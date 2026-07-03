@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Wishlist - MODA</title>
+    <link rel="stylesheet" href="styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <header class="navbar">
+        <div class="logo">MODA</div>
+        <nav class="nav-links">
+            <a href="index.html">Home</a>
+            <a href="mens.html">Men's</a>
+            <a href="womens.html">Women's</a>
+            <a href="all-products.html">All Products</a>
+        </nav>
+        <div class="nav-actions">
+            <div class="search-bar">
+                <i class="fas fa-search"></i>
+                <input type="text" placeholder="Search...">
+            </div>
+            <a href="wishlist.html" class="icon"><i class="fas fa-heart" style="color: var(--primary-color);"></i></a>
+            <a href="cart.html" class="icon position-relative">
+                <i class="fas fa-shopping-bag"></i>
+                <span class="cart-badge" id="nav-cart-count">0</span>
+            </a>
+            <a href="#" class="account">Account</a>
+        </div>
+    </header>
+
+    <main class="collection-page">
+        <div class="breadcrumbs">
+            <a href="index.html">HOME</a> &gt; <span>WISHLIST</span>
+        </div>
+        
+        <h1 class="page-title">Your Wishlist</h1>
+
+        <div class="collection-layout" style="display: block;">
+            <div id="wishlist-container" class="product-grid-4">
+                <!-- Items injected by JS -->
+            </div>
+            
+            <p id="empty-wishlist-msg" style="display: none; text-align: center; padding: 4rem; font-family: var(--font-body); color: var(--text-light);">
+                Your wishlist is currently empty.
+            </p>
+        </div>
+    </main>
+
+    <footer class="footer-alt">
+        <div class="footer-content footer-alt-grid">
+            <div class="footer-col brand-col">
+                <h3>MODA</h3>
+                <p>Defining the vanguard of contemporary wear through artisanal craftsmanship and architectural precision.</p>
+            </div>
+            <div class="footer-col">
+                <h3>Customer Care</h3>
+                <ul>
+                    <li><a href="#">Returns</a></li>
+                    <li><a href="#">Shipping Info</a></li>
+                    <li><a href="#">Sizing Guide</a></li>
+                </ul>
+            </div>
+            <div class="footer-col">
+                <h3>Legal</h3>
+                <ul>
+                    <li><a href="#">Privacy Policy</a></li>
+                    <li><a href="#">Terms of Service</a></li>
+                    <li><a href="#">Cookie Policy</a></li>
+                </ul>
+            </div>
+            <div class="footer-col newsletter-col">
+                <h3>Newsletter</h3>
+                <p>Subscribe to receive first access to new arrivals.</p>
+                <div class="newsletter-input">
+                    <input type="email" placeholder="Email Address">
+                    <button>JOIN</button>
+                </div>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <p>&copy; 2024 MODA ARCHIVE. ALL RIGHTS RESERVED.</p>
+            <div class="footer-socials">
+                <a href="#">INSTAGRAM</a>
+                <a href="#">PINTEREST</a>
+                <a href="#">TWITTER</a>
+            </div>
+        </div>
+    </footer>
+    <script src="script.js"></script>
+</body>
+</html>

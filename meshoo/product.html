@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Product Details - MODA</title>
+    <link rel="stylesheet" href="styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <header class="navbar">
+        <div class="logo">MODA</div>
+        <nav class="nav-links">
+            <a href="index.html">Home</a>
+            <a href="mens.html">Men's</a>
+            <a href="womens.html">Women's</a>
+            <a href="all-products.html">All Products</a>
+        </nav>
+        <div class="nav-actions">
+            <div class="search-bar">
+                <i class="fas fa-search"></i>
+                <input type="text" placeholder="Search...">
+            </div>
+            <a href="wishlist.html" class="icon"><i class="far fa-heart"></i></a>
+            <a href="cart.html" class="icon position-relative">
+                <i class="fas fa-shopping-bag"></i>
+                <span class="cart-badge" id="nav-cart-count">0</span>
+            </a>
+            <a href="#" class="account">Account</a>
+        </div>
+    </header>
+
+    <main class="pdp-page">
+        <!-- Breadcrumbs -->
+        <div class="breadcrumbs">
+            <a href="index.html">HOME</a> &gt; <a href="womens.html">WOMEN'S</a> &gt; <span>COATS</span>
+        </div>
+
+        <section class="product-main-section">
+            <div class="product-gallery">
+                <div class="thumbnail-list">
+                    <img src="https://images.unsplash.com/photo-1539008835657-9e8e9680c956?auto=format&fit=crop&w=600&q=80" class="thumb active" alt="Thumb 1">
+                    <img src="https://images.unsplash.com/photo-1539008835657-9e8e9680c956?auto=format&fit=crop&w=600&q=80" class="thumb" alt="Thumb 2">
+                    <img src="https://images.unsplash.com/photo-1539008835657-9e8e9680c956?auto=format&fit=crop&w=600&q=80" class="thumb" alt="Thumb 3">
+                </div>
+                <div class="main-image-container">
+                    <img src="https://images.unsplash.com/photo-1539008835657-9e8e9680c956?auto=format&fit=crop&w=800&q=80" class="main-product-img" alt="Main Product">
+                </div>
+            </div>
+
+            <div class="product-info-panel">
+                <div class="badge-new" style="position: static; display: inline-block; margin-bottom: 1rem;">NEW ARRIVAL</div>
+                <h1 class="product-detail-title">LUXURY OVERSIZED WOOL COAT</h1>
+                <div class="price-review-row">
+                    <span class="product-detail-price">$1,250.00</span>
+                    <div class="reviews-stars">
+                        <i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="far fa-star"></i>
+                        <span class="review-count">(48 Reviews)</span>
+                    </div>
+                </div>
+
+                <p class="product-description-short">A definitive statement of modern minimalism. Crafted from ethically sourced Italian virgin wool, this oversized coat features dropped shoulders and a structured silhouette for effortless sophistication.</p>
+
+                <div class="product-options">
+                    <div class="option-header">
+                        <span>SELECT SIZE</span>
+                        <a href="#" class="size-guide">Size Guide</a>
+                    </div>
+                    <div class="size-grid pdp-sizes">
+                        <button class="size-btn">XS</button>
+                        <button class="size-btn active">S</button>
+                        <button class="size-btn">M</button>
+                        <button class="size-btn">L</button>
+                    </div>
+
+                    <div class="option-header">
+                        <span>COLOR: <span id="pdp-selected-color">CHARCOAL GREY</span></span>
+                    </div>
+                    <div class="color-swatches pdp-colors">
+                        <button class="color-btn active" data-color="CHARCOAL GREY" style="background-color: #333;"></button>
+                        <button class="color-btn" data-color="BLACK" style="background-color: #000;"></button>
+                        <button class="color-btn" data-color="LIGHT GREY" style="background-color: #e5e5e5;"></button>
+                    </div>
+                </div>
+
+                <div class="product-actions">
+                    <button class="btn-add-cart" id="pdp-add-to-cart">ADD TO CART</button>
+                    <button class="btn-wishlist-outline"><i class="far fa-heart"></i> ADD TO WISHLIST</button>
+                </div>
+
+                <div class="product-tabs">
+                    <div class="tab-headers">
+                        <span class="tab active">Description</span>
+                        <span class="tab">Material & Care</span>
+                        <span class="tab">Shipping</span>
+                    </div>
+                    <div class="tab-content">
+                        <p>This premium outerwear piece is designed with an emphasis on architectural volume. The double-faced wool construction provides exceptional warmth without the weight.</p>
+                        <ul>
+                            <li>100% Virgin Italian Wool</li>
+                            <li>Concealed button fastening</li>
+                            <li>Oversized welt pockets</li>
+                            <li>Satin-lined sleeves</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- You May Also Like -->
+        <section class="related-products">
+            <h2 class="section-title-center">YOU MAY ALSO LIKE</h2>
+            <div class="product-grid-4">
+                <div class="product-card">
+                    <div class="product-image-wrapper">
+                        <img src="https://images.unsplash.com/photo-1610652492500-ded49ceeb378?auto=format&fit=crop&w=600&q=80" alt="Structured Knit Sweater">
+                    </div>
+                    <div class="product-info-collection">
+                        <h4>STRUCTURED KNIT SWEATER</h4>
+                        <div class="price-row">
+                            <span class="price">$450.00</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="product-card">
+                    <div class="product-image-wrapper">
+                        <img src="https://images.unsplash.com/photo-1594633312681-425c7b97ccd1?auto=format&fit=crop&w=600&q=80" alt="Tailored Wide-Leg Trousers">
+                    </div>
+                    <div class="product-info-collection">
+                        <h4>TAILORED WIDE-LEG TROUSERS</h4>
+                        <div class="price-row">
+                            <span class="price">$650.00</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="product-card">
+                    <div class="product-image-wrapper">
+                        <img src="https://images.unsplash.com/photo-1584916201218-f4242ceb4809?auto=format&fit=crop&w=600&q=80" alt="Architectural Leather Tote">
+                    </div>
+                    <div class="product-info-collection">
+                        <h4>ARCHITECTURAL LEATHER TOTE</h4>
+                        <div class="price-row">
+                            <span class="price">$1,100.00</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="product-card">
+                    <div class="product-image-wrapper">
+                        <img src="https://images.unsplash.com/photo-1543163521-1bf539c55dd2?auto=format&fit=crop&w=600&q=80" alt="Essential Calfskin Boot">
+                    </div>
+                    <div class="product-info-collection">
+                        <h4>ESSENTIAL CALFSKIN BOOT</h4>
+                        <div class="price-row">
+                            <span class="price">$850.00</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Customer Reviews -->
+        <section class="customer-reviews">
+            <h2 class="section-title-left">CUSTOMER REVIEWS</h2>
+            <div class="reviews-layout">
+                <div class="reviews-summary">
+                    <div class="big-rating">4.8</div>
+                    <div class="stars">
+                        <i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="far fa-star"></i>
+                    </div>
+                    <div class="based-on">BASED ON 48 REVIEWS</div>
+                    <button class="write-review-btn">WRITE A REVIEW</button>
+                </div>
+                <div class="reviews-list">
+                    <div class="review-item">
+                        <div class="review-header">
+                            <span class="reviewer-name">ELEANOR V.</span>
+                            <span class="review-date">OCT 12, 2024</span>
+                        </div>
+                        <div class="stars">
+                            <i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="far fa-star"></i>
+                        </div>
+                        <h5>Incredible silhouette and quality</h5>
+                        <p>The drape of this coat is absolutely stunning. It has that perfect oversized look without feeling bulky. The wool is heavy and feels very premium. Highly recommend for a capsule wardrobe.</p>
+                    </div>
+                    <div class="review-item">
+                        <div class="review-header">
+                            <span class="reviewer-name">JULIAN M.</span>
+                            <span class="review-date">SEP 28, 2024</span>
+                        </div>
+                        <div class="stars">
+                            <i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="far fa-star"></i>
+                        </div>
+                        <h5>Investment piece</h5>
+                        <p>Worth every penny. I've been looking for an oversized coat that actually fits well in the shoulders, and this is it. The lining is beautiful and the charcoal color is perfect.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer class="footer-alt">
+        <div class="footer-content footer-alt-grid">
+            <div class="footer-col brand-col">
+                <h3>MODA ARCHIVE</h3>
+                <p>Redefining luxury through minimalist design and artisanal craftsmanship since 2018.</p>
+            </div>
+            <div class="footer-col">
+                <h3>SITEMAP</h3>
+                <ul>
+                    <li><a href="#">Collections</a></li>
+                    <li><a href="#">Men's</a></li>
+                    <li><a href="#">Women's</a></li>
+                    <li><a href="#">Archive</a></li>
+                </ul>
+            </div>
+            <div class="footer-col">
+                <h3>SUPPORT</h3>
+                <ul>
+                    <li><a href="#">Returns</a></li>
+                    <li><a href="#">Shipping Info</a></li>
+                    <li><a href="#">Contact Us</a></li>
+                    <li><a href="#">Sustainability</a></li>
+                </ul>
+            </div>
+            <div class="footer-col newsletter-col">
+                <h3>NEWSLETTER</h3>
+                <p>Join our archive for exclusive early access to new drops.</p>
+                <div class="newsletter-input">
+                    <input type="email" placeholder="Email Address">
+                    <button>JOIN</button>
+                </div>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <p>&copy; 2024 MODA ARCHIVE. ALL RIGHTS RESERVED.</p>
+            <div class="footer-socials">
+                <a href="#">Privacy Policy</a>
+                <a href="#">Terms of Service</a>
+            </div>
+        </div>
+    </footer>
+    <script src="script.js"></script>
+</body>
+</html>

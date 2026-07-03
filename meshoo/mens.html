@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Men's Collection - MODA</title>
+    <link rel="stylesheet" href="styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <header class="navbar">
+        <div class="logo">MODA</div>
+        <nav class="nav-links">
+            <a href="index.html">Home</a>
+            <a href="mens.html" class="active">Men's</a>
+            <a href="womens.html">Women's</a>
+            <a href="all-products.html">All Products</a>
+        </nav>
+        <div class="nav-actions">
+            <div class="search-bar">
+                <i class="fas fa-search"></i>
+                <input type="text" placeholder="Search...">
+            </div>
+            <a href="wishlist.html" class="icon"><i class="far fa-heart"></i></a>
+            <a href="#" class="icon"><i class="fas fa-shopping-bag"></i></a>
+            <a href="#" class="account">Account</a>
+        </div>
+    </header>
+
+    <main class="collection-page">
+        <div class="breadcrumbs">
+            <a href="index.html">HOME</a> &gt; <span>MEN'S</span>
+        </div>
+        
+        <h1 class="page-title">Men's Collection</h1>
+
+        <div class="collection-layout">
+            <!-- Sidebar Filters -->
+            <aside class="filters">
+                <div class="filter-section">
+                    <h4>PRICE RANGE</h4>
+                    <div class="range-slider">
+                        <div class="slider-track">
+                            <div class="slider-fill"></div>
+                            <div class="slider-thumb" style="left: 0%;"></div>
+                            <div class="slider-thumb" style="left: 100%;"></div>
+                        </div>
+                        <div class="range-values">
+                            <span>$0</span>
+                            <span>$1,000+</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="filter-section">
+                    <h4>BRAND</h4>
+                    <ul class="checkbox-list">
+                        <li><label><input type="checkbox"> <span>Aura Collective</span></label></li>
+                        <li><label><input type="checkbox"> <span>Moda Archive</span></label></li>
+                        <li><label><input type="checkbox"> <span>Elysian Men</span></label></li>
+                        <li><label><input type="checkbox"> <span>Nordic Raw</span></label></li>
+                    </ul>
+                </div>
+
+                <div class="filter-section">
+                    <h4>SIZE</h4>
+                    <div class="size-grid">
+                        <button class="size-btn">XS</button>
+                        <button class="size-btn active">S</button>
+                        <button class="size-btn">M</button>
+                        <button class="size-btn">L</button>
+                        <button class="size-btn">XL</button>
+                        <button class="size-btn">XXL</button>
+                    </div>
+                </div>
+
+                <div class="filter-section">
+                    <h4>COLOR SWATCH</h4>
+                    <div class="color-swatches">
+                        <button class="color-btn active" style="background-color: #000;"></button>
+                        <button class="color-btn" style="background-color: #fff; border: 1px solid #ddd;"></button>
+                        <button class="color-btn" style="background-color: #888;"></button>
+                        <button class="color-btn" style="background-color: #2b59ff;"></button>
+                        <button class="color-btn" style="background-color: #8b4513;"></button>
+                    </div>
+                </div>
+            </aside>
+
+            <!-- Product Grid Area -->
+            <div class="collection-content">
+                <div class="collection-toolbar">
+                    <span class="product-count">24 PRODUCTS FOUND</span>
+                    <div class="sort-by">
+                        <span>SORT BY: NEWEST</span>
+                        <i class="fas fa-chevron-down"></i>
+                    </div>
+                </div>
+
+                <div class="product-grid-3">
+                    <!-- Product 1 -->
+                    <div class="product-card">
+                        <div class="product-image-wrapper">
+                            <div class="badge-new">NEW ARRIVAL</div>
+                            <img src="https://images.unsplash.com/photo-1507680434267-325ea751d506?auto=format&fit=crop&w=600&q=80" alt="Structured Wool Overcoat">
+                        </div>
+                        <div class="product-info-collection">
+                            <div class="brand-row">
+                                <span class="brand">MODA ARCHIVE</span>
+                                <button class="wishlist-btn-small"><i class="far fa-heart"></i></button>
+                            </div>
+                            <h4>Structured Wool Overcoat</h4>
+                            <div class="price-row">
+                                <span class="price">$450.00</span>
+                                <span class="rating"><i class="far fa-star"></i> 4.8</span>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- Product 2 -->
+                    <div class="product-card">
+                        <div class="product-image-wrapper">
+                            <img src="https://images.unsplash.com/photo-1610652492500-ded49ceeb378?auto=format&fit=crop&w=600&q=80" alt="Heritage Cashmere Knit">
+                        </div>
+                        <div class="product-info-collection">
+                            <div class="brand-row">
+                                <span class="brand">AURA COLLECTIVE</span>
+                                <button class="wishlist-btn-small"><i class="far fa-heart"></i></button>
+                            </div>
+                            <h4>Heritage Cashmere Knit</h4>
+                            <div class="price-row">
+                                <span class="price">$280.00</span>
+                                <span class="rating"><i class="far fa-star"></i> 5.0</span>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- Product 3 -->
+                    <div class="product-card">
+                        <div class="product-image-wrapper">
+                            <div class="badge-new">LIMITED</div>
+                            <img src="https://images.unsplash.com/photo-1520975954732-57dd22299614?auto=format&fit=crop&w=600&q=80" alt="Architectural Leather Shell">
+                        </div>
+                        <div class="product-info-collection">
+                            <div class="brand-row">
+                                <span class="brand">ELYSIAN MEN</span>
+                                <button class="wishlist-btn-small"><i class="far fa-heart"></i></button>
+                            </div>
+                            <h4>Architectural Leather Shell</h4>
+                            <div class="price-row">
+                                <span class="price">$895.00</span>
+                                <span class="rating"><i class="far fa-star"></i> 4.9</span>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- Product 4 -->
+                    <div class="product-card">
+                        <div class="product-image-wrapper">
+                            <img src="https://images.unsplash.com/photo-1620799140408-edc6dcb6d633?auto=format&fit=crop&w=600&q=80" alt="Cable-Knit Cardigan">
+                        </div>
+                        <div class="product-info-collection">
+                            <div class="brand-row">
+                                <span class="brand">NORDIC RAW</span>
+                                <button class="wishlist-btn-small"><i class="far fa-heart"></i></button>
+                            </div>
+                            <h4>Cable-Knit Cardigan</h4>
+                            <div class="price-row">
+                                <span class="price">$320.00</span>
+                                <span class="rating"><i class="far fa-star"></i> 4.7</span>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- Product 5 -->
+                    <div class="product-card">
+                        <div class="product-image-wrapper">
+                            <img src="https://images.unsplash.com/photo-1602810316693-3667c854239a?auto=format&fit=crop&w=600&q=80" alt="Technical Poplin Shirt">
+                        </div>
+                        <div class="product-info-collection">
+                            <div class="brand-row">
+                                <span class="brand">MODA ARCHIVE</span>
+                                <button class="wishlist-btn-small"><i class="far fa-heart"></i></button>
+                            </div>
+                            <h4>Technical Poplin Shirt</h4>
+                            <div class="price-row">
+                                <span class="price">$195.00</span>
+                                <span class="rating"><i class="far fa-star"></i> 4.6</span>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- Product 6 -->
+                    <div class="product-card">
+                        <div class="product-image-wrapper">
+                            <img src="https://images.unsplash.com/photo-1592878904946-b3cd8ae243d0?auto=format&fit=crop&w=600&q=80" alt="Tailored Silk-Blend Blazer">
+                        </div>
+                        <div class="product-info-collection">
+                            <div class="brand-row">
+                                <span class="brand">ELYSIAN MEN</span>
+                                <button class="wishlist-btn-small"><i class="far fa-heart"></i></button>
+                            </div>
+                            <h4>Tailored Silk-Blend Blazer</h4>
+                            <div class="price-row">
+                                <span class="price">$620.00</span>
+                                <span class="rating"><i class="far fa-star"></i> 4.9</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="pagination">
+                    <button class="page-btn"><i class="fas fa-chevron-left"></i></button>
+                    <button class="page-btn active">1</button>
+                    <button class="page-btn">2</button>
+                    <button class="page-btn">3</button>
+                    <button class="page-btn"><i class="fas fa-chevron-right"></i></button>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <footer class="footer-alt">
+        <div class="footer-content footer-alt-grid">
+            <div class="footer-col brand-col">
+                <h3>MODA</h3>
+                <p>Defining the vanguard of contemporary menswear through artisanal craftsmanship and architectural precision.</p>
+            </div>
+            <div class="footer-col">
+                <h3>Customer Care</h3>
+                <ul>
+                    <li><a href="#">Returns</a></li>
+                    <li><a href="#">Shipping Info</a></li>
+                    <li><a href="#">Sizing Guide</a></li>
+                </ul>
+            </div>
+            <div class="footer-col">
+                <h3>Legal</h3>
+                <ul>
+                    <li><a href="#">Privacy Policy</a></li>
+                    <li><a href="#">Terms of Service</a></li>
+                    <li><a href="admin.html">Admin Dashboard</a></li>
+                </ul>
+            </div>
+            <div class="footer-col newsletter-col">
+                <h3>Newsletter</h3>
+                <p>Subscribe to receive first access to new arrivals.</p>
+                <div class="newsletter-input">
+                    <input type="email" placeholder="Email Address">
+                    <button>JOIN</button>
+                </div>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <p>&copy; 2024 MODA ARCHIVE. ALL RIGHTS RESERVED.</p>
+            <div class="footer-socials">
+                <a href="#">INSTAGRAM</a>
+                <a href="#">PINTEREST</a>
+                <a href="#">TWITTER</a>
+            </div>
+        </div>
+    </footer>
+    <script src="script.js"></script>
+</body>
+</html>
