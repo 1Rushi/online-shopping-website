@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Account - Moda</title>
+    <link rel="stylesheet" href="styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        .account-container {
+            max-width: 500px;
+            margin: 100px auto;
+            padding: 2rem;
+            background: #fff;
+            border: 1px solid #ddd;
+        }
+        .account-tabs {
+            display: flex;
+            margin-bottom: 2rem;
+            border-bottom: 1px solid #ddd;
+        }
+        .account-tabs button {
+            flex: 1;
+            padding: 1rem;
+            background: none;
+            border: none;
+            font-family: 'Inter', sans-serif;
+            font-size: 1rem;
+            font-weight: 500;
+            cursor: pointer;
+            text-transform: uppercase;
+        }
+        .account-tabs button.active {
+            border-bottom: 2px solid #000;
+            font-weight: 600;
+        }
+        .account-form {
+            display: none;
+        }
+        .account-form.active {
+            display: block;
+        }
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-family: 'Inter', sans-serif;
+            font-size: 0.9rem;
+            color: #555;
+        }
+        .form-group input {
+            width: 100%;
+            padding: 0.8rem;
+            border: 1px solid #ccc;
+            font-family: 'Inter', sans-serif;
+        }
+        .account-btn {
+            width: 100%;
+            padding: 1rem;
+            background: #000;
+            color: #fff;
+            border: none;
+            font-family: 'Inter', sans-serif;
+            font-weight: 600;
+            text-transform: uppercase;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+        .account-btn:hover {
+            background: #333;
+        }
+        .form-message {
+            margin-top: 1rem;
+            padding: 1rem;
+            display: none;
+            font-family: 'Inter', sans-serif;
+            font-size: 0.9rem;
+        }
+        .form-message.error {
+            background-color: #fee2e2;
+            color: #dc2626;
+            border: 1px solid #f87171;
+            display: block;
+        }
+        .form-message.success {
+            background-color: #dcfce7;
+            color: #16a34a;
+            border: 1px solid #4ade80;
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <header class="navbar">
+        <div class="logo">MODA</div>
+        <nav class="nav-links">
+            <a href="index.html">HOME</a>
+            <a href="mens.html">MEN</a>
+            <a href="womens.html">WOMEN</a>
+            <a href="all-products.html">ALL PRODUCTS</a>
+        </nav>
+        <div class="nav-icons">
+            <a href="#" class="icon-link"><i class="fas fa-search"></i></a>
+            <a href="account.html" class="icon-link account-link-nav">Account</a>
+            <a href="cart.html" class="icon-link"><i class="fas fa-shopping-cart"></i> (<span id="cart-count">0</span>)</a>
+        </div>
+    </header>
+
+    <main>
+        <div class="account-container">
+            <div class="account-tabs">
+                <button class="active" id="tab-login" onclick="switchTab('login')">Login</button>
+                <button id="tab-register" onclick="switchTab('register')">Register</button>
+            </div>
+
+            <!-- Login Form -->
+            <form id="login-form" class="account-form active">
+                <h2>Welcome Back</h2>
+                <div class="form-group">
+                    <label>Email Address</label>
+                    <input type="email" id="login-email" required>
+                </div>
+                <div class="form-group">
+                    <label>Password</label>
+                    <input type="password" id="login-password" required>
+                </div>
+                <button type="submit" class="account-btn">Log In</button>
+                <div id="login-message" class="form-message"></div>
+            </form>
+
+            <!-- Register Form -->
+            <form id="register-form" class="account-form">
+                <h2>Create Account</h2>
+                <div class="form-group">
+                    <label>Full Name</label>
+                    <input type="text" id="register-name" required>
+                </div>
+                <div class="form-group">
+                    <label>Email Address</label>
+                    <input type="email" id="register-email" required>
+                </div>
+                <div class="form-group">
+                    <label>Password</label>
+                    <input type="password" id="register-password" required>
+                </div>
+                <button type="submit" class="account-btn">Register</button>
+                <div id="register-message" class="form-message"></div>
+            </form>
+        </div>
+    </main>
+
+    <footer class="footer-alt">
+        <div class="footer-content footer-alt-grid">
+            <div class="footer-col brand-col">
+                <h3>MODA ARCHIVE</h3>
+                <p>Curation of timeless silhouettes and contemporary design principles. Built for the modern wardrobe.</p>
+            </div>
+            <div class="footer-col">
+                <h3>Shop</h3>
+                <a href="mens.html">Men's Collection</a>
+                <a href="womens.html">Women's Collection</a>
+                <a href="all-products.html">All Products</a>
+            </div>
+            <div class="footer-col">
+                <h3>Support</h3>
+                <a href="#">FAQ</a>
+                <a href="#">Shipping & Returns</a>
+                <a href="#">Contact Us</a>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        function switchTab(tab) {
+            document.getElementById('tab-login').classList.remove('active');
+            document.getElementById('tab-register').classList.remove('active');
+            document.getElementById('login-form').classList.remove('active');
+            document.getElementById('register-form').classList.remove('active');
+
+            if (tab === 'login') {
+                document.getElementById('tab-login').classList.add('active');
+                document.getElementById('login-form').classList.add('active');
+            } else {
+                document.getElementById('tab-register').classList.add('active');
+                document.getElementById('register-form').classList.add('active');
+            }
+        }
+    </script>
+    <script src="script.js"></script>
+</body>
+</html>

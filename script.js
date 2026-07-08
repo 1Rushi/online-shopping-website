@@ -1,4 +1,13 @@
 document.addEventListener('DOMContentLoaded', () => {
+    const getSessionId = () => {
+        let sid = localStorage.getItem('moda_session_id');
+        if (!sid) {
+            sid = 'sess_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('moda_session_id', sid);
+        }
+        return sid;
+    };
+
     // Basic setup
     const setupNavCart = () => {
         const cartLinks = document.querySelectorAll('.nav-actions .icon .fa-shopping-bag');
@@ -17,14 +26,18 @@ document.addEventListener('DOMContentLoaded', () => {
         updateCartBadge();
     };
 
-    const updateCartBadge = () => {
-        const cart = JSON.parse(localStorage.getItem('moda_cart')) || [];
-        const totalItems = cart.reduce((sum, item) => sum + item.qty, 0);
-        const badges = document.querySelectorAll('.cart-badge');
-        badges.forEach(b => {
-            b.innerText = totalItems;
-            b.style.display = totalItems > 0 ? 'flex' : 'none';
-        });
+    const updateCartBadge = async () => {
+        try {
+            const res = await fetch(`http://localhost:3000/api/cart/${getSessionId()}`);
+            if(!res.ok) return;
+            const cart = await res.json();
+            const totalItems = cart.reduce((sum, item) => sum + item.qty, 0);
+            const badges = document.querySelectorAll('.cart-badge');
+            badges.forEach(b => {
+                b.innerText = totalItems;
+                b.style.display = totalItems > 0 ? 'flex' : 'none';
+            });
+        } catch(e) {}
     };
 
     setupNavCart();
@@ -53,6 +66,7 @@ document.addEventListener('DOMContentLoaded', () => {
                             <td>${p.category}</td>
                             <td>${p.brand}</td>
                             <td>$${parseFloat(p.price).toFixed(2)}</td>
+                            <td>${p.sizes || 'N/A'}</td>
                             <td><button class="action-btn" onclick="deleteCustomProduct(${p.id})"><i class="fas fa-trash"></i></button></td>
                         </tr>
                     `).join('');
@@ -157,14 +171,14 @@ document.addEventListener('DOMContentLoaded', () => {
                 renderAdminOrders();
             });
         }
-// Auto-show Orders panel on admin page load
-if (navOrders && ordersPanel) {
-  navProducts.classList.remove('active');
-  navOrders.classList.add('active');
-  productsPanel.style.display = 'none';
-  ordersPanel.style.display = 'block';
-  renderAdminOrders();
-}
+
+        if (navOrders && ordersPanel) {
+            navProducts.classList.remove('active');
+            navOrders.classList.add('active');
+            productsPanel.style.display = 'none';
+            ordersPanel.style.display = 'block';
+            renderAdminOrders();
+        }
 
         if (tbody) renderAdminTable();
 
@@ -190,6 +204,11 @@ if (navOrders && ordersPanel) {
                     const img2Base64 = await readAsBase64(file2);
                     const img3Base64 = await readAsBase64(file3);
                     
+                    const checkedSizes = Array.from(document.querySelectorAll('#prod-sizes input[type="checkbox"]'))
+                        .filter(cb => cb.checked)
+                        .map(cb => cb.value)
+                        .join(',');
+
                     const newItem = {
                         title: document.getElementById('prod-name').value,
                         price: parseFloat(document.getElementById('prod-price').value),
@@ -197,7 +216,8 @@ if (navOrders && ordersPanel) {
                         brand: document.getElementById('prod-brand').value,
                         img: img1Base64,
                         img2: img2Base64,
-                        img3: img3Base64
+                        img3: img3Base64,
+                        sizes: checkedSizes
                     };
 
                     try {
@@ -295,7 +315,7 @@ if (navOrders && ordersPanel) {
 
             if (targetGrid) {
                 let htmlToInject = '';
-                window.dynamicProductsMap = {}; // Store them globally to avoid huge base64 DOM strings
+                window.dynamicProductsMap = {}; 
                 
                 [...customProducts].reverse().forEach(p => {
                     window.dynamicProductsMap[p.id] = p;
@@ -341,53 +361,55 @@ if (navOrders && ordersPanel) {
     // ==========================================
     // WISHLIST LOGIC
     // ==========================================
-    const updateWishlistUI = () => {
-        const wishlist = JSON.parse(localStorage.getItem('moda_wishlist')) || [];
-        const wishlistBtns = document.querySelectorAll('.wishlist-btn-small, .btn-wishlist-outline');
-        
-        wishlistBtns.forEach(btn => {
-            const card = btn.closest('.product-card');
-            let title = '';
-            if (card) {
-                const titleEl = card.querySelector('h4');
-                if (titleEl) title = titleEl.innerText.trim();
-            } else if (btn.classList.contains('btn-wishlist-outline')) {
-                const titleEl = document.querySelector('.product-detail-title');
-                if(titleEl) title = titleEl.innerText.trim();
-            }
+    const updateWishlistUI = async () => {
+        try {
+            const res = await fetch(`http://localhost:3000/api/wishlist/${getSessionId()}`);
+            if(!res.ok) return;
+            const wishlist = await res.json();
+            const wishlistBtns = document.querySelectorAll('.wishlist-btn-small, .btn-wishlist-outline');
+            
+            wishlistBtns.forEach(btn => {
+                const card = btn.closest('.product-card');
+                let title = '';
+                if (card) {
+                    const titleEl = card.querySelector('h4');
+                    if (titleEl) title = titleEl.innerText.trim();
+                } else if (btn.classList.contains('btn-wishlist-outline')) {
+                    const titleEl = document.querySelector('.product-detail-title');
+                    if(titleEl) title = titleEl.innerText.trim();
+                }
 
-            if (title) {
-                const exists = wishlist.find(i => i.title === title);
-                const icon = btn.querySelector('i');
-                if (exists) {
-                    if(icon) {
-                        icon.classList.remove('far');
-                        icon.classList.add('fas');
-                        icon.style.color = 'var(--primary-color)';
-                    }
-                } else {
-                    if(icon) {
-                        icon.classList.remove('fas');
-                        icon.classList.add('far');
-                        icon.style.color = '';
+                if (title) {
+                    const exists = wishlist.find(i => i.title === title);
+                    const icon = btn.querySelector('i');
+                    if (exists) {
+                        if(icon) {
+                            icon.classList.remove('far');
+                            icon.classList.add('fas');
+                            icon.style.color = 'var(--primary-color)';
+                        }
+                    } else {
+                        if(icon) {
+                            icon.classList.remove('fas');
+                            icon.classList.add('far');
+                            icon.style.color = '';
+                        }
                     }
                 }
-            }
-        });
+            });
+        } catch(e) {}
     };
 
-    const toggleWishlist = (product) => {
-        let wishlist = JSON.parse(localStorage.getItem('moda_wishlist')) || [];
-        const index = wishlist.findIndex(i => i.title === product.title);
-        
-        if (index > -1) {
-            wishlist.splice(index, 1);
-        } else {
-            wishlist.push(product);
-        }
-        
-        localStorage.setItem('moda_wishlist', JSON.stringify(wishlist));
-        updateWishlistUI();
+    const toggleWishlist = async (product) => {
+        try {
+            await fetch(`http://localhost:3000/api/wishlist/${getSessionId()}`, {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify(product)
+            });
+            updateWishlistUI();
+            if (window.renderWishlistPage) window.renderWishlistPage();
+        } catch(e) {}
     };
 
     document.addEventListener('click', (e) => {
@@ -459,62 +481,125 @@ if (navOrders && ordersPanel) {
                     img3 = window.dynamicProductsMap[cardId].img3 || '';
                 }
 
-                const currentProduct = {
-                    img: img,
-                    img2: img2,
-                    img3: img3,
-                    title: title,
-                    price: price,
-                    brand: brand,
-                    color: color
-                };
+                if (cardId) {
+                    localStorage.setItem('current_product_id', cardId);
+                    localStorage.removeItem('current_product');
+                } else {
+                    const currentProduct = {
+                        img: img,
+                        img2: img2,
+                        img3: img3,
+                        title: title,
+                        price: price,
+                        brand: brand,
+                        color: color
+                    };
+                    localStorage.setItem('current_product', JSON.stringify(currentProduct));
+                    localStorage.removeItem('current_product_id');
+                }
                 
-                localStorage.setItem('current_product', JSON.stringify(currentProduct));
                 window.location.href = 'product.html';
             });
         });
     };
 
     // ==========================================
-    // FILTER LOGIC (Brands)
+    // FILTER LOGIC (Brands & Sizes)
     // ==========================================
     const brandCheckboxes = document.querySelectorAll('.filter-section input[type="checkbox"]');
+    const sizeBtns = document.querySelectorAll('.size-grid .size-btn');
+    const countEl = document.querySelector('.product-count');
+
+    const getProductSizes = (title) => {
+        const sizes = ['XS', 'S', 'M', 'L', 'XL', 'XXL'];
+        let hash = 0;
+        for (let i = 0; i < title.length; i++) {
+            hash += title.charCodeAt(i);
+        }
+        return [
+            sizes[hash % sizes.length],
+            sizes[(hash + 1) % sizes.length],
+            sizes[(hash + 3) % sizes.length]
+        ];
+    };
+
+    window.applyFilters = () => {
+        const checkedBrands = Array.from(brandCheckboxes)
+            .filter(box => box.checked)
+            .map(box => box.nextElementSibling.innerText.trim().toUpperCase());
+            
+        const activeSizes = Array.from(sizeBtns)
+            .filter(btn => btn.classList.contains('active'))
+            .map(btn => btn.innerText.trim());
+
+        const productCards = document.querySelectorAll('.collection-content .product-card');
+        let visibleCount = 0;
+
+        productCards.forEach(card => {
+            const brandEl = card.querySelector('.brand');
+            const titleEl = card.querySelector('h4');
+            if (!brandEl || !titleEl) return;
+            
+            const cardBrand = brandEl.innerText.trim().toUpperCase();
+            const cardTitle = titleEl.innerText.trim();
+            const cardId = card.getAttribute('data-product-id');
+            let cardSizes = [];
+            
+            if (cardId && window.dynamicProductsMap && window.dynamicProductsMap[cardId] && window.dynamicProductsMap[cardId].sizes) {
+                cardSizes = window.dynamicProductsMap[cardId].sizes.split(',');
+            } else {
+                cardSizes = getProductSizes(cardTitle);
+            }
+            
+            const brandMatch = checkedBrands.length === 0 || checkedBrands.includes(cardBrand);
+            const sizeMatch = activeSizes.length === 0 || activeSizes.some(size => cardSizes.includes(size));
+
+            if (brandMatch && sizeMatch) {
+                card.style.display = ''; 
+                visibleCount++;
+            } else {
+                card.style.display = 'none';
+            }
+        });
+
+        if (countEl) countEl.innerText = `${visibleCount} PRODUCTS FOUND`;
+    };
+
     if (brandCheckboxes.length > 0) {
-        brandCheckboxes.forEach(cb => {
-            cb.addEventListener('change', () => {
-                const checkedBrands = Array.from(brandCheckboxes)
-                    .filter(box => box.checked)
-                    .map(box => box.nextElementSibling.innerText.trim().toUpperCase());
-                
-                const productCards = document.querySelectorAll('.collection-content .product-card');
-                let visibleCount = 0;
+        brandCheckboxes.forEach(cb => cb.addEventListener('change', window.applyFilters));
+    }
 
-                productCards.forEach(card => {
-                    const brandEl = card.querySelector('.brand');
-                    if (!brandEl) return;
-                    const cardBrand = brandEl.innerText.trim().toUpperCase();
-                    
-                    if (checkedBrands.length === 0 || checkedBrands.includes(cardBrand)) {
-                        card.style.display = ''; 
-                        visibleCount++;
-                    } else {
-                        card.style.display = 'none';
-                    }
-                });
-
-                const countEl = document.querySelector('.product-count');
-                if (countEl) countEl.innerText = `${visibleCount} PRODUCTS FOUND`;
+    if (sizeBtns.length > 0) {
+        sizeBtns.forEach(btn => {
+            btn.addEventListener('click', () => {
+                btn.classList.toggle('active');
+                window.applyFilters();
             });
         });
+        
+        // Ensure filters apply on page load if any are checked/active initially
+        setTimeout(() => window.applyFilters(), 200);
     }
 
     // ==========================================
     // PDP LOGIC
     // ==========================================
     if (window.location.pathname.includes('product.html')) {
-        const currentProduct = JSON.parse(localStorage.getItem('current_product'));
-        
-        if (currentProduct) {
+        const loadProductPage = async () => {
+            let currentProduct = null;
+            const productId = localStorage.getItem('current_product_id');
+            if (productId) {
+                try {
+                    const res = await fetch(`http://localhost:3000/api/products/${productId}`);
+                    if (res.ok) {
+                        currentProduct = await res.json();
+                    }
+                } catch(e) {}
+            } else {
+                currentProduct = JSON.parse(localStorage.getItem('current_product'));
+            }
+            
+            if (currentProduct) {
             const mainImg = document.querySelector('.main-product-img');
             if (mainImg) mainImg.src = currentProduct.img;
 
@@ -550,7 +635,6 @@ if (navOrders && ordersPanel) {
             if (priceEl) priceEl.innerText = '$' + currentProduct.price.toFixed(2);
         }
 
-        // Thumbnail Click Logic
         const productThumbs = document.querySelectorAll('.thumbnail-list .thumb');
         const productMainImg = document.querySelector('.main-product-img');
         
@@ -564,7 +648,6 @@ if (navOrders && ordersPanel) {
             });
         }
 
-        // Size Selector Click Logic
         const sizeBtns = document.querySelectorAll('.pdp-sizes .size-btn');
         if (sizeBtns.length > 0) {
             sizeBtns.forEach(btn => {
@@ -575,7 +658,6 @@ if (navOrders && ordersPanel) {
             });
         }
 
-        // Color Swatch Click Logic
         const colorBtns = document.querySelectorAll('.pdp-colors .color-btn');
         const selectedColorText = document.getElementById('pdp-selected-color');
         if (colorBtns.length > 0) {
@@ -593,7 +675,7 @@ if (navOrders && ordersPanel) {
 
         const addToCartBtn = document.getElementById('pdp-add-to-cart');
         if (addToCartBtn) {
-            addToCartBtn.addEventListener('click', () => {
+            addToCartBtn.addEventListener('click', async () => {
                 if (!currentProduct) return;
 
                 const activeSizeBtn = document.querySelector('.pdp-sizes .size-btn.active');
@@ -603,7 +685,6 @@ if (navOrders && ordersPanel) {
                 const selectedColor = activeColorBtn ? (activeColorBtn.getAttribute('data-color') || 'CHARCOAL GREY') : 'CHARCOAL GREY';
 
                 const item = {
-                    id: Date.now() + Math.random(),
                     img: currentProduct.img,
                     title: currentProduct.title,
                     price: currentProduct.price,
@@ -613,18 +694,26 @@ if (navOrders && ordersPanel) {
                     color: selectedColor
                 };
 
-                let cart = JSON.parse(localStorage.getItem('moda_cart')) || [];
-                const existing = cart.find(i => i.title === item.title && i.size === item.size && i.color === item.color);
-                if(existing) {
-                    existing.qty += 1;
-                } else {
-                    cart.push(item);
+                try {
+                    const submitBtn = document.getElementById('pdp-add-to-cart');
+                    if (submitBtn) submitBtn.disabled = true;
+                    
+                    await fetch(`http://localhost:3000/api/cart/${getSessionId()}`, {
+                        method: 'POST',
+                        headers: {'Content-Type': 'application/json'},
+                        body: JSON.stringify(item)
+                    });
+                    
+                    window.location.href = 'cart.html';
+                } catch(e) {
+                    alert('Error adding to cart. Is the backend running?');
+                    const submitBtn = document.getElementById('pdp-add-to-cart');
+                    if (submitBtn) submitBtn.disabled = false;
                 }
-                localStorage.setItem('moda_cart', JSON.stringify(cart));
-                
-                window.location.href = 'cart.html';
             });
         }
+        };
+        loadProductPage();
     }
 
     // ==========================================
@@ -635,69 +724,79 @@ if (navOrders && ordersPanel) {
         setupCheckoutModal();
     }
 
-    function renderCart() {
+    async function renderCart() {
         const container = document.getElementById('cart-items-container');
         if (!container) return;
-        let cart = JSON.parse(localStorage.getItem('moda_cart')) || [];
-        container.innerHTML = '';
+        container.innerHTML = '<p style="padding: 2rem 0; color: var(--text-light);">Loading cart...</p>';
+        
+        try {
+            const res = await fetch(`http://localhost:3000/api/cart/${getSessionId()}`);
+            const cart = await res.json();
+            container.innerHTML = '';
 
-        if (cart.length === 0) {
-            container.innerHTML = '<p style="padding: 2rem 0; color: var(--text-light);">Your shopping cart is currently empty.</p>';
+            if (cart.length === 0) {
+                container.innerHTML = '<p style="padding: 2rem 0; color: var(--text-light);">Your shopping cart is currently empty.</p>';
+                updateTotals(cart);
+                return;
+            }
+
+            cart.forEach((item) => {
+                const itemEl = document.createElement('div');
+                itemEl.className = 'cart-item';
+                itemEl.innerHTML = `
+                    <div class="cart-item-info">
+                        <img src="${item.img}" alt="${item.title}" class="cart-item-img">
+                        <div class="cart-item-details">
+                            <div class="cart-item-brand">${item.brand}</div>
+                            <h4 class="cart-item-title">${item.title}</h4>
+                            <div class="cart-item-meta">Size: ${item.size} | Color: ${item.color}</div>
+                        </div>
+                    </div>
+                    <div class="cart-item-qty">
+                        <div class="qty-control">
+                            <button class="qty-btn" onclick="updateQty(${item.id}, -1)">-</button>
+                            <input type="text" class="qty-input" value="${item.qty}" readonly>
+                            <button class="qty-btn" onclick="updateQty(${item.id}, 1)">+</button>
+                        </div>
+                    </div>
+                    <div class="cart-item-total">
+                        <div class="item-price">$${(item.price * item.qty).toFixed(2)}</div>
+                        <div class="item-actions">
+                            <button class="wishlist-btn-small" style="font-family: inherit; font-size: 0.8rem; border: none; background: transparent; cursor: pointer; text-transform: uppercase; color: var(--text-light);"><i class="far fa-heart"></i> SAVE</button>
+                            <button onclick="removeItem(${item.id})"><i class="fas fa-times"></i></button>
+                        </div>
+                    </div>
+                `;
+                container.appendChild(itemEl);
+            });
+
             updateTotals(cart);
-            return;
+            updateWishlistUI();
+        } catch(e) {
+            container.innerHTML = '<p style="padding: 2rem 0; color: red;">Error loading cart. Is backend running?</p>';
         }
-
-        cart.forEach((item, index) => {
-            const itemEl = document.createElement('div');
-            itemEl.className = 'cart-item';
-            itemEl.innerHTML = `
-                <div class="cart-item-info">
-                    <img src="${item.img}" alt="${item.title}" class="cart-item-img">
-                    <div class="cart-item-details">
-                        <div class="cart-item-brand">${item.brand}</div>
-                        <h4 class="cart-item-title">${item.title}</h4>
-                        <div class="cart-item-meta">Size: ${item.size} | Color: ${item.color}</div>
-                    </div>
-                </div>
-                <div class="cart-item-qty">
-                    <div class="qty-control">
-                        <button class="qty-btn" onclick="updateQty(${index}, -1)">-</button>
-                        <input type="text" class="qty-input" value="${item.qty}" readonly>
-                        <button class="qty-btn" onclick="updateQty(${index}, 1)">+</button>
-                    </div>
-                </div>
-                <div class="cart-item-total">
-                    <div class="item-price">$${(item.price * item.qty).toFixed(2)}</div>
-                    <div class="item-actions">
-                        <button class="wishlist-btn-small" style="font-family: inherit; font-size: 0.8rem; border: none; background: transparent; cursor: pointer; text-transform: uppercase; color: var(--text-light);"><i class="far fa-heart"></i> SAVE</button>
-                        <button onclick="removeItem(${index})"><i class="fas fa-times"></i></button>
-                    </div>
-                </div>
-            `;
-            container.appendChild(itemEl);
-        });
-
-        updateTotals(cart);
-        updateWishlistUI();
     }
 
-    window.updateQty = function(index, delta) {
-        let cart = JSON.parse(localStorage.getItem('moda_cart')) || [];
-        if (cart[index]) {
-            cart[index].qty += delta;
-            if (cart[index].qty < 1) cart[index].qty = 1;
-            localStorage.setItem('moda_cart', JSON.stringify(cart));
+    window.updateQty = async function(itemId, delta) {
+        try {
+            await fetch(`http://localhost:3000/api/cart/${getSessionId()}/${itemId}`, {
+                method: 'PUT',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({delta})
+            });
             renderCart();
             updateCartBadge();
-        }
+        } catch(e) {}
     }
 
-    window.removeItem = function(index) {
-        let cart = JSON.parse(localStorage.getItem('moda_cart')) || [];
-        cart.splice(index, 1);
-        localStorage.setItem('moda_cart', JSON.stringify(cart));
-        renderCart();
-        updateCartBadge();
+    window.removeItem = async function(itemId) {
+        try {
+            await fetch(`http://localhost:3000/api/cart/${getSessionId()}/${itemId}`, {
+                method: 'DELETE'
+            });
+            renderCart();
+            updateCartBadge();
+        } catch(e) {}
     }
 
     function updateTotals(cart) {
@@ -726,26 +825,32 @@ if (navOrders && ordersPanel) {
 
         if (!checkoutBtn || !modal) return;
 
-        checkoutBtn.addEventListener('click', () => {
-            const cart = JSON.parse(localStorage.getItem('moda_cart')) || [];
-            if (cart.length === 0) {
-                alert('Your shopping cart is empty!');
-                return;
+        checkoutBtn.addEventListener('click', async () => {
+            try {
+                const res = await fetch(`http://localhost:3000/api/cart/${getSessionId()}`);
+                const cart = await res.json();
+                
+                if (cart.length === 0) {
+                    alert('Your shopping cart is empty!');
+                    return;
+                }
+
+                window.currentCheckoutCart = cart;
+
+                const subtotal = cart.reduce((sum, item) => sum + (item.price * item.qty), 0);
+                const tax = subtotal * 0.0824;
+                const total = subtotal + tax;
+
+                if (modalGrandTotal) {
+                    modalGrandTotal.innerText = '$' + total.toFixed(2);
+                }
+
+                paymentFormStep.style.display = 'block';
+                paymentSuccessStep.style.display = 'none';
+                modal.style.display = 'flex';
+            } catch (e) {
+                alert('Error connecting to backend to fetch cart.');
             }
-
-            // Calculate total price
-            const subtotal = cart.reduce((sum, item) => sum + (item.price * item.qty), 0);
-            const tax = subtotal * 0.0824;
-            const total = subtotal + tax;
-
-            if (modalGrandTotal) {
-                modalGrandTotal.innerText = '$' + total.toFixed(2);
-            }
-
-            // Reset modal steps
-            paymentFormStep.style.display = 'block';
-            paymentSuccessStep.style.display = 'none';
-            modal.style.display = 'flex';
         });
 
         const closeModal = () => {
@@ -756,14 +861,11 @@ if (navOrders && ordersPanel) {
         if (successCloseBtn) {
             successCloseBtn.addEventListener('click', () => {
                 closeModal();
-                // Clear cart and reload cart page
-                localStorage.removeItem('moda_cart');
                 renderCart();
                 updateCartBadge();
             });
         }
 
-        // Close on overlay click
         modal.addEventListener('click', (e) => {
             if (e.target === modal) closeModal();
         });
@@ -772,12 +874,11 @@ if (navOrders && ordersPanel) {
             form.addEventListener('submit', async (e) => {
                 e.preventDefault();
                 
-                const cart = JSON.parse(localStorage.getItem('moda_cart')) || [];
+                const cart = window.currentCheckoutCart || [];
                 const subtotal = cart.reduce((sum, item) => sum + (item.price * item.qty), 0);
                 const tax = subtotal * 0.0824;
                 const total = parseFloat((subtotal + tax).toFixed(2));
 
-                // Order details to send to server
                 const orderData = {
                     items: cart.map(item => ({
                         title: item.title,
@@ -802,27 +903,25 @@ if (navOrders && ordersPanel) {
                 };
 
                 try {
-                    // Disable submit button during fetch
                     const submitBtn = document.getElementById('submit-payment-btn');
                     if (submitBtn) submitBtn.disabled = true;
 
                     const res = await fetch('http://localhost:3000/api/orders', {
                         method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json'
-                        },
+                        headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify(orderData)
                     });
 
                     if (res.ok) {
                         const data = await res.json();
                         
-                        // Show success shipping date
                         if (successShippingDate) {
                             successShippingDate.innerText = data.shipping_date;
                         }
 
-                        // Switch to success step
+                        // Clear the cart on backend after successful order
+                        await fetch(`http://localhost:3000/api/cart/${getSessionId()}`, { method: 'DELETE' });
+
                         paymentFormStep.style.display = 'none';
                         paymentSuccessStep.style.display = 'block';
                     } else {
@@ -843,59 +942,212 @@ if (navOrders && ordersPanel) {
         const container = document.getElementById('wishlist-container');
         const emptyMsg = document.getElementById('empty-wishlist-msg');
         
-        window.renderWishlistPage = () => {
+        window.renderWishlistPage = async () => {
             if (!container || !emptyMsg) return;
-            const wishlist = JSON.parse(localStorage.getItem('moda_wishlist')) || [];
-            if (wishlist.length === 0) {
-                container.innerHTML = '';
-                emptyMsg.style.display = 'block';
-                return;
-            }
+            try {
+                const res = await fetch(`http://localhost:3000/api/wishlist/${getSessionId()}`);
+                const wishlist = await res.json();
+                
+                if (wishlist.length === 0) {
+                    container.innerHTML = '';
+                    emptyMsg.style.display = 'block';
+                    return;
+                }
 
-            emptyMsg.style.display = 'none';
-            container.innerHTML = wishlist.map(item => `
-                <div class="product-card">
-                    <div class="product-image-wrapper">
-                        <img src="${item.img}" alt="${item.title}">
-                    </div>
-                    <div class="product-info-collection">
-                        <div class="brand-row">
-                            <span class="brand">${item.brand}</span>
-                            <button class="wishlist-btn-small">
-                                <i class="fas fa-heart" style="color: var(--primary-color);"></i>
-                            </button>
+                emptyMsg.style.display = 'none';
+                container.innerHTML = wishlist.map(item => `
+                    <div class="product-card">
+                        <div class="product-image-wrapper">
+                            <img src="${item.img}" alt="${item.title}">
                         </div>
-                        <h4>${item.title}</h4>
-                        <div class="price-row">
-                            <span class="price">$${item.price.toFixed(2)}</span>
+                        <div class="product-info-collection">
+                            <div class="brand-row">
+                                <span class="brand">${item.brand}</span>
+                                <button class="wishlist-btn-small">
+                                    <i class="fas fa-heart" style="color: var(--primary-color);"></i>
+                                </button>
+                            </div>
+                            <h4>${item.title}</h4>
+                            <div class="price-row">
+                                <span class="price">$${item.price.toFixed(2)}</span>
+                            </div>
                         </div>
                     </div>
-                </div>
-            `).join('');
+                `).join('');
 
-            const cards = container.querySelectorAll('.product-card');
-            cards.forEach(card => {
-                card.addEventListener('click', (e) => {
-                    if(e.target.closest('.wishlist-btn-small')) return;
-                    const title = card.querySelector('h4').innerText.trim();
-                    const item = wishlist.find(i => i.title === title);
-                    if(item) {
-                        localStorage.setItem('current_product', JSON.stringify({
-                            img: item.img, title: item.title, price: item.price, brand: item.brand, color: 'Default'
-                        }));
-                        window.location.href = 'product.html';
-                    }
+                const cards = container.querySelectorAll('.product-card');
+                cards.forEach(card => {
+                    card.addEventListener('click', (e) => {
+                        if(e.target.closest('.wishlist-btn-small')) return;
+                        const title = card.querySelector('h4').innerText.trim();
+                        const item = wishlist.find(i => i.title === title);
+                        if(item) {
+                            localStorage.setItem('current_product', JSON.stringify({
+                                img: item.img, title: item.title, price: item.price, brand: item.brand, color: 'Default'
+                            }));
+                            window.location.href = 'product.html';
+                        }
+                    });
                 });
-            });
+            } catch(e) {}
         };
 
         renderWishlistPage();
-
-        document.addEventListener('click', (e) => {
-            const btnSmall = e.target.closest('.wishlist-btn-small');
-            if (btnSmall) {
-                setTimeout(() => { if (window.renderWishlistPage) window.renderWishlistPage(); }, 50);
-            }
-        });
     }
+
+    // ==========================================
+    // ACCOUNT LOGIC
+    // ==========================================
+    const checkAuthState = () => {
+        const userJson = localStorage.getItem('moda_user');
+        const accountLinks = document.querySelectorAll('.account-link-nav');
+        
+        if (userJson) {
+            try {
+                const user = JSON.parse(userJson);
+                accountLinks.forEach(link => {
+                    link.innerText = user.name.split(' ')[0]; // Show first name
+                    link.href = 'javascript:void(0)';
+                    
+                    link.addEventListener('click', function(e) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        
+                        let popup = document.getElementById('logout-popup');
+                        if (!popup) {
+                            popup = document.createElement('div');
+                            popup.id = 'logout-popup';
+                            popup.style.position = 'absolute';
+                            popup.style.background = '#fff';
+                            popup.style.border = '1px solid #eee';
+                            popup.style.padding = '10px';
+                            popup.style.boxShadow = '0 4px 12px rgba(0,0,0,0.1)';
+                            popup.style.zIndex = '1000';
+                            popup.style.borderRadius = '4px';
+                            
+                            const logoutBtn = document.createElement('button');
+                            logoutBtn.innerText = 'Log Out';
+                            logoutBtn.style.background = '#000';
+                            logoutBtn.style.color = '#fff';
+                            logoutBtn.style.border = 'none';
+                            logoutBtn.style.padding = '8px 16px';
+                            logoutBtn.style.cursor = 'pointer';
+                            logoutBtn.style.fontFamily = 'Inter, sans-serif';
+                            logoutBtn.style.fontSize = '0.9rem';
+                            logoutBtn.style.width = '100%';
+                            
+                            logoutBtn.onclick = () => {
+                                localStorage.removeItem('moda_user');
+                                window.location.reload();
+                            };
+                            
+                            popup.appendChild(logoutBtn);
+                            document.body.appendChild(popup);
+                        }
+                        
+                        const rect = link.getBoundingClientRect();
+                        popup.style.top = (rect.bottom + window.scrollY + 15) + 'px';
+                        popup.style.left = (rect.left + window.scrollX - 20) + 'px';
+                        
+                        if (popup.style.display === 'none' || !popup.style.display) {
+                            popup.style.display = 'block';
+                        } else {
+                            popup.style.display = 'none';
+                        }
+                    });
+                });
+
+                document.addEventListener('click', (e) => {
+                    const popup = document.getElementById('logout-popup');
+                    if (popup && !e.target.classList.contains('account-link-nav') && !popup.contains(e.target)) {
+                        popup.style.display = 'none';
+                    }
+                });
+
+            } catch (e) {
+                console.error("Error parsing user data");
+            }
+        } else {
+            accountLinks.forEach(link => {
+                link.innerText = 'Account';
+                link.href = 'account.html';
+            });
+        }
+    };
+    checkAuthState();
+
+    if (window.location.pathname.includes('account.html')) {
+        const registerForm = document.getElementById('register-form');
+        const loginForm = document.getElementById('login-form');
+        const registerMsg = document.getElementById('register-message');
+        const loginMsg = document.getElementById('login-message');
+
+        if (registerForm) {
+            registerForm.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const name = document.getElementById('register-name').value;
+                const email = document.getElementById('register-email').value;
+                const password = document.getElementById('register-password').value;
+
+                try {
+                    const res = await fetch('http://localhost:3000/api/register', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ name, email, password })
+                    });
+                    const data = await res.json();
+                    if (res.ok) {
+                        registerMsg.className = 'form-message success';
+                        registerMsg.innerText = 'Registration successful! You can now log in.';
+                        registerMsg.style.display = 'block';
+                        registerForm.reset();
+                    } else {
+                        registerMsg.className = 'form-message error';
+                        registerMsg.innerText = data.error || 'Registration failed.';
+                        registerMsg.style.display = 'block';
+                    }
+                } catch (err) {
+                    registerMsg.className = 'form-message error';
+                    registerMsg.innerText = 'Error connecting to server.';
+                    registerMsg.style.display = 'block';
+                }
+            });
+        }
+
+        if (loginForm) {
+            loginForm.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const email = document.getElementById('login-email').value;
+                const password = document.getElementById('login-password').value;
+
+                try {
+                    const res = await fetch('http://localhost:3000/api/login', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ email, password })
+                    });
+                    const data = await res.json();
+                    if (res.ok) {
+                        localStorage.setItem('moda_user', JSON.stringify(data.user));
+                        loginMsg.className = 'form-message success';
+                        loginMsg.innerText = 'Login successful! Redirecting...';
+                        loginMsg.style.display = 'block';
+                        
+                        setTimeout(() => {
+                            window.location.href = 'index.html';
+                        }, 1000);
+                    } else {
+                        loginMsg.className = 'form-message error';
+                        loginMsg.innerText = data.error || 'Login failed.';
+                        loginMsg.style.display = 'block';
+                    }
+                } catch (err) {
+                    loginMsg.className = 'form-message error';
+                    loginMsg.innerText = 'Error connecting to server.';
+                    loginMsg.style.display = 'block';
+                }
+            });
+        }
+    }
+
 });

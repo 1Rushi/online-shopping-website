@@ -4,7 +4,7 @@ const pool = new Pool({
     user: 'postgres',
     host: 'localhost',
     database: 'moda_db',
-    password: 'pas',
+    password: 'pass123',
     port: 5432,
 });
 

@@ -192,6 +192,17 @@
                                 </select>
                             </div>
                             <div class="form-group full-width">
+                                <label>Available Sizes</label>
+                                <div style="display: flex; gap: 15px; flex-wrap: wrap;" id="prod-sizes">
+                                    <label style="display: flex; align-items: center; gap: 5px; cursor: pointer; text-transform: none;"><input type="checkbox" value="XS"> XS</label>
+                                    <label style="display: flex; align-items: center; gap: 5px; cursor: pointer; text-transform: none;"><input type="checkbox" value="S"> S</label>
+                                    <label style="display: flex; align-items: center; gap: 5px; cursor: pointer; text-transform: none;"><input type="checkbox" value="M" checked> M</label>
+                                    <label style="display: flex; align-items: center; gap: 5px; cursor: pointer; text-transform: none;"><input type="checkbox" value="L" checked> L</label>
+                                    <label style="display: flex; align-items: center; gap: 5px; cursor: pointer; text-transform: none;"><input type="checkbox" value="XL"> XL</label>
+                                    <label style="display: flex; align-items: center; gap: 5px; cursor: pointer; text-transform: none;"><input type="checkbox" value="XXL"> XXL</label>
+                                </div>
+                            </div>
+                            <div class="form-group full-width">
                                 <label>Main Product Image (Required)</label>
                                 <input type="file" id="prod-image" accept="image/*" required style="padding: 0.6rem;">
                             </div>
@@ -219,6 +230,7 @@
                                 <th>Category</th>
                                 <th>Brand</th>
                                 <th>Price</th>
+                                <th>Sizes</th>
                                 <th>Action</th>
                             </tr>
                         </thead>
