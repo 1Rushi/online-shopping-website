@@ -1,0 +1,643 @@
+/* Top Announcement Bar */
+.top-bar {
+    background-color: #000;
+    color: #fff;
+    font-size: 0.75rem;
+    display: flex;
+    justify-content: space-between;
+    padding: 0.5rem 2rem;
+    font-weight: 500;
+    letter-spacing: 1px;
+}
+
+.top-bar-center {
+    flex: 1;
+    text-align: center;
+}
+
+.top-bar-center span {
+    color: #ffd700;
+}
+
+.top-bar-right {
+    display: flex;
+    gap: 1.5rem;
+}
+
+.top-bar-right a {
+    color: #fff;
+    text-decoration: none;
+}
+
+/* Main Navbar - Dark Version */
+.dark-navbar {
+    background-color: #000 !important;
+    border-bottom: 1px solid #333;
+}
+
+.dark-navbar .logo {
+    background: none;
+    -webkit-text-fill-color: #fff;
+    color: #fff;
+}
+
+.dark-navbar .nav-links a {
+    color: #fff;
+}
+
+.dark-navbar .nav-links a.active {
+    border-bottom: 2px solid #fff;
+}
+
+.dark-navbar .nav-links a::after {
+    background-color: #fff;
+}
+
+.dark-navbar .search-bar {
+    background-color: #333;
+    color: #fff;
+    width: 300px;
+}
+
+.dark-navbar .search-bar input {
+    color: #fff;
+    width: 100%;
+}
+
+.dark-navbar .search-bar input::placeholder {
+    color: #aaa;
+}
+
+.dark-navbar .icon-link {
+    color: #fff;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    gap: 0.2rem;
+}
+
+.dark-navbar .icon-link i {
+    font-size: 1.2rem;
+}
+
+.icon-link.bag {
+    position: relative;
+}
+
+.bag-count {
+    position: absolute;
+    top: -5px;
+    right: 5px;
+    background-color: #e63946;
+    color: #fff;
+    border-radius: 50%;
+    width: 16px;
+    height: 16px;
+    font-size: 0.6rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+}
+
+/* Men's Hero */
+.mens-hero {
+    display: flex;
+    background-color: #f5f5f5;
+    height: 400px;
+}
+
+.mens-hero .hero-content {
+    flex: 1;
+    padding: 4rem;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+.mens-hero .breadcrumbs {
+    margin-bottom: 1rem;
+}
+
+.mens-hero h1 {
+    font-size: 3.5rem;
+    font-weight: 700;
+    margin-bottom: 1rem;
+    color: #000;
+}
+
+.mens-hero p {
+    font-size: 1rem;
+    color: #555;
+    margin-bottom: 2rem;
+}
+
+.hero-buttons {
+    display: flex;
+    gap: 1rem;
+}
+
+.hero-buttons .btn {
+    padding: 0.8rem 2rem;
+    font-weight: 600;
+    border-radius: 4px;
+    cursor: pointer;
+    border: none;
+    letter-spacing: 1px;
+}
+
+.btn-dark {
+    background-color: #000;
+    color: #fff;
+}
+
+.btn-light {
+    background-color: transparent;
+    border: 1px solid #ccc !important;
+    color: #000;
+}
+
+.mens-hero .hero-image {
+    flex: 1;
+}
+
+.mens-hero .hero-image img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+/* Categories Strip */
+.categories-strip {
+    display: flex;
+    justify-content: center;
+    gap: 1.5rem;
+    padding: 2rem 4rem;
+    background-color: #fff;
+    border-bottom: 1px solid #eee;
+    overflow-x: auto;
+}
+
+.category-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+    cursor: pointer;
+    min-width: 100px;
+}
+
+.category-item img {
+    width: 80px;
+    height: 80px;
+    border-radius: 4px;
+    object-fit: cover;
+    border: 1px solid #eee;
+}
+
+.category-item span {
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: 1px;
+    color: #555;
+}
+
+.category-item.active img {
+    border: 2px solid #000;
+}
+
+.category-item.active span {
+    color: #000;
+}
+
+/* Sidebar Filters */
+.collection-layout {
+    display: flex;
+    padding: 2rem 4rem;
+    gap: 2rem;
+    background-color: #fff;
+}
+
+.sidebar-filters {
+    width: 250px;
+    flex-shrink: 0;
+}
+
+.filter-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.5rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid #eee;
+}
+
+.filter-header h3 {
+    font-size: 1rem;
+    font-weight: 700;
+}
+
+.clear-all {
+    font-size: 0.8rem;
+    color: #888;
+    text-decoration: underline;
+}
+
+.filter-group {
+    margin-bottom: 1.5rem;
+    border-bottom: 1px solid #eee;
+    padding-bottom: 1.5rem;
+}
+
+.filter-title {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.85rem;
+    font-weight: 700;
+    margin-bottom: 1rem;
+    cursor: pointer;
+}
+
+.filter-list {
+    list-style: none;
+}
+
+.filter-list li {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 0.5rem;
+    font-size: 0.85rem;
+    color: #555;
+}
+
+.filter-list input[type="checkbox"] {
+    margin-right: 0.5rem;
+}
+
+.filter-list .count {
+    color: #888;
+}
+
+.brand-search {
+    position: relative;
+    margin-bottom: 1rem;
+}
+
+.brand-search input {
+    width: 100%;
+    padding: 0.5rem 0.5rem 0.5rem 2rem;
+    border: 1px solid #eee;
+    border-radius: 4px;
+}
+
+.brand-search i {
+    position: absolute;
+    left: 0.5rem;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #888;
+}
+
+.view-more {
+    font-size: 0.8rem;
+    color: #888;
+    display: block;
+    margin-top: 0.5rem;
+}
+
+/* Price Slider (Visual Only for now) */
+.price-slider {
+    position: relative;
+    height: 4px;
+    background: #eee;
+    border-radius: 2px;
+    margin: 1.5rem 0;
+}
+
+.slider-progress {
+    position: absolute;
+    left: 10%;
+    right: 20%;
+    height: 100%;
+    background: #000;
+}
+
+.slider-thumb {
+    position: absolute;
+    top: -6px;
+    width: 16px;
+    height: 16px;
+    background: #fff;
+    border: 2px solid #000;
+    border-radius: 50%;
+    cursor: pointer;
+    -webkit-appearance: none;
+    pointer-events: none;
+}
+
+.slider-thumb.min {
+    left: 10%;
+}
+
+.slider-thumb.max {
+    right: 20%;
+}
+
+.price-labels {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.8rem;
+    font-weight: 600;
+}
+
+/* Size Grid */
+.size-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 0.5rem;
+}
+
+.size-grid button {
+    padding: 0.5rem 0;
+    border: 1px solid #eee;
+    background: #fff;
+    cursor: pointer;
+    font-size: 0.8rem;
+    font-weight: 600;
+}
+
+.size-grid button.active {
+    background: #000;
+    color: #fff;
+    border-color: #000;
+}
+
+/* Color Swatches */
+.color-swatches {
+    display: flex;
+    gap: 0.5rem;
+    margin-bottom: 0.5rem;
+}
+
+.swatch {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    border: none;
+    cursor: pointer;
+}
+
+/* Rating list */
+.stars {
+    color: #fbc02d;
+}
+
+/* Product Area */
+.product-area {
+    flex: 1;
+}
+
+.toolbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2rem;
+}
+
+.item-count {
+    font-weight: 600;
+    font-size: 0.9rem;
+}
+
+.toolbar-actions {
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+}
+
+.sort-dropdown {
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.view-toggles button {
+    background: #fff;
+    border: 1px solid #eee;
+    padding: 0.4rem 0.6rem;
+    cursor: pointer;
+}
+
+.view-toggles button.active {
+    background: #000;
+    color: #fff;
+}
+
+/* Pagination */
+.pagination {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 0.5rem;
+    margin-top: 3rem;
+}
+
+.page-btn {
+    width: 35px;
+    height: 35px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid #eee;
+    background: #fff;
+    cursor: pointer;
+    font-weight: 600;
+}
+
+.page-btn.active {
+    background: #000;
+    color: #fff;
+    border-color: #000;
+}
+
+.page-dots {
+    color: #888;
+}
+
+/* Features Strip */
+.features-strip {
+    display: flex;
+    justify-content: space-around;
+    padding: 3rem 4rem;
+    background: #fafafa;
+    border-top: 1px solid #eee;
+}
+
+.feature {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.feature i {
+    font-size: 2rem;
+    color: #333;
+}
+
+.feature h4 {
+    font-size: 0.85rem;
+    font-weight: 700;
+    margin-bottom: 0.2rem;
+}
+
+.feature p {
+    font-size: 0.75rem;
+    color: #888;
+}
+
+/* Newsletter Dark */
+.newsletter-dark {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: #111;
+    color: #fff;
+    padding: 3rem 4rem;
+}
+
+.newsletter-left h3 {
+    font-size: 1.2rem;
+    margin-bottom: 0.5rem;
+}
+
+.newsletter-left p {
+    font-size: 0.85rem;
+    color: #aaa;
+}
+
+.newsletter-center .input-group {
+    display: flex;
+    border-bottom: 1px solid #555;
+    width: 400px;
+}
+
+.newsletter-center input {
+    flex: 1;
+    background: transparent;
+    border: none;
+    color: #fff;
+    padding: 0.5rem 0;
+    outline: none;
+}
+
+.newsletter-center button {
+    background: transparent;
+    border: none;
+    color: #fff;
+    cursor: pointer;
+}
+
+.newsletter-right {
+    display: flex;
+    gap: 2rem;
+}
+
+.perk {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.perk i {
+    font-size: 1.5rem;
+}
+
+.perk h4 {
+    font-size: 0.8rem;
+    margin-bottom: 0.2rem;
+}
+
+.perk p {
+    font-size: 0.7rem;
+    color: #aaa;
+}
+
+/* Footer New */
+.footer-new {
+    background: #fff;
+    padding: 4rem 4rem 2rem;
+    border-top: 1px solid #eee;
+}
+
+.footer-main {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 3rem;
+}
+
+.footer-col h4 {
+    font-size: 0.9rem;
+    font-weight: 700;
+    margin-bottom: 1.5rem;
+}
+
+.footer-col ul {
+    list-style: none;
+    padding: 0;
+}
+
+.footer-col ul li {
+    margin-bottom: 0.8rem;
+}
+
+.footer-col ul a {
+    color: #666;
+    font-size: 0.85rem;
+    text-decoration: none;
+}
+
+.brand-info h2 {
+    font-size: 2rem;
+    font-weight: 700;
+    margin-bottom: 1rem;
+    letter-spacing: 2px;
+}
+
+.brand-info p {
+    color: #666;
+    font-size: 0.85rem;
+    margin-bottom: 1.5rem;
+    max-width: 250px;
+}
+
+.social-icons {
+    display: flex;
+    gap: 1rem;
+}
+
+.social-icons a {
+    color: #000;
+    font-size: 1.2rem;
+}
+
+.footer-bottom {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-top: 2rem;
+    border-top: 1px solid #eee;
+    font-size: 0.8rem;
+    color: #888;
+}
+
+.payment-methods {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.payment-methods img {
+    height: 20px;
+}

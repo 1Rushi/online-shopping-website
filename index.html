@@ -1,41 +1,72 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>MODA - Modern E-Commerce</title>
     <link rel="stylesheet" href="styles.css">
-    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="mens.css">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&family=Inter:wght@300;400;500;600&display=swap"
+        rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- AOS Animation CSS -->
+    <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
 </head>
+
 <body>
-    <header class="navbar">
-        <div class="logo">MODA</div>
+    <!-- Top Announcement Bar -->
+    <!-- <div class="top-bar">
+        <div class="top-bar-center">
+            EXTRA 20% OFF ON FIRST ORDER | <span>USE CODE: MODA20</span>
+        </div>
+        <div class="top-bar-right">
+            <a href="#">Track Order</a>
+            <a href="#">Store Locator</a>
+            <a href="#">Help</a>
+        </div>
+    </div> -->
+
+    <!-- Main Navbar -->
+    <header class="navbar dark-navbar">
+        <div class="logo">M MODA</div>
         <nav class="nav-links">
-            <a href="index.html" class="active">Home</a>
-            <a href="mens.html">Men's</a>
-            <a href="womens.html">Women's</a>
-            <a href="all-products.html">All Products</a>
+            <a href="index.html" class="active">HOME</a>
+            <a href="mens.html">MEN</a>
+            <a href="womens.html">WOMEN</a>
+            <a href="all-products.html">ALL PRODUCTS</a>
         </nav>
         <div class="nav-actions">
             <div class="search-bar">
                 <i class="fas fa-search"></i>
-                <input type="text" placeholder="Search...">
+                <input type="text" placeholder="Search for products, brands and more">
             </div>
-            <a href="wishlist.html" class="icon"><i class="far fa-heart"></i></a>
-            <a href="#" class="icon"><i class="fas fa-shopping-bag"></i></a>
-            <a href="account.html" class="account account-link-nav">Account</a>
+            <a href="wishlist.html" class="icon-link">
+                <i class="far fa-heart"></i>
+                <span>Wishlist</span>
+            </a>
+            <a href="cart.html" class="icon-link bag">
+                <i class="fas fa-shopping-bag"></i>
+                <span>Bag</span>
+            </a>
+            <a href="account.html" class="icon-link">
+                <i class="far fa-user"></i>
+                <span>Account</span>
+            </a>
         </div>
     </header>
 
     <main>
         <!-- Hero Section -->
-        <section class="hero" style="background-image: url('file:///C:/Users/Rushikesh/.gemini/antigravity/brain/14e0f14d-ce6e-41e4-9bc6-d819552540f7/hero_modern_utility_1778914515415.png');">
-            <div class="hero-content">
-                <div class="badge">NEW SEASON ARRIVALS</div>
-                <h1>THE ART OF<br>MODERN<br>UTILITY</h1>
-                <p>Refined silhouettes and premium textiles engineered<br>for the contemporary landscape. Discover our latest<br>curated collection.</p>
-                <div class="hero-buttons">
+        <section class="hero"
+            style="background-image: url('https://images.unsplash.com/photo-1469334031218-e382a71b716b?auto=format&fit=crop&w=1920&q=80');">
+            <div class="hero-content" data-aos="fade-up" data-aos-duration="1000">
+                <div class="badge" data-aos="fade-down" data-aos-delay="200">NEW SEASON ARRIVALS</div>
+                <h1 data-aos="zoom-in" data-aos-delay="400">THE ART OF<br>MODERN<br>UTILITY</h1>
+                <p data-aos="fade-up" data-aos-delay="600">Refined silhouettes and premium textiles engineered<br>for
+                    the contemporary landscape. Discover our latest<br>curated collection.</p>
+                <div class="hero-buttons" data-aos="fade-up" data-aos-delay="800">
                     <a href="#" class="btn btn-primary">SHOP WOMEN'S</a>
                     <a href="#" class="btn btn-secondary">SHOP MEN'S</a>
                 </div>
@@ -44,20 +75,26 @@
 
         <!-- Categories Grid -->
         <section class="categories">
-            <div class="category-large" style="background-image: url('file:///C:/Users/Rushikesh/.gemini/antigravity/brain/14e0f14d-ce6e-41e4-9bc6-d819552540f7/womens_summer_edit_1778914561484.png');">
+            <div class="category-large"
+                style="background-image: url('https://images.unsplash.com/photo-1483985988355-763728e1935b?auto=format&fit=crop&w=800&q=80');"
+                data-aos="fade-right" data-aos-duration="1000">
                 <div class="category-info">
                     <h3>WOMEN'S SUMMER EDIT</h3>
                     <a href="#">THE DAILY ESSENTIALS</a>
                 </div>
             </div>
             <div class="category-small-wrapper">
-                <div class="category-small" style="background-image: url('file:///C:/Users/Rushikesh/.gemini/antigravity/brain/14e0f14d-ce6e-41e4-9bc6-d819552540f7/mens_essentials_1778914577015.png');">
+                <div class="category-small"
+                    style="background-image: url('https://images.unsplash.com/photo-1490367532201-b9bc1dc483f6?auto=format&fit=crop&w=600&q=80');"
+                    data-aos="fade-left" data-aos-duration="1000" data-aos-delay="100">
                     <div class="category-info">
                         <h3>MEN'S ESSENTIALS</h3>
                         <a href="#">SHOP NOW</a>
                     </div>
                 </div>
-                <div class="category-small" style="background-image: url('file:///C:/Users/Rushikesh/.gemini/antigravity/brain/14e0f14d-ce6e-41e4-9bc6-d819552540f7/premium_knits_1778914662699.png');">
+                <div class="category-small"
+                    style="background-image: url('https://images.unsplash.com/photo-1620799140408-edc6dcb6d633?auto=format&fit=crop&w=600&q=80');"
+                    data-aos="fade-left" data-aos-duration="1000" data-aos-delay="300">
                     <div class="category-info">
                         <h3>PREMIUM KNITS</h3>
                         <a href="#">DISCOVER</a>
@@ -67,87 +104,91 @@
         </section>
 
         <!-- New Arrivals -->
-        <section class="new-arrivals">
+        <section class="new-arrivals" data-aos="fade-up" data-aos-duration="1000">
             <div class="section-header">
                 <div>
-                    <h2>NEW ARRIVALS</h2>
-                    <p>The latest pieces added to our permanent archive.</p>
+                    <h2 data-aos="fade-right" data-aos-delay="200">NEW ARRIVALS</h2>
+                    <p data-aos="fade-right" data-aos-delay="300">The latest pieces added to our permanent archive.</p>
                 </div>
-                <a href="#" class="view-all">VIEW ALL PRODUCTS</a>
+                <a href="#" class="view-all" data-aos="fade-left" data-aos-delay="300">VIEW ALL PRODUCTS</a>
             </div>
             <div class="product-grid">
                 <div class="product-card">
-                    <div class="product-image-wrapper">
-                        <div class="badge-new">NEW</div>
-                        <img src="file:///C:/Users/Rushikesh/.gemini/antigravity/brain/14e0f14d-ce6e-41e4-9bc6-d819552540f7/product_cotton_tee_1778914698313.png" alt="Structured Cotton Tee">
+                    <div class="product-img-wrap">
+                        <span class="badge new">NEW</span>
+                        <button class="wishlist-btn"><i class="far fa-heart"></i></button>
+                        <img src="https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?auto=format&fit=crop&w=600&q=80"
+                            alt="Structured Cotton Tee">
                     </div>
-                    <div class="product-details">
-                        <h4>STRUCTURED COTTON TEE</h4>
-                        <p class="color">Off-White</p>
-                        <p class="price">$130.00</p>
-                    </div>
-                </div>
-                <div class="product-card">
-                    <div class="product-image-wrapper">
-                        <img src="file:///C:/Users/Rushikesh/.gemini/antigravity/brain/14e0f14d-ce6e-41e4-9bc6-d819552540f7/product_wool_trousers_1778914718192.png" alt="Wide Leg Wool Trousers">
-                    </div>
-                    <div class="product-details">
-                        <h4>WIDE LEG WOOL TROUSERS</h4>
-                        <p class="color">Midnight Black</p>
-                        <p class="price">$380.00</p>
+                    <div class="product-info">
+                        <div class="brand">MODA ARCHIVE</div>
+                        <h4 class="title">STRUCTURED COTTON TEE</h4>
+                        <div class="price-wrap">
+                            <span class="price">₹130.00</span>
+                        </div>
                     </div>
                 </div>
                 <div class="product-card">
-                    <div class="product-image-wrapper">
-                        <div class="badge-new">LIMITED</div>
-                        <img src="https://images.unsplash.com/photo-1590874103328-eac38a683ce7?auto=format&fit=crop&w=600&q=80" alt="Medium Leather Tote">
+                    <div class="product-img-wrap">
+                        <button class="wishlist-btn"><i class="far fa-heart"></i></button>
+                        <img src="https://images.unsplash.com/photo-1594938298596-70f56fb3ce9b?auto=format&fit=crop&w=600&q=80"
+                            alt="Wide Leg Wool Trousers">
                     </div>
-                    <div class="product-details">
-                        <h4>MEDIUM LEATHER TOTE</h4>
-                        <p class="color">Tan Suede</p>
-                        <p class="price">$490.00</p>
+                    <div class="product-info">
+                        <div class="brand">MODA ARCHIVE</div>
+                        <h4 class="title">WIDE LEG WOOL TROUSERS</h4>
+                        <div class="price-wrap">
+                            <span class="price">₹380.00</span>
+                        </div>
                     </div>
                 </div>
                 <div class="product-card">
-                    <div class="product-image-wrapper">
-                        <img src="https://images.unsplash.com/photo-1566207274740-0f8cf6b7d5a5?auto=format&fit=crop&w=600&q=80" alt="Silk Slip Dress">
+                    <div class="product-img-wrap">
+                        <span class="badge trending">LIMITED</span>
+                        <button class="wishlist-btn"><i class="far fa-heart"></i></button>
+                        <img src="https://images.unsplash.com/photo-1590874103328-eac38a683ce7?auto=format&fit=crop&w=600&q=80"
+                            alt="Medium Leather Tote">
                     </div>
-                    <div class="product-details">
-                        <h4>SILK SLIP DRESS</h4>
-                        <p class="color">Jet Black</p>
-                        <p class="price">$290.00</p>
+                    <div class="product-info">
+                        <div class="brand">MODA ARCHIVE</div>
+                        <h4 class="title">MEDIUM LEATHER TOTE</h4>
+                        <div class="price-wrap">
+                            <span class="price">₹490.00</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="product-card">
+                    <div class="product-img-wrap">
+                        <button class="wishlist-btn"><i class="far fa-heart"></i></button>
+                        <img src="https://images.unsplash.com/photo-1566207274740-0f8cf6b7d5a5?auto=format&fit=crop&w=600&q=80"
+                            alt="Silk Slip Dress">
+                    </div>
+                    <div class="product-info">
+                        <div class="brand">MODA ARCHIVE</div>
+                        <h4 class="title">SILK SLIP DRESS</h4>
+                        <div class="price-wrap">
+                            <span class="price">₹290.00</span>
+                        </div>
                     </div>
                 </div>
             </div>
         </section>
 
         <!-- Quote Section -->
-        <section class="quote-section">
+        <section class="quote-section" data-aos="zoom-in" data-aos-duration="1200">
             <blockquote>"Style is a way to say who you are without having to speak."</blockquote>
             <cite>— RACHEL ZOE</cite>
         </section>
 
-        <!-- Newsletter Section -->
-        <section class="newsletter">
-            <div class="newsletter-content">
-                <div class="newsletter-text">
-                    <h2>JOIN THE ARCHIVE</h2>
-                    <p>Subscribe to receive early access to new collections,<br>exclusive events, and seasonal lookbooks.</p>
-                </div>
-                <div class="newsletter-form">
-                    <input type="email" placeholder="ENTER YOUR EMAIL ADDRESS">
-                    <button type="submit">SUBSCRIBE</button>
-                </div>
-            </div>
-            <p class="privacy-note">By subscribing you agree to our Privacy Policy.</p>
-        </section>
+
     </main>
 
     <footer>
         <div class="footer-content">
             <div class="footer-col">
                 <h3>MODA</h3>
-                <p>Crafting timeless essentials for the modern<br>wardrobe. Focused on quality, sustainability,<br>and architectural form.</p>
+                <p>Crafting timeless essentials for the modern<br>wardrobe. Focused on quality, sustainability,<br>and
+                    architectural form.</p>
             </div>
             <div class="footer-col">
                 <h3>SHOP</h3>
@@ -185,6 +226,15 @@
             </div>
         </div>
     </footer>
+    <!-- AOS Animation JS -->
+    <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
+    <script>
+        AOS.init({
+            once: true,
+            offset: 50
+        });
+    </script>
     <script src="script.js"></script>
 </body>
+
 </html>

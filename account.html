@@ -5,79 +5,286 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Account - Moda</title>
     <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="mens.css">
     <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        .account-container {
-            max-width: 500px;
-            margin: 100px auto;
-            padding: 2rem;
-            background: #fff;
-            border: 1px solid #ddd;
-        }
-        .account-tabs {
+        /* Unauthenticated View (Split Screen) */
+        #auth-wrapper {
             display: flex;
-            margin-bottom: 2rem;
-            border-bottom: 1px solid #ddd;
+            min-height: calc(100vh - 120px);
+            background: #fff;
         }
-        .account-tabs button {
+        .auth-image {
             flex: 1;
-            padding: 1rem;
-            background: none;
-            border: none;
-            font-family: 'Inter', sans-serif;
-            font-size: 1rem;
-            font-weight: 500;
-            cursor: pointer;
-            text-transform: uppercase;
-        }
-        .account-tabs button.active {
-            border-bottom: 2px solid #000;
-            font-weight: 600;
-        }
-        .account-form {
+            background: url('https://images.unsplash.com/photo-1490481651871-ab68de25d43d?auto=format&fit=crop&w=1200&q=80') center/cover no-repeat;
             display: none;
         }
-        .account-form.active {
-            display: block;
+        @media (min-width: 900px) {
+            .auth-image { display: block; }
         }
-        .form-group {
-            margin-bottom: 1.5rem;
+        .auth-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            padding: 4rem 10%;
         }
+        .auth-title {
+            font-size: 2.5rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            font-family: 'Playfair Display', serif;
+        }
+        .auth-subtitle {
+            color: var(--text-light);
+            margin-bottom: 2.5rem;
+        }
+        .auth-tabs {
+            display: flex;
+            gap: 2rem;
+            margin-bottom: 2rem;
+            border-bottom: 1px solid #eee;
+        }
+        .auth-tabs button {
+            background: none;
+            border: none;
+            padding: 0.5rem 0;
+            font-size: 1rem;
+            font-weight: 500;
+            color: var(--text-light);
+            cursor: pointer;
+            border-bottom: 2px solid transparent;
+            transition: all 0.3s ease;
+        }
+        .auth-tabs button.active {
+            color: var(--text-color);
+            border-color: var(--text-color);
+        }
+        .account-form { display: none; animation: fadeIn 0.4s ease; }
+        .account-form.active { display: block; }
+
+        .form-group { margin-bottom: 1.5rem; }
         .form-group label {
             display: block;
             margin-bottom: 0.5rem;
-            font-family: 'Inter', sans-serif;
-            font-size: 0.9rem;
-            color: #555;
+            font-size: 0.85rem;
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
         }
         .form-group input {
             width: 100%;
-            padding: 0.8rem;
-            border: 1px solid #ccc;
+            padding: 1rem;
+            border: 1px solid #e5e5e5;
+            border-radius: 4px;
+            background: #fafafa;
+            transition: all 0.3s;
             font-family: 'Inter', sans-serif;
         }
-        .account-btn {
+        .form-group input:focus {
+            border-color: #000;
+            background: #fff;
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(0,0,0,0.05);
+        }
+        .btn-submit {
             width: 100%;
-            padding: 1rem;
+            padding: 1.2rem;
             background: #000;
             color: #fff;
             border: none;
-            font-family: 'Inter', sans-serif;
             font-weight: 600;
-            text-transform: uppercase;
+            letter-spacing: 0.1em;
             cursor: pointer;
-            transition: background 0.3s;
+            transition: background 0.3s, transform 0.1s;
+            text-transform: uppercase;
         }
-        .account-btn:hover {
-            background: #333;
+        .btn-submit:hover { background: #333; }
+        .btn-submit:active { transform: scale(0.98); }
+
+        /* Authenticated Dashboard View */
+        #profile-section {
+            display: none; /* Shown by JS when logged in */
         }
+        .dashboard-wrapper {
+            max-width: 1200px;
+            margin: 4rem auto;
+            padding: 0 2rem;
+            display: flex;
+            flex-direction: column;
+            gap: 3rem;
+        }
+        @media (min-width: 768px) {
+            .dashboard-wrapper { flex-direction: row; }
+        }
+
+        .dashboard-sidebar {
+            flex: 0 0 250px;
+        }
+        .user-greeting {
+            font-family: 'Playfair Display', serif;
+            font-size: 1.5rem;
+            margin-bottom: 2rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid #eee;
+        }
+        .dashboard-nav {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+        .dashboard-nav button {
+            text-align: left;
+            padding: 1rem;
+            background: none;
+            border: none;
+            border-left: 3px solid transparent;
+            font-size: 0.95rem;
+            color: var(--text-light);
+            cursor: pointer;
+            transition: all 0.2s;
+            font-family: 'Inter', sans-serif;
+        }
+        .dashboard-nav button:hover {
+            color: var(--text-color);
+            background: #f9f9f9;
+        }
+        .dashboard-nav button.active {
+            color: var(--text-color);
+            font-weight: 600;
+            border-left-color: var(--text-color);
+            background: #f9f9f9;
+        }
+        .dashboard-nav button.logout-btn {
+            color: #dc2626;
+            margin-top: 2rem;
+        }
+
+        .dashboard-content {
+            flex: 1;
+        }
+        .dashboard-panel {
+            display: none;
+            animation: fadeIn 0.4s ease;
+        }
+        .dashboard-panel.active {
+            display: block;
+        }
+        .panel-title {
+            font-size: 1.8rem;
+            font-weight: 600;
+            margin-bottom: 2rem;
+            font-family: 'Playfair Display', serif;
+        }
+
+        /* Profile Info Cards */
+        .info-card {
+            border: 1px solid #eee;
+            padding: 2rem;
+            border-radius: 8px;
+            margin-bottom: 1.5rem;
+        }
+        .info-row {
+            display: flex;
+            margin-bottom: 1rem;
+        }
+        .info-label {
+            width: 150px;
+            color: var(--text-light);
+            font-size: 0.9rem;
+        }
+        .info-value {
+            font-weight: 500;
+        }
+
+        /* Order Cards CSS (Used by script.js injection) */
+        .order-card {
+            border: 1px solid #eaeaea;
+            border-radius: 8px;
+            overflow: hidden;
+            margin-bottom: 2rem;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.02);
+            font-family: 'Inter', sans-serif;
+        }
+        .order-header {
+            background: #f9fafb;
+            padding: 1.5rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid #eaeaea;
+        }
+        .order-header-info p { margin: 0; }
+        .order-date { color: var(--text-light); font-size: 0.85rem; margin-bottom: 0.3rem; }
+        .order-id { font-weight: 600; font-size: 1.1rem; }
+        .order-status {
+            padding: 0.4rem 1rem;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 600;
+        }
+        .status-Pending { background: #fef3c7; color: #92400e; }
+        .status-Shipped { background: #e0f2fe; color: #0369a1; }
+        .status-Delivered { background: #dcfce7; color: #166534; }
+
+        .order-body { padding: 1.5rem; }
+        .order-item-list {
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+        .order-item {
+            display: flex;
+            gap: 1.5rem;
+            padding-bottom: 1.5rem;
+            border-bottom: 1px solid #f3f4f6;
+        }
+        .order-item:last-child { border-bottom: none; padding-bottom: 0; }
+        .order-item-img {
+            width: 90px;
+            height: 120px;
+            object-fit: cover;
+            border-radius: 4px;
+            background: #f5f5f5;
+        }
+        .order-item-details { flex: 1; display: flex; flex-direction: column; justify-content: center; }
+        .order-item-title { font-weight: 600; margin-bottom: 0.5rem; font-size: 1.1rem; }
+        .order-item-meta { color: var(--text-light); font-size: 0.9rem; margin-bottom: 0.5rem; }
+        .order-item-price { font-weight: 600; margin-top: auto; }
+
+        .order-footer {
+            padding: 1.5rem;
+            background: #fafafa;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-top: 1px solid #eaeaea;
+        }
+        .order-total { font-size: 1.2rem; font-weight: 600; }
+        .btn-outline {
+            padding: 0.6rem 1.2rem;
+            border: 1px solid #ccc;
+            background: transparent;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 0.85rem;
+            transition: all 0.2s;
+            border-radius: 4px;
+        }
+        .btn-outline:hover { background: #f3f4f6; border-color: #999; }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
         .form-message {
             margin-top: 1rem;
             padding: 1rem;
             display: none;
-            font-family: 'Inter', sans-serif;
             font-size: 0.9rem;
+            border-radius: 4px;
         }
         .form-message.error {
             background-color: #fee2e2;
@@ -94,61 +301,145 @@
     </style>
 </head>
 <body>
-    <header class="navbar">
-        <div class="logo">MODA</div>
+    <!-- Top Announcement Bar -->
+    <div class="top-bar">
+        <div class="top-bar-center">
+            EXTRA 20% OFF ON FIRST ORDER | <span>USE CODE: MODA20</span>
+        </div>
+        <div class="top-bar-right">
+            <a href="#">Track Order</a>
+            <a href="#">Store Locator</a>
+            <a href="#">Help</a>
+        </div>
+    </div>
+
+    <!-- Main Navbar -->
+    <header class="navbar dark-navbar">
+        <div class="logo">M MODA</div>
         <nav class="nav-links">
             <a href="index.html">HOME</a>
             <a href="mens.html">MEN</a>
             <a href="womens.html">WOMEN</a>
             <a href="all-products.html">ALL PRODUCTS</a>
         </nav>
-        <div class="nav-icons">
-            <a href="#" class="icon-link"><i class="fas fa-search"></i></a>
-            <a href="account.html" class="icon-link account-link-nav">Account</a>
-            <a href="cart.html" class="icon-link"><i class="fas fa-shopping-cart"></i> (<span id="cart-count">0</span>)</a>
+        <div class="nav-actions">
+            <div class="search-bar">
+                <i class="fas fa-search"></i>
+                <input type="text" placeholder="Search for products, brands and more">
+            </div>
+            <a href="wishlist.html" class="icon-link">
+                <i class="far fa-heart"></i>
+                <span>Wishlist</span>
+            </a>
+            <a href="cart.html" class="icon-link bag">
+                <i class="fas fa-shopping-bag"></i>
+                <span>Bag</span>
+            </a>
+            <a href="account.html" class="icon-link">
+                <i class="far fa-user"></i>
+                <span>Account</span>
+            </a>
         </div>
     </header>
 
     <main>
-        <div class="account-container">
-            <div class="account-tabs">
-                <button class="active" id="tab-login" onclick="switchTab('login')">Login</button>
-                <button id="tab-register" onclick="switchTab('register')">Register</button>
+        <!-- Unauthenticated Split Layout -->
+        <div id="auth-wrapper">
+            <div class="auth-image"></div>
+            <div class="auth-content">
+                <h1 class="auth-title">Welcome to MODA</h1>
+                <p class="auth-subtitle">Sign in to track orders, manage your profile, and receive exclusive offers.</p>
+                
+                <div class="auth-tabs" id="account-tabs">
+                    <button class="active" id="tab-login" onclick="switchAuthTab('login')">Sign In</button>
+                    <button id="tab-register" onclick="switchAuthTab('register')">Create Account</button>
+                </div>
+
+                <!-- Login Form -->
+                <form id="login-form" class="account-form active">
+                    <div class="form-group">
+                        <label>Email Address</label>
+                        <input type="email" id="login-email" placeholder="Enter your email" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Password</label>
+                        <input type="password" id="login-password" placeholder="Enter your password" required>
+                    </div>
+                    <button type="submit" class="btn-submit">Sign In</button>
+                    <div id="login-message" class="form-message"></div>
+                </form>
+
+                <!-- Register Form -->
+                <form id="register-form" class="account-form">
+                    <div class="form-group">
+                        <label>Full Name</label>
+                        <input type="text" id="register-name" placeholder="John Doe" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Email Address</label>
+                        <input type="email" id="register-email" placeholder="Enter your email" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Password</label>
+                        <input type="password" id="register-password" placeholder="Create a password" required>
+                    </div>
+                    <button type="submit" class="btn-submit">Create Account</button>
+                    <div id="register-message" class="form-message"></div>
+                </form>
             </div>
+        </div>
 
-            <!-- Login Form -->
-            <form id="login-form" class="account-form active">
-                <h2>Welcome Back</h2>
-                <div class="form-group">
-                    <label>Email Address</label>
-                    <input type="email" id="login-email" required>
-                </div>
-                <div class="form-group">
-                    <label>Password</label>
-                    <input type="password" id="login-password" required>
-                </div>
-                <button type="submit" class="account-btn">Log In</button>
-                <div id="login-message" class="form-message"></div>
-            </form>
+        <!-- Authenticated Dashboard Layout -->
+        <div id="profile-section">
+            <div class="dashboard-wrapper">
+                
+                <!-- Sidebar Menu -->
+                <aside class="dashboard-sidebar">
+                    <h2 class="user-greeting">Hi, <span id="greeting-name">User</span>!</h2>
+                    <nav class="dashboard-nav">
+                        <button class="active" onclick="switchDashTab('overview', this)">Account Overview</button>
+                        <button onclick="switchDashTab('orders', this)">My Orders</button>
+                        <button onclick="switchDashTab('settings', this)">Settings</button>
+                        <button class="logout-btn" onclick="logout()">Log Out</button>
+                    </nav>
+                </aside>
 
-            <!-- Register Form -->
-            <form id="register-form" class="account-form">
-                <h2>Create Account</h2>
-                <div class="form-group">
-                    <label>Full Name</label>
-                    <input type="text" id="register-name" required>
+                <!-- Dashboard Content Area -->
+                <div class="dashboard-content">
+                    
+                    <!-- Overview Panel -->
+                    <div id="panel-overview" class="dashboard-panel active">
+                        <h2 class="panel-title">Account Overview</h2>
+                        <div class="info-card">
+                            <h3 style="margin-bottom: 1.5rem; font-family: 'Playfair Display', serif;">Profile Information</h3>
+                            <div class="info-row">
+                                <div class="info-label">Full Name</div>
+                                <div class="info-value" id="profile-name"></div>
+                            </div>
+                            <div class="info-row">
+                                <div class="info-label">Email Address</div>
+                                <div class="info-value" id="profile-email"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Orders Panel -->
+                    <div id="panel-orders" class="dashboard-panel">
+                        <h2 class="panel-title">Order History</h2>
+                        <div id="user-orders-list">
+                            <!-- Orders dynamically injected by script.js -->
+                            <p style="color: var(--text-light);">Loading orders...</p>
+                        </div>
+                    </div>
+
+                    <!-- Settings Panel (Placeholder for visual completeness) -->
+                    <div id="panel-settings" class="dashboard-panel">
+                        <h2 class="panel-title">Account Settings</h2>
+                        <p style="color: var(--text-light);">Settings and preferences will be available here soon.</p>
+                    </div>
+
                 </div>
-                <div class="form-group">
-                    <label>Email Address</label>
-                    <input type="email" id="register-email" required>
-                </div>
-                <div class="form-group">
-                    <label>Password</label>
-                    <input type="password" id="register-password" required>
-                </div>
-                <button type="submit" class="account-btn">Register</button>
-                <div id="register-message" class="form-message"></div>
-            </form>
+            </div>
         </div>
     </main>
 
@@ -174,7 +465,8 @@
     </footer>
 
     <script>
-        function switchTab(tab) {
+        // Auth Tabs Toggle
+        function switchAuthTab(tab) {
             document.getElementById('tab-login').classList.remove('active');
             document.getElementById('tab-register').classList.remove('active');
             document.getElementById('login-form').classList.remove('active');
@@ -187,6 +479,19 @@
                 document.getElementById('tab-register').classList.add('active');
                 document.getElementById('register-form').classList.add('active');
             }
+        }
+
+        // Dashboard Tabs Toggle
+        function switchDashTab(panelId, btnElement) {
+            // Remove active from all buttons
+            document.querySelectorAll('.dashboard-nav button').forEach(btn => btn.classList.remove('active'));
+            // Add active to clicked button
+            btnElement.classList.add('active');
+
+            // Hide all panels
+            document.querySelectorAll('.dashboard-panel').forEach(panel => panel.classList.remove('active'));
+            // Show selected panel
+            document.getElementById('panel-' + panelId).classList.add('active');
         }
     </script>
     <script src="script.js"></script>

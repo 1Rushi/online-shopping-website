@@ -1,11 +1,23 @@
 document.addEventListener('DOMContentLoaded', () => {
     const getSessionId = () => {
+        const userStr = localStorage.getItem('moda_user');
+        if (userStr) {
+            try {
+                const user = JSON.parse(userStr);
+                if (user && user.id) return 'user_' + user.id;
+            } catch(e) {}
+        }
         let sid = localStorage.getItem('moda_session_id');
         if (!sid) {
             sid = 'sess_' + Math.random().toString(36).substr(2, 9);
             localStorage.setItem('moda_session_id', sid);
         }
         return sid;
+    };
+
+    window.logout = () => {
+        localStorage.removeItem('moda_user');
+        window.location.href = 'account.html';
     };
 
     // Basic setup
@@ -32,7 +44,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if(!res.ok) return;
             const cart = await res.json();
             const totalItems = cart.reduce((sum, item) => sum + item.qty, 0);
-            const badges = document.querySelectorAll('.cart-badge');
+            const badges = document.querySelectorAll('.cart-badge, .bag-count');
             badges.forEach(b => {
                 b.innerText = totalItems;
                 b.style.display = totalItems > 0 ? 'flex' : 'none';
@@ -42,6 +54,31 @@ document.addEventListener('DOMContentLoaded', () => {
 
     setupNavCart();
 
+    const setupSearchBars = () => {
+        const searchInputs = document.querySelectorAll('.search-bar input');
+        searchInputs.forEach(input => {
+            input.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') {
+                    const query = e.target.value.trim();
+                    if (query) {
+                        window.location.href = `all-products.html?search=${encodeURIComponent(query)}`;
+                    }
+                }
+            });
+            // Also make the search icon clickable
+            const icon = input.previousElementSibling;
+            if (icon && icon.tagName.toLowerCase() === 'i') {
+                icon.style.cursor = 'pointer';
+                icon.addEventListener('click', () => {
+                    const query = input.value.trim();
+                    if (query) {
+                        window.location.href = `all-products.html?search=${encodeURIComponent(query)}`;
+                    }
+                });
+            }
+        });
+    };
+    setupSearchBars();
     // ==========================================
     // ADMIN PANEL & DYNAMIC INJECTION (PostgreSQL)
     // ==========================================
@@ -65,7 +102,7 @@ document.addEventListener('DOMContentLoaded', () => {
                             <td>${p.title}</td>
                             <td>${p.category}</td>
                             <td>${p.brand}</td>
-                            <td>$${parseFloat(p.price).toFixed(2)}</td>
+                            <td>₹${parseFloat(p.price).toFixed(2)}</td>
                             <td>${p.sizes || 'N/A'}</td>
                             <td><button class="action-btn" onclick="deleteCustomProduct(${p.id})"><i class="fas fa-trash"></i></button></td>
                         </tr>
@@ -114,9 +151,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
                     const statusBadge = order.status === 'Dispatched' 
                         ? `<span style="background-color: #2ecc71; color: white; padding: 3px 8px; border-radius: 3px; font-size: 0.75rem; font-weight: 500; text-transform: uppercase;">DISPATCHED</span>`
-                        : `<span style="background-color: #f39c12; color: white; padding: 3px 8px; border-radius: 3px; font-size: 0.75rem; font-weight: 500; text-transform: uppercase;">PENDING</span>`;
+                        : `<span style="background-color: #f39c12; color: white; padding: 3px 8px; border-radius: 3px; font-size: 0.75rem; font-weight: 500; text-transform: uppercase;">PROCESSING</span>`;
 
-                    const dispatchBtn = order.status === 'Pending'
+                    const dispatchBtn = order.status !== 'Dispatched'
                         ? `<button class="checkout-btn" style="padding: 6px 12px; font-size: 0.7rem; border-radius: 3px; background-color: #2ecc71; color: white; border: none; cursor: pointer; margin: 0; width: auto;" onclick="dispatchOrder(${order.id})">DISPATCH</button>`
                         : `<button style="padding: 6px 12px; font-size: 0.7rem; border-radius: 3px; background-color: #ddd; color: #777; border: none; cursor: not-allowed; margin: 0; width: auto;" disabled>DISPATCHED</button>`;
 
@@ -127,7 +164,7 @@ document.addEventListener('DOMContentLoaded', () => {
                             <td style="font-weight: 600;">#${order.id}</td>
                             <td style="font-size: 0.8rem; color: #666;">${dateStr}</td>
                             <td>${itemsList}</td>
-                            <td style="font-weight: 600;">$${parseFloat(order.total_price).toFixed(2)}</td>
+                            <td style="font-weight: 600;">₹${parseFloat(order.total_price).toFixed(2)}</td>
                             <td>${statusBadge}</td>
                             <td style="font-size: 0.85rem; font-weight: 500;">${order.customer_info?.name || ''}<br>${order.customer_info?.phone || ''}<br>${order.customer_info?.address || ''} ${order.customer_info?.city || ''} ${order.customer_info?.state || ''} ${order.customer_info?.zip || ''}<br>${order.customer_info?.country || ''}</td>
                             <td style="font-size: 0.85rem; font-weight: 500;">${order.shipping_date || 'N/A'}</td>
@@ -146,38 +183,163 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         };
 
+        const customersTbody = document.getElementById('custom-customers-tbody');
+
+        const renderAdminCustomers = async () => {
+            if (!customersTbody) return;
+            try {
+                const res = await fetch('http://localhost:3000/api/admin/customers');
+                const customers = await res.json();
+                window.adminCustomers = customers; // Save for modal
+                
+                if (customers.length === 0) {
+                    customersTbody.innerHTML = '<tr><td colspan="7" style="text-align: center; color: var(--text-light); padding: 2rem;">No customers found.</td></tr>';
+                    return;
+                }
+
+                customersTbody.innerHTML = customers.map((c) => {
+                    const avatarStr = c.name ? c.name.charAt(0).toUpperCase() : '?';
+                    const lastOrderStr = c.last_order_date 
+                        ? new Date(c.last_order_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+                        : '<span style="color: #999;">Never</span>';
+                        
+                    return `
+                        <tr>
+                            <td style="font-weight: 600;">#${c.id}</td>
+                            <td>
+                                <div style="display: flex; align-items: center; gap: 12px;">
+                                    <div style="width: 36px; height: 36px; border-radius: 50%; background: #000; color: #fff; display: flex; align-items: center; justify-content: center; font-weight: 600; font-size: 0.9rem;">
+                                        ${avatarStr}
+                                    </div>
+                                    <div style="font-weight: 600; font-family: 'Inter', sans-serif;">${c.name || 'Unknown'}</div>
+                                </div>
+                            </td>
+                            <td style="color: var(--text-light);">${c.email}</td>
+                            <td style="text-align: center;">
+                                <span style="background: #f1f5f9; color: #334155; padding: 4px 10px; border-radius: 20px; font-weight: 600; font-size: 0.85rem;">
+                                    ${c.total_orders}
+                                </span>
+                            </td>
+                            <td style="font-weight: 600; font-family: 'Inter', sans-serif;">₹${parseFloat(c.total_spent).toFixed(2)}</td>
+                            <td style="font-size: 0.9rem;">${lastOrderStr}</td>
+                            <td>
+                                <button class="action-btn" style="color: #64748b; font-size: 1rem;" title="View Details" onclick="viewCustomerDetails(${c.id})"><i class="fas fa-eye"></i></button>
+                            </td>
+                        </tr>
+                    `;
+                }).join('');
+
+            } catch (err) {
+                customersTbody.innerHTML = '<tr><td colspan="7" style="color: red; text-align: center;">Could not connect to database to fetch customers.</td></tr>';
+            }
+        };
+
+        window.viewCustomerDetails = async (userId) => {
+            const customer = window.adminCustomers.find(c => c.id === userId);
+            if (!customer) return;
+
+            const modal = document.getElementById('customer-modal');
+            const content = document.getElementById('customer-modal-content');
+            if (!modal || !content) return;
+
+            content.innerHTML = '<p style="padding: 2rem 0; text-align: center;">Loading order history...</p>';
+            modal.style.display = 'flex';
+
+            try {
+                const res = await fetch(`http://localhost:3000/api/orders/user/${userId}`);
+                const orders = await res.json();
+                
+                let ordersHtml = '';
+                if (orders.length === 0) {
+                    ordersHtml = '<p style="color: #666; padding: 1rem 0;">No order history available for this customer.</p>';
+                } else {
+                    ordersHtml = `
+                        <div style="margin-top: 1.5rem;">
+                            <h3 style="font-size: 1.1rem; margin-bottom: 1rem; border-bottom: 1px solid #eee; padding-bottom: 0.5rem;">Recent Orders</h3>
+                            <div style="display: flex; flex-direction: column; gap: 1rem; max-height: 400px; overflow-y: auto; padding-right: 10px;">
+                                ${orders.map(o => `
+                                    <div style="border: 1px solid #e2e8f0; border-radius: 6px; padding: 1rem; background: #f8fafc;">
+                                        <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
+                                            <span style="font-weight: 600;">Order #${o.id}</span>
+                                            <span style="color: #64748b; font-size: 0.85rem;">${new Date(o.created_at).toLocaleDateString()}</span>
+                                        </div>
+                                        <div style="display: flex; justify-content: space-between; font-size: 0.9rem;">
+                                            <span>Status: <strong style="color: ${o.status !== 'Dispatched' ? '#f59e0b' : '#10b981'}">${o.status === 'Pending' ? 'Processing' : o.status}</strong></span>
+                                            <span style="font-weight: 600;">₹${parseFloat(o.total_price).toFixed(2)}</span>
+                                        </div>
+                                    </div>
+                                `).join('')}
+                            </div>
+                        </div>
+                    `;
+                }
+
+                content.innerHTML = `
+                    <div style="display: flex; gap: 1.5rem; margin-bottom: 2rem;">
+                        <div style="width: 80px; height: 80px; min-width: 80px; border-radius: 50%; background: #000; color: #fff; display: flex; align-items: center; justify-content: center; font-size: 2.5rem; font-weight: 600; font-family: var(--font-heading);">
+                            ${customer.name ? customer.name.charAt(0).toUpperCase() : '?'}
+                        </div>
+                        <div style="display: flex; flex-direction: column; justify-content: center;">
+                            <h3 style="font-size: 1.5rem; margin-bottom: 0.4rem;">${customer.name || 'Unknown'}</h3>
+                            <div style="color: #64748b; font-size: 0.95rem; margin-bottom: 0.3rem;"><i class="fas fa-envelope" style="width: 20px;"></i> ${customer.email}</div>
+                            <div style="color: #64748b; font-size: 0.95rem;"><i class="fas fa-shopping-bag" style="width: 20px;"></i> ${customer.total_orders} Orders (Lifetime Value: <strong style="color:#000;">₹${parseFloat(customer.total_spent).toFixed(2)}</strong>)</div>
+                        </div>
+                    </div>
+                    ${ordersHtml}
+                `;
+
+            } catch (err) {
+                content.innerHTML = '<p style="color: red;">Failed to load customer details.</p>';
+            }
+        };
+
         // Navigation tab switching
         const navProducts = document.getElementById('admin-nav-products');
         const navOrders = document.getElementById('admin-nav-orders');
+        const navCustomers = document.getElementById('admin-nav-customers');
         const productsPanel = document.getElementById('admin-products-panel');
         const ordersPanel = document.getElementById('admin-orders-panel');
+        const customersPanel = document.getElementById('admin-customers-panel');
 
-        if (navProducts && navOrders && productsPanel && ordersPanel) {
+        if (navProducts && navOrders && navCustomers && productsPanel && ordersPanel && customersPanel) {
+            const clearTabs = () => {
+                navProducts.classList.remove('active');
+                navOrders.classList.remove('active');
+                navCustomers.classList.remove('active');
+                productsPanel.style.display = 'none';
+                ordersPanel.style.display = 'none';
+                customersPanel.style.display = 'none';
+            };
+
             navProducts.addEventListener('click', (e) => {
                 e.preventDefault();
+                clearTabs();
                 navProducts.classList.add('active');
-                navOrders.classList.remove('active');
                 productsPanel.style.display = 'block';
-                ordersPanel.style.display = 'none';
                 renderAdminTable();
             });
 
             navOrders.addEventListener('click', (e) => {
                 e.preventDefault();
+                clearTabs();
                 navOrders.classList.add('active');
-                navProducts.classList.remove('active');
-                productsPanel.style.display = 'none';
                 ordersPanel.style.display = 'block';
                 renderAdminOrders();
             });
-        }
 
-        if (navOrders && ordersPanel) {
-            navProducts.classList.remove('active');
-            navOrders.classList.add('active');
-            productsPanel.style.display = 'none';
-            ordersPanel.style.display = 'block';
-            renderAdminOrders();
+            navCustomers.addEventListener('click', (e) => {
+                e.preventDefault();
+                clearTabs();
+                navCustomers.classList.add('active');
+                customersPanel.style.display = 'block';
+                renderAdminCustomers();
+            });
+            
+            // Set default tab on load
+            clearTabs();
+            navProducts.classList.add('active');
+            productsPanel.style.display = 'block';
+            renderAdminTable();
         }
 
         if (tbody) renderAdminTable();
@@ -299,14 +461,15 @@ document.addEventListener('DOMContentLoaded', () => {
             let targetGrid = null;
             let allowedCategory = null;
 
-            if (window.location.pathname.includes('mens.html')) {
-                targetGrid = document.querySelector('.collection-content .product-grid-3');
+            const fileName = window.location.pathname.split('/').pop();
+            if (fileName === 'mens.html') {
+                targetGrid = document.querySelector('.product-area .product-grid');
                 allowedCategory = "Men's";
-            } else if (window.location.pathname.includes('womens.html')) {
-                targetGrid = document.querySelector('.collection-content .product-grid-3');
+            } else if (fileName === 'womens.html') {
+                targetGrid = document.querySelector('.product-area .product-grid');
                 allowedCategory = "Women's";
-            } else if (window.location.pathname.includes('all-products.html')) {
-                targetGrid = document.querySelector('.collection-content .product-grid-3');
+            } else if (fileName === 'all-products.html') {
+                targetGrid = document.querySelector('.product-area .product-grid');
                 allowedCategory = "All";
             } else if (window.location.pathname.endsWith('index.html') || window.location.pathname.endsWith('/')) {
                 targetGrid = document.querySelector('.product-grid');
@@ -321,19 +484,17 @@ document.addEventListener('DOMContentLoaded', () => {
                     window.dynamicProductsMap[p.id] = p;
                     if (allowedCategory === 'All' || p.category === allowedCategory) {
                         htmlToInject += `
-                            <div class="product-card" data-product-id="${p.id}">
-                                <div class="product-image-wrapper">
-                                    <div class="badge-new" style="background-color: var(--accent-blue);">NEW</div>
+                            <div class="product-card" data-product-id="${p.id}" data-category="${p.category}">
+                                <div class="product-img-wrap">
+                                    <span class="badge new" style="background-color: var(--accent-blue);">NEW</span>
+                                    <button class="wishlist-btn"><i class="far fa-heart"></i></button>
                                     <img src="${p.img}" alt="${p.title}">
                                 </div>
-                                <div class="product-info-collection">
-                                    <div class="brand-row">
-                                        <span class="brand">${p.brand}</span>
-                                        <button class="wishlist-btn-small"><i class="far fa-heart"></i></button>
-                                    </div>
-                                    <h4>${p.title}</h4>
-                                    <div class="price-row">
-                                        <span class="price">$${parseFloat(p.price).toFixed(2)}</span>
+                                <div class="product-info">
+                                    <div class="brand">${p.brand}</div>
+                                    <h4 class="title">${p.title}</h4>
+                                    <div class="price-wrap">
+                                        <span class="price">₹${parseFloat(p.price).toFixed(2)}</span>
                                     </div>
                                 </div>
                             </div>
@@ -349,6 +510,9 @@ document.addEventListener('DOMContentLoaded', () => {
         } finally {
             setupProductCards();
             updateWishlistUI();
+            if (typeof window.applyFilters === 'function') {
+                setTimeout(() => window.applyFilters(), 100);
+            }
         }
     };
 
@@ -366,7 +530,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const res = await fetch(`http://localhost:3000/api/wishlist/${getSessionId()}`);
             if(!res.ok) return;
             const wishlist = await res.json();
-            const wishlistBtns = document.querySelectorAll('.wishlist-btn-small, .btn-wishlist-outline');
+            const wishlistBtns = document.querySelectorAll('.wishlist-btn, .btn-wishlist-outline');
             
             wishlistBtns.forEach(btn => {
                 const card = btn.closest('.product-card');
@@ -413,7 +577,7 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     document.addEventListener('click', (e) => {
-        const btnSmall = e.target.closest('.wishlist-btn-small');
+        const btnSmall = e.target.closest('.wishlist-btn');
         const btnOutline = e.target.closest('.btn-wishlist-outline');
         
         if (btnSmall) {
@@ -428,7 +592,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 const brandEl = card.querySelector('.brand');
 
                 if (imgEl && titleEl && priceEl) {
-                    const priceText = priceEl.innerText.replace('$', '').replace(',', '');
+                    const priceText = priceEl.innerText.replace('₹', '').replace(',', '');
                     toggleWishlist({
                         img: imgEl.src,
                         title: titleEl.innerText.trim(),
@@ -454,7 +618,7 @@ document.addEventListener('DOMContentLoaded', () => {
             card.parentNode.replaceChild(newCard, card);
             
             newCard.addEventListener('click', (e) => {
-                if(e.target.closest('.wishlist-btn') || e.target.closest('.wishlist-btn-small')) {
+                if(e.target.closest('.wishlist-btn')) {
                     return;
                 }
 
@@ -464,8 +628,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 const title = titleEl ? titleEl.innerText.trim() : 'Unknown Product';
                 
                 const priceEl = newCard.querySelector('.price');
-                const priceText = priceEl ? priceEl.innerText : '$0.00';
-                const price = parseFloat(priceText.replace('$', '').replace(',', ''));
+                const priceText = priceEl ? priceEl.innerText : '₹0.00';
+                const price = parseFloat(priceText.replace('₹', '').replace(',', ''));
                 
                 const brandEl = newCard.querySelector('.brand');
                 const brand = brandEl ? brandEl.innerText.trim() : 'MODA ARCHIVE';
@@ -504,82 +668,31 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     // ==========================================
-    // FILTER LOGIC (Brands & Sizes)
+    // SEARCH LOGIC
     // ==========================================
-    const brandCheckboxes = document.querySelectorAll('.filter-section input[type="checkbox"]');
-    const sizeBtns = document.querySelectorAll('.size-grid .size-btn');
-    const countEl = document.querySelector('.product-count');
-
-    const getProductSizes = (title) => {
-        const sizes = ['XS', 'S', 'M', 'L', 'XL', 'XXL'];
-        let hash = 0;
-        for (let i = 0; i < title.length; i++) {
-            hash += title.charCodeAt(i);
-        }
-        return [
-            sizes[hash % sizes.length],
-            sizes[(hash + 1) % sizes.length],
-            sizes[(hash + 3) % sizes.length]
-        ];
-    };
-
-    window.applyFilters = () => {
-        const checkedBrands = Array.from(brandCheckboxes)
-            .filter(box => box.checked)
-            .map(box => box.nextElementSibling.innerText.trim().toUpperCase());
-            
-        const activeSizes = Array.from(sizeBtns)
-            .filter(btn => btn.classList.contains('active'))
-            .map(btn => btn.innerText.trim());
-
-        const productCards = document.querySelectorAll('.collection-content .product-card');
-        let visibleCount = 0;
-
-        productCards.forEach(card => {
-            const brandEl = card.querySelector('.brand');
-            const titleEl = card.querySelector('h4');
-            if (!brandEl || !titleEl) return;
-            
-            const cardBrand = brandEl.innerText.trim().toUpperCase();
-            const cardTitle = titleEl.innerText.trim();
-            const cardId = card.getAttribute('data-product-id');
-            let cardSizes = [];
-            
-            if (cardId && window.dynamicProductsMap && window.dynamicProductsMap[cardId] && window.dynamicProductsMap[cardId].sizes) {
-                cardSizes = window.dynamicProductsMap[cardId].sizes.split(',');
-            } else {
-                cardSizes = getProductSizes(cardTitle);
-            }
-            
-            const brandMatch = checkedBrands.length === 0 || checkedBrands.includes(cardBrand);
-            const sizeMatch = activeSizes.length === 0 || activeSizes.some(size => cardSizes.includes(size));
-
-            if (brandMatch && sizeMatch) {
-                card.style.display = ''; 
-                visibleCount++;
-            } else {
-                card.style.display = 'none';
+    const searchInputs = document.querySelectorAll('.search-bar input');
+    const urlParams = new URLSearchParams(window.location.search);
+    const searchQuery = (urlParams.get('search') || '').trim();
+    
+    if (searchQuery) {
+        searchInputs.forEach(input => input.value = searchQuery);
+    }
+    
+    searchInputs.forEach(input => {
+        input.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                const query = input.value.trim();
+                if (query) {
+                    window.location.href = `all-products.html?search=${encodeURIComponent(query)}`;
+                } else {
+                    window.location.href = 'all-products.html';
+                }
             }
         });
+    });
 
-        if (countEl) countEl.innerText = `${visibleCount} PRODUCTS FOUND`;
-    };
-
-    if (brandCheckboxes.length > 0) {
-        brandCheckboxes.forEach(cb => cb.addEventListener('change', window.applyFilters));
-    }
-
-    if (sizeBtns.length > 0) {
-        sizeBtns.forEach(btn => {
-            btn.addEventListener('click', () => {
-                btn.classList.toggle('active');
-                window.applyFilters();
-            });
-        });
-        
-        // Ensure filters apply on page load if any are checked/active initially
-        setTimeout(() => window.applyFilters(), 200);
-    }
+    // ==========================================
+    // Filter logic has been unified and moved to initMensFilters (now initialized for all collection pages)
 
     // ==========================================
     // PDP LOGIC
@@ -632,7 +745,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (titleEl) titleEl.innerText = currentProduct.title;
             
             const priceEl = document.querySelector('.product-detail-price');
-            if (priceEl) priceEl.innerText = '$' + currentProduct.price.toFixed(2);
+            if (priceEl) priceEl.innerText = '₹' + currentProduct.price.toFixed(2);
         }
 
         const productThumbs = document.querySelectorAll('.thumbnail-list .thumb');
@@ -712,6 +825,34 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             });
         }
+
+        const pdpWishlistBtn = document.querySelector('.btn-wishlist-outline');
+        if (pdpWishlistBtn) {
+            pdpWishlistBtn.addEventListener('click', async () => {
+                if (!currentProduct) return;
+                
+                // Add loading state or feedback
+                const icon = pdpWishlistBtn.querySelector('i');
+                if (icon) {
+                    icon.classList.remove('far');
+                    icon.classList.add('fas');
+                    icon.style.color = 'var(--primary-color, #111)';
+                }
+
+                await toggleWishlist({
+                    img: currentProduct.img,
+                    title: currentProduct.title,
+                    price: currentProduct.price,
+                    brand: currentProduct.brand
+                });
+                
+                // Show a quick alert or change text to let user know it worked
+                pdpWishlistBtn.innerHTML = '<i class="fas fa-heart" style="color: var(--primary-color, #111);"></i> ADDED TO WISHLIST';
+                
+                // Optionally redirect to wishlist page
+                // window.location.href = 'wishlist.html'; 
+            });
+        }
         };
         loadProductPage();
     }
@@ -760,7 +901,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         </div>
                     </div>
                     <div class="cart-item-total">
-                        <div class="item-price">$${(item.price * item.qty).toFixed(2)}</div>
+                        <div class="item-price">₹${(item.price * item.qty).toFixed(2)}</div>
                         <div class="item-actions">
                             <button class="wishlist-btn-small" style="font-family: inherit; font-size: 0.8rem; border: none; background: transparent; cursor: pointer; text-transform: uppercase; color: var(--text-light);"><i class="far fa-heart"></i> SAVE</button>
                             <button onclick="removeItem(${item.id})"><i class="fas fa-times"></i></button>
@@ -807,9 +948,9 @@ document.addEventListener('DOMContentLoaded', () => {
         const tax = subtotal * 0.0824; 
         const total = subtotal + tax;
 
-        if (subtotalEl) subtotalEl.innerText = '$' + subtotal.toFixed(2);
-        if (taxEl) taxEl.innerText = '$' + tax.toFixed(2);
-        if (totalEl) totalEl.innerText = '$' + total.toFixed(2);
+        if (subtotalEl) subtotalEl.innerText = '₹' + subtotal.toFixed(2);
+        if (taxEl) taxEl.innerText = '₹' + tax.toFixed(2);
+        if (totalEl) totalEl.innerText = '₹' + total.toFixed(2);
     }
 
     function setupCheckoutModal() {
@@ -826,6 +967,12 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!checkoutBtn || !modal) return;
 
         checkoutBtn.addEventListener('click', async () => {
+            const userJson = localStorage.getItem('moda_user');
+            if (!userJson) {
+                window.location.href = 'account.html?msg=checkout';
+                return;
+            }
+
             try {
                 const res = await fetch(`http://localhost:3000/api/cart/${getSessionId()}`);
                 const cart = await res.json();
@@ -842,7 +989,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 const total = subtotal + tax;
 
                 if (modalGrandTotal) {
-                    modalGrandTotal.innerText = '$' + total.toFixed(2);
+                    modalGrandTotal.innerText = '₹' + total.toFixed(2);
                 }
 
                 paymentFormStep.style.display = 'block';
@@ -874,22 +1021,28 @@ document.addEventListener('DOMContentLoaded', () => {
             form.addEventListener('submit', async (e) => {
                 e.preventDefault();
                 
-                const cart = window.currentCheckoutCart || [];
-                const subtotal = cart.reduce((sum, item) => sum + (item.price * item.qty), 0);
+                const cartData = window.currentCheckoutCart || [];
+                const subtotal = cartData.reduce((sum, item) => sum + (item.price * item.qty), 0);
                 const tax = subtotal * 0.0824;
                 const total = parseFloat((subtotal + tax).toFixed(2));
 
+                let orderUserId = null;
+                try {
+                    const u = JSON.parse(localStorage.getItem('moda_user'));
+                    if (u && u.id) orderUserId = u.id;
+                } catch(e) {}
+
                 const orderData = {
-                    items: cart.map(item => ({
+                    items: cartData.map(item => ({
                         title: item.title,
                         price: item.price,
-                        brand: item.brand,
                         qty: item.qty,
                         size: item.size,
                         color: item.color,
                         img: item.img
                     })),
                     total_price: total,
+                    user_id: orderUserId,
                     customer_info: {
                         name: document.getElementById('cust-name')?.value || '',
                         phone: document.getElementById('cust-phone')?.value || '',
@@ -957,19 +1110,17 @@ document.addEventListener('DOMContentLoaded', () => {
                 emptyMsg.style.display = 'none';
                 container.innerHTML = wishlist.map(item => `
                     <div class="product-card">
-                        <div class="product-image-wrapper">
+                        <div class="product-img-wrap">
+                            <button class="wishlist-btn wishlist-btn-small">
+                                <i class="fas fa-heart" style="color: var(--primary-color);"></i>
+                            </button>
                             <img src="${item.img}" alt="${item.title}">
                         </div>
-                        <div class="product-info-collection">
-                            <div class="brand-row">
-                                <span class="brand">${item.brand}</span>
-                                <button class="wishlist-btn-small">
-                                    <i class="fas fa-heart" style="color: var(--primary-color);"></i>
-                                </button>
-                            </div>
-                            <h4>${item.title}</h4>
-                            <div class="price-row">
-                                <span class="price">$${item.price.toFixed(2)}</span>
+                        <div class="product-info">
+                            <div class="brand">${item.brand}</div>
+                            <h4 class="title">${item.title}</h4>
+                            <div class="price-wrap">
+                                <span class="price">₹${item.price.toFixed(2)}</span>
                             </div>
                         </div>
                     </div>
@@ -1007,63 +1158,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 const user = JSON.parse(userJson);
                 accountLinks.forEach(link => {
                     link.innerText = user.name.split(' ')[0]; // Show first name
-                    link.href = 'javascript:void(0)';
-                    
-                    link.addEventListener('click', function(e) {
-                        e.preventDefault();
-                        e.stopPropagation();
-                        
-                        let popup = document.getElementById('logout-popup');
-                        if (!popup) {
-                            popup = document.createElement('div');
-                            popup.id = 'logout-popup';
-                            popup.style.position = 'absolute';
-                            popup.style.background = '#fff';
-                            popup.style.border = '1px solid #eee';
-                            popup.style.padding = '10px';
-                            popup.style.boxShadow = '0 4px 12px rgba(0,0,0,0.1)';
-                            popup.style.zIndex = '1000';
-                            popup.style.borderRadius = '4px';
-                            
-                            const logoutBtn = document.createElement('button');
-                            logoutBtn.innerText = 'Log Out';
-                            logoutBtn.style.background = '#000';
-                            logoutBtn.style.color = '#fff';
-                            logoutBtn.style.border = 'none';
-                            logoutBtn.style.padding = '8px 16px';
-                            logoutBtn.style.cursor = 'pointer';
-                            logoutBtn.style.fontFamily = 'Inter, sans-serif';
-                            logoutBtn.style.fontSize = '0.9rem';
-                            logoutBtn.style.width = '100%';
-                            
-                            logoutBtn.onclick = () => {
-                                localStorage.removeItem('moda_user');
-                                window.location.reload();
-                            };
-                            
-                            popup.appendChild(logoutBtn);
-                            document.body.appendChild(popup);
-                        }
-                        
-                        const rect = link.getBoundingClientRect();
-                        popup.style.top = (rect.bottom + window.scrollY + 15) + 'px';
-                        popup.style.left = (rect.left + window.scrollX - 20) + 'px';
-                        
-                        if (popup.style.display === 'none' || !popup.style.display) {
-                            popup.style.display = 'block';
-                        } else {
-                            popup.style.display = 'none';
-                        }
-                    });
+                    link.href = 'account.html';
                 });
-
-                document.addEventListener('click', (e) => {
-                    const popup = document.getElementById('logout-popup');
-                    if (popup && !e.target.classList.contains('account-link-nav') && !popup.contains(e.target)) {
-                        popup.style.display = 'none';
-                    }
-                });
-
             } catch (e) {
                 console.error("Error parsing user data");
             }
@@ -1077,6 +1173,85 @@ document.addEventListener('DOMContentLoaded', () => {
     checkAuthState();
 
     if (window.location.pathname.includes('account.html')) {
+        const uStr = localStorage.getItem('moda_user');
+        if (uStr) {
+            try {
+                const u = JSON.parse(uStr);
+                if (u && u.id) {
+                    const profileSection = document.getElementById('profile-section');
+                    const authWrapper = document.getElementById('auth-wrapper');
+                    
+                    if (profileSection && authWrapper) {
+                        profileSection.style.display = 'block';
+                        authWrapper.style.display = 'none';
+                        
+                        document.getElementById('profile-name').innerText = u.name || '';
+                        document.getElementById('profile-email').innerText = u.email || '';
+                        
+                        const greetingEl = document.getElementById('greeting-name');
+                        if (greetingEl) greetingEl.innerText = (u.name || 'User').split(' ')[0];
+                        
+                        fetch(`http://localhost:3000/api/orders/user/${u.id}`)
+                            .then(res => res.json())
+                            .then(orders => {
+                                const list = document.getElementById('user-orders-list');
+                                if (!list) return;
+                                if (!orders || orders.length === 0) {
+                                    list.innerHTML = '<p>No orders found.</p>';
+                                    return;
+                                }
+                                let html = '';
+                                orders.forEach(order => {
+                                    const formattedTotal = '₹' + order.total_price.toFixed(2);
+                                    html += `
+                                        <div class="order-card">
+                                            <div class="order-header">
+                                                <div class="order-header-info">
+                                                    <p class="order-date">Placed on ${order.shipping_date}</p>
+                                                    <p class="order-id">Order #${order.id}</p>
+                                                </div>
+                                                <div class="order-status status-${order.status}">${order.status === 'Pending' ? 'Processing' : order.status}</div>
+                                            </div>
+                                            <div class="order-body">
+                                                <div class="order-item-list">
+                                                    ${(order.items || []).map(item => `
+                                                        <div class="order-item">
+                                                            <img src="${item.img || 'https://via.placeholder.com/90x120'}" alt="${item.title}" class="order-item-img">
+                                                            <div class="order-item-details">
+                                                                <h4 class="order-item-title">${item.title}</h4>
+                                                                <p class="order-item-meta">Qty: ${item.qty} | Brand: ${item.brand || 'MODA ARCHIVE'}</p>
+                                                                <span class="order-item-price">₹${item.price ? parseFloat(item.price).toFixed(2) : '0.00'}</span>
+                                                            </div>
+                                                        </div>
+                                                    `).join('')}
+                                                </div>
+                                            </div>
+                                            <div class="order-footer">
+                                                <span class="order-total">Total: ${formattedTotal}</span>
+                                                <button class="btn-outline">Track Package</button>
+                                            </div>
+                                        </div>
+                                    `;
+                                });
+                                list.innerHTML = html;
+                            })
+                            .catch(err => {
+                                const list = document.getElementById('user-orders-list');
+                                if (list) list.innerHTML = '<p>Error loading orders.</p>';
+                            });
+                    }
+                }
+            } catch(e) {}
+        } else {
+            const urlParams = new URLSearchParams(window.location.search);
+            if (urlParams.get('msg') === 'checkout') {
+                const authTitle = document.querySelector('.auth-title');
+                if (authTitle) {
+                    authTitle.insertAdjacentHTML('afterend', '<div class="form-message error" style="display: block; margin-bottom: 1.5rem; background-color: #fef3c7; color: #92400e; border-color: #f59e0b; padding: 1rem; border-radius: 4px;">Please create an account or sign in to proceed with your order.</div>');
+                }
+            }
+        }
+
         const registerForm = document.getElementById('register-form');
         const loginForm = document.getElementById('login-form');
         const registerMsg = document.getElementById('register-message');
@@ -1149,5 +1324,193 @@ document.addEventListener('DOMContentLoaded', () => {
             });
         }
     }
+
+    // ==========================================
+    // MENS PAGE FILTERS (DYNAMIC BRAND, SIZE)
+    // ==========================================
+    const initMensFilters = () => {
+        if (!document.querySelector('.sidebar-filters') || !document.querySelector('.product-area')) return;
+
+        const filterGroups = document.querySelectorAll('.filter-group');
+        let brandGroup = null;
+        let sizeGroup = null;
+        
+        filterGroups.forEach(group => {
+            const title = group.querySelector('.filter-title');
+            if (title && title.textContent.includes('BRAND')) brandGroup = group;
+            if (title && title.textContent.includes('SIZE')) sizeGroup = group;
+        });
+
+        const allSizes = ['XS', 'S', 'M', 'L', 'XL', 'XXL', '3XL', '5XL'];
+        const sizeButtons = sizeGroup ? sizeGroup.querySelectorAll('.size-grid button') : [];
+
+        const buildBrandUI = () => {
+            if (!brandGroup) return;
+            const ul = brandGroup.querySelector('.filter-list');
+            if (!ul) return;
+
+            // Preserve currently checked brands
+            const activeCheckboxes = ul.querySelectorAll('input[type="checkbox"]:checked');
+            const previouslySelected = Array.from(activeCheckboxes).map(cb => cb.value);
+
+            // Re-scan all products
+            const allCards = document.querySelectorAll('.product-area .product-card');
+            const brandCounts = {};
+            
+            allCards.forEach(card => {
+                const brandEl = card.querySelector('.brand');
+                const cardBrand = brandEl ? brandEl.textContent.trim() : 'MODA ARCHIVE';
+                brandCounts[cardBrand] = (brandCounts[cardBrand] || 0) + 1;
+                
+                if (!card.dataset.sizes) {
+                    const cardId = card.getAttribute('data-product-id');
+                    if (cardId && window.dynamicProductsMap && window.dynamicProductsMap[cardId] && window.dynamicProductsMap[cardId].sizes) {
+                        card.dataset.sizes = window.dynamicProductsMap[cardId].sizes.split(',').map(s => s.trim().toUpperCase()).join(',');
+                    } else {
+                        const sizes = [...allSizes].sort(() => 0.5 - Math.random()).slice(0, 4);
+                        card.dataset.sizes = sizes.join(',');
+                    }
+                }
+            });
+
+            ul.innerHTML = '';
+            
+            Object.keys(brandCounts).sort().forEach(brandName => {
+                const li = document.createElement('li');
+                const isChecked = previouslySelected.includes(brandName) ? 'checked' : '';
+                li.innerHTML = `<label><input type="checkbox" value="${brandName}" ${isChecked}> ${brandName}</label> <span class="count">(${brandCounts[brandName]})</span>`;
+                ul.appendChild(li);
+            });
+
+            const newCheckboxes = ul.querySelectorAll('input[type="checkbox"]');
+            newCheckboxes.forEach(cb => {
+                cb.addEventListener('change', applyFilters);
+            });
+        };
+
+        const applyFilters = () => {
+            // Extract selected brands from UI
+            let selectedBrands = [];
+            if (brandGroup) {
+                const activeCheckboxes = brandGroup.querySelectorAll('input[type="checkbox"]:checked');
+                selectedBrands = Array.from(activeCheckboxes).map(cb => cb.value.toLowerCase());
+            }
+
+            const selectedSizes = Array.from(sizeButtons)
+                .filter(btn => btn.classList.contains('active'))
+                .map(btn => btn.textContent.trim().toUpperCase());
+
+            const urlParamsLocal = new URLSearchParams(window.location.search);
+            const urlSearchQueryLocal = (urlParamsLocal.get('search') || '').trim().toLowerCase();
+
+            let visibleCount = 0;
+            const currentCards = document.querySelectorAll('.product-area .product-card');
+            
+            currentCards.forEach(card => {
+                const brandEl = card.querySelector('.brand');
+                const cardBrand = brandEl ? brandEl.textContent.trim().toLowerCase() : 'moda archive';
+                const titleEl = card.querySelector('.title, h4');
+                const cardTitle = titleEl ? titleEl.textContent.trim().toLowerCase() : '';
+                const cardCategory = (card.getAttribute('data-category') || '').toLowerCase();
+                
+                const brandMatch = selectedBrands.length === 0 || selectedBrands.includes(cardBrand);
+
+                const cardSizes = card.dataset.sizes ? card.dataset.sizes.split(',') : allSizes;
+                const sizeMatch = selectedSizes.length === 0 || selectedSizes.some(size => cardSizes.includes(size));
+                
+                const searchMatch = !urlSearchQueryLocal || 
+                    cardTitle.includes(urlSearchQueryLocal) || 
+                    cardBrand.includes(urlSearchQueryLocal) || 
+                    cardCategory.includes(urlSearchQueryLocal);
+
+                if (brandMatch && sizeMatch && searchMatch) {
+                    card.style.display = '';
+                    visibleCount++;
+                } else {
+                    card.style.display = 'none';
+                }
+            });
+            
+            const countEl = document.querySelector('.item-count');
+            if (countEl) countEl.textContent = `${visibleCount} Items Found`;
+        };
+
+        const sortProducts = () => {
+            const sortSelect = document.getElementById('sort-select');
+            if (!sortSelect) return;
+            const sortVal = sortSelect.value;
+            const grid = document.querySelector('.product-area .product-grid');
+            if (!grid) return;
+            const cards = Array.from(grid.querySelectorAll('.product-card'));
+
+            cards.sort((a, b) => {
+                const getPrice = (card) => {
+                    const priceEl = card.querySelector('.price');
+                    if (!priceEl) return 0;
+                    return parseFloat(priceEl.textContent.replace('₹', '').replace(/,/g, ''));
+                };
+
+                if (sortVal === 'price-low') {
+                    return getPrice(a) - getPrice(b);
+                } else if (sortVal === 'price-high') {
+                    return getPrice(b) - getPrice(a);
+                } else if (sortVal === 'newest') {
+                    // ID is sequential, higher is newer
+                    const idA = parseInt(a.dataset.productId || '0');
+                    const idB = parseInt(b.dataset.productId || '0');
+                    return idB - idA; 
+                } else {
+                    // popularity (default) - no strict sort needed for demo
+                    return 0;
+                }
+            });
+
+            // Re-append in new order
+            cards.forEach(card => grid.appendChild(card));
+        };
+
+        sizeButtons.forEach(btn => {
+            btn.addEventListener('click', () => {
+                btn.classList.toggle('active');
+                applyFilters();
+            });
+        });
+
+        const sortSelect = document.getElementById('sort-select');
+        if (sortSelect) {
+            sortSelect.addEventListener('change', sortProducts);
+        }
+
+        const viewToggles = document.querySelectorAll('.view-toggles button');
+        const productGrid = document.querySelector('.product-area .product-grid');
+        
+        if (viewToggles.length === 2 && productGrid) {
+            // Grid view (default)
+            viewToggles[0].addEventListener('click', () => {
+                viewToggles[0].classList.add('active');
+                viewToggles[1].classList.remove('active');
+                productGrid.classList.remove('list-view');
+            });
+            // List view
+            viewToggles[1].addEventListener('click', () => {
+                viewToggles[1].classList.add('active');
+                viewToggles[0].classList.remove('active');
+                productGrid.classList.add('list-view');
+            });
+        }
+
+        // Initialize UI and apply filters
+        buildBrandUI();
+        applyFilters();
+        
+        // Expose globally so dynamic injections can re-trigger UI build
+        window.applyFilters = () => {
+            buildBrandUI();
+            applyFilters();
+            sortProducts();
+        };
+    };
+
+    initMensFilters();
 
 });

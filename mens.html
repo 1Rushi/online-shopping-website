@@ -1,249 +1,349 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Men's Collection - MODA</title>
     <link rel="stylesheet" href="styles.css">
-    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="mens.css">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&family=Inter:wght@300;400;500;600;700&display=swap"
+        rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
+
 <body>
-    <header class="navbar">
-        <div class="logo">MODA</div>
+    <!-- Top Announcement Bar -->
+    <div class="top-bar">
+        <div class="top-bar-center">
+            EXTRA 20% OFF ON FIRST ORDER | <span>USE CODE: MODA20</span>
+        </div>
+        <div class="top-bar-right">
+            <a href="#">Track Order</a>
+            <a href="#">Store Locator</a>
+            <a href="#">Help</a>
+        </div>
+    </div>
+
+    <!-- Main Navbar -->
+    <header class="navbar dark-navbar">
+        <div class="logo">M MODA</div>
         <nav class="nav-links">
-            <a href="index.html">Home</a>
-            <a href="mens.html" class="active">Men's</a>
-            <a href="womens.html">Women's</a>
-            <a href="all-products.html">All Products</a>
+            <a href="index.html">HOME</a>
+            <a href="mens.html" class="active">MEN</a>
+            <a href="womens.html">WOMEN</a>
+            <a href="all-products.html">ALL PRODUCTS</a>
         </nav>
         <div class="nav-actions">
             <div class="search-bar">
                 <i class="fas fa-search"></i>
-                <input type="text" placeholder="Search...">
+                <input type="text" placeholder="Search for products, brands and more">
             </div>
-            <a href="wishlist.html" class="icon"><i class="far fa-heart"></i></a>
-            <a href="#" class="icon"><i class="fas fa-shopping-bag"></i></a>
-            <a href="account.html" class="account account-link-nav">Account</a>
+            <a href="wishlist.html" class="icon-link">
+                <i class="far fa-heart"></i>
+                <span>Wishlist</span>
+            </a>
+            <a href="cart.html" class="icon-link bag">
+                <i class="fas fa-shopping-bag"></i>
+                <span>Bag</span>
+            </a>
+            <a href="account.html" class="icon-link">
+                <i class="far fa-user"></i>
+                <span>Account</span>
+            </a>
         </div>
     </header>
 
     <main class="collection-page">
-        <div class="breadcrumbs">
-            <a href="index.html">HOME</a> &gt; <span>MEN'S</span>
-        </div>
-        
-        <h1 class="page-title">Men's Collection</h1>
+        <!-- Hero Section -->
+        <section class="mens-hero">
+            <div class="hero-content">
+                <div class="breadcrumbs">
+                    <a href="index.html">Home</a> &gt; <span>Men</span>
+                </div>
+                <h1>Men's Collection</h1>
+                <p>Discover style that defines you. Explore the<br>latest trends in men's fashion.</p>
+                <div class="hero-buttons">
+                    <button class="btn btn-dark">SHOP NOW</button>
+                    <button class="btn btn-light">NEW ARRIVALS</button>
+                </div>
+            </div>
+            <div class="hero-image">
+                <img src="/image/pexels-rachel-claire-5865240.jpg" alt="Men's Fashion">
+            </div>
+        </section>
+
+        <!-- Categories Strip -->
+        <section class="categories-strip">
+            <div class="category-item active">
+                <img src="https://images.unsplash.com/photo-1556821840-3a63f95609a7?auto=format&fit=crop&w=150&q=80"
+                    alt="All">
+                <span>ALL</span>
+            </div>
+            <div class="category-item">
+                <img src="https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?auto=format&fit=crop&w=150&q=80"
+                    alt="T-Shirts">
+                <span>T-SHIRTS</span>
+            </div>
+            <div class="category-item">
+                <img src="https://images.unsplash.com/photo-1602810316693-3667c854239a?auto=format&fit=crop&w=150&q=80"
+                    alt="Shirts">
+                <span>SHIRTS</span>
+            </div>
+            <div class="category-item">
+                <img src="https://images.unsplash.com/photo-1542272604-787c3835535d?auto=format&fit=crop&w=150&q=80"
+                    alt="Jeans">
+                <span>JEANS</span>
+            </div>
+            <div class="category-item">
+                <img src="https://images.unsplash.com/photo-1551028719-00167b16eac5?auto=format&fit=crop&w=150&q=80"
+                    alt="Jackets">
+                <span>JACKETS</span>
+            </div>
+            <div class="category-item">
+                <img src="https://images.unsplash.com/photo-1624378439575-d8705ad7ae80?auto=format&fit=crop&w=150&q=80"
+                    alt="Trousers">
+                <span>TROUSERS</span>
+            </div>
+            <div class="category-item">
+                <img src="https://images.unsplash.com/photo-1592878904946-b3cd8ae243d0?auto=format&fit=crop&w=150&q=80"
+                    alt="Blazers">
+                <span>BLAZERS</span>
+            </div>
+            <div class="category-item">
+                <img src="https://images.unsplash.com/photo-1460353581641-37baddab0fa2?auto=format&fit=crop&w=150&q=80"
+                    alt="Shoes">
+                <span>SHOES</span>
+            </div>
+            <div class="category-item">
+                <img src="https://images.unsplash.com/photo-1523275335684-37898b6baf30?auto=format&fit=crop&w=150&q=80"
+                    alt="Accessories">
+                <span>ACCESSORIES</span>
+            </div>
+        </section>
 
         <div class="collection-layout">
             <!-- Sidebar Filters -->
-            <aside class="filters">
-                <div class="filter-section">
-                    <h4>PRICE RANGE</h4>
-                    <div class="range-slider">
-                        <div class="slider-track">
-                            <div class="slider-fill"></div>
-                            <div class="slider-thumb" style="left: 0%;"></div>
-                            <div class="slider-thumb" style="left: 100%;"></div>
+            <aside class="sidebar-filters">
+
+
+
+
+                <div class="filter-group">
+                    <h4 class="filter-title">BRAND </i></h4>
+                    <div class="filter-content">
+                        <div class="brand-search">
+                            <i class="fas fa-search"></i>
+                            <input type="text" placeholder="Search Brand">
                         </div>
-                        <div class="range-values">
-                            <span>$0</span>
-                            <span>$1,000+</span>
+                        <ul class="filter-list">
+                            <li><label><input type="checkbox"> Jack & Jones</label> <span class="count">(125)</span>
+                            </li>
+                            <li><label><input type="checkbox"> U.S. Polo Assn.</label> <span class="count">(96)</span>
+                            </li>
+                            <li><label><input type="checkbox"> Roadster</label> <span class="count">(78)</span></li>
+                            <li><label><input type="checkbox"> HRX</label> <span class="count">(62)</span></li>
+                            <li><label><input type="checkbox"> Arrow</label> <span class="count">(54)</span></li>
+                        </ul>
+
+                    </div>
+                </div>
+
+                <div class="filter-group">
+                    <h4 class="filter-title">SIZE </i></h4>
+                    <div class="filter-content">
+                        <div class="size-grid">
+                            <button class="size-btn">XS</button>
+                            <button class="size-btn">S</button>
+                            <button class="size-btn">M</button>
+                            <button class="size-btn">L</button>
+                            <button class="size-btn">XL</button>
+                            <button class="size-btn">XXL</button>
+                            <button class="size-btn">3XL</button>
+                            <button class="size-btn">5XL</button>
                         </div>
                     </div>
                 </div>
 
-                <div class="filter-section">
-                    <h4>BRAND</h4>
-                    <ul class="checkbox-list">
-                        <li><label><input type="checkbox"> <span>Aura Collective</span></label></li>
-                        <li><label><input type="checkbox"> <span>Moda Archive</span></label></li>
-                        <li><label><input type="checkbox"> <span>Elysian Men</span></label></li>
-                        <li><label><input type="checkbox"> <span>Nordic Raw</span></label></li>
-                    </ul>
-                </div>
 
-                <div class="filter-section">
-                    <h4>SIZE</h4>
-                    <div class="size-grid">
-                        <button class="size-btn">XS</button>
-                        <button class="size-btn active">S</button>
-                        <button class="size-btn">M</button>
-                        <button class="size-btn">L</button>
-                        <button class="size-btn">XL</button>
-                        <button class="size-btn">XXL</button>
-                    </div>
-                </div>
+
+
+
             </aside>
 
-            <!-- Product Grid Area -->
-            <div class="collection-content">
-                <div class="collection-toolbar">
-                    <span class="product-count">24 PRODUCTS FOUND</span>
-                    <div class="sort-by">
-                        <span>SORT BY: NEWEST</span>
-                        <i class="fas fa-chevron-down"></i>
+            <!-- Product Area -->
+            <div class="product-area">
+                <div class="toolbar">
+                    <div class="item-count">5236 Items Found</div>
+                    <div class="toolbar-actions">
+                        <div class="sort-dropdown">
+                            <select id="sort-select"
+                                style="border:none; outline:none; background:transparent; font-family:var(--font-sans); font-weight:600; font-size:0.85rem; letter-spacing:0.05em; cursor:pointer;">
+                                <option value="popularity">SORT BY: Popularity</option>
+                                <option value="price-low">Price: Low to High</option>
+                                <option value="price-high">Price: High to Low</option>
+                                <option value="newest">Newest Arrivals</option>
+                            </select>
+                        </div>
+                        <div class="view-toggles">
+                            <button class="active"><i class="fas fa-th-large"></i></button>
+                            <button><i class="fas fa-list"></i></button>
+                        </div>
                     </div>
                 </div>
 
-                <div class="product-grid-3">
-                    <!-- Product 1 -->
-                    <div class="product-card">
-                        <div class="product-image-wrapper">
-                            <div class="badge-new">NEW ARRIVAL</div>
-                            <img src="https://images.unsplash.com/photo-1507680434267-325ea751d506?auto=format&fit=crop&w=600&q=80" alt="Structured Wool Overcoat">
-                        </div>
-                        <div class="product-info-collection">
-                            <div class="brand-row">
-                                <span class="brand">MODA ARCHIVE</span>
-                                <button class="wishlist-btn-small"><i class="far fa-heart"></i></button>
-                            </div>
-                            <h4>Structured Wool Overcoat</h4>
-                            <div class="price-row">
-                                <span class="price">$450.00</span>
-                                <span class="rating"><i class="far fa-star"></i> 4.8</span>
-                            </div>
-                        </div>
-                    </div>
-                    <!-- Product 2 -->
-                    <div class="product-card">
-                        <div class="product-image-wrapper">
-                            <img src="https://images.unsplash.com/photo-1610652492500-ded49ceeb378?auto=format&fit=crop&w=600&q=80" alt="Heritage Cashmere Knit">
-                        </div>
-                        <div class="product-info-collection">
-                            <div class="brand-row">
-                                <span class="brand">AURA COLLECTIVE</span>
-                                <button class="wishlist-btn-small"><i class="far fa-heart"></i></button>
-                            </div>
-                            <h4>Heritage Cashmere Knit</h4>
-                            <div class="price-row">
-                                <span class="price">$280.00</span>
-                                <span class="rating"><i class="far fa-star"></i> 5.0</span>
-                            </div>
-                        </div>
-                    </div>
-                    <!-- Product 3 -->
-                    <div class="product-card">
-                        <div class="product-image-wrapper">
-                            <div class="badge-new">LIMITED</div>
-                            <img src="https://images.unsplash.com/photo-1520975954732-57dd22299614?auto=format&fit=crop&w=600&q=80" alt="Architectural Leather Shell">
-                        </div>
-                        <div class="product-info-collection">
-                            <div class="brand-row">
-                                <span class="brand">ELYSIAN MEN</span>
-                                <button class="wishlist-btn-small"><i class="far fa-heart"></i></button>
-                            </div>
-                            <h4>Architectural Leather Shell</h4>
-                            <div class="price-row">
-                                <span class="price">$895.00</span>
-                                <span class="rating"><i class="far fa-star"></i> 4.9</span>
-                            </div>
-                        </div>
-                    </div>
-                    <!-- Product 4 -->
-                    <div class="product-card">
-                        <div class="product-image-wrapper">
-                            <img src="https://images.unsplash.com/photo-1620799140408-edc6dcb6d633?auto=format&fit=crop&w=600&q=80" alt="Cable-Knit Cardigan">
-                        </div>
-                        <div class="product-info-collection">
-                            <div class="brand-row">
-                                <span class="brand">NORDIC RAW</span>
-                                <button class="wishlist-btn-small"><i class="far fa-heart"></i></button>
-                            </div>
-                            <h4>Cable-Knit Cardigan</h4>
-                            <div class="price-row">
-                                <span class="price">$320.00</span>
-                                <span class="rating"><i class="far fa-star"></i> 4.7</span>
-                            </div>
-                        </div>
-                    </div>
-                    <!-- Product 5 -->
-                    <div class="product-card">
-                        <div class="product-image-wrapper">
-                            <img src="https://images.unsplash.com/photo-1602810316693-3667c854239a?auto=format&fit=crop&w=600&q=80" alt="Technical Poplin Shirt">
-                        </div>
-                        <div class="product-info-collection">
-                            <div class="brand-row">
-                                <span class="brand">MODA ARCHIVE</span>
-                                <button class="wishlist-btn-small"><i class="far fa-heart"></i></button>
-                            </div>
-                            <h4>Technical Poplin Shirt</h4>
-                            <div class="price-row">
-                                <span class="price">$195.00</span>
-                                <span class="rating"><i class="far fa-star"></i> 4.6</span>
-                            </div>
-                        </div>
-                    </div>
-                    <!-- Product 6 -->
-                    <div class="product-card">
-                        <div class="product-image-wrapper">
-                            <img src="https://images.unsplash.com/photo-1592878904946-b3cd8ae243d0?auto=format&fit=crop&w=600&q=80" alt="Tailored Silk-Blend Blazer">
-                        </div>
-                        <div class="product-info-collection">
-                            <div class="brand-row">
-                                <span class="brand">ELYSIAN MEN</span>
-                                <button class="wishlist-btn-small"><i class="far fa-heart"></i></button>
-                            </div>
-                            <h4>Tailored Silk-Blend Blazer</h4>
-                            <div class="price-row">
-                                <span class="price">$620.00</span>
-                                <span class="rating"><i class="far fa-star"></i> 4.9</span>
-                            </div>
-                        </div>
-                    </div>
+                <div class="product-grid">
+                    <!-- Dynamic products will be injected here -->
                 </div>
 
                 <div class="pagination">
-                    <button class="page-btn"><i class="fas fa-chevron-left"></i></button>
                     <button class="page-btn active">1</button>
                     <button class="page-btn">2</button>
                     <button class="page-btn">3</button>
+                    <button class="page-btn">4</button>
+                    <span class="page-dots">...</span>
+                    <button class="page-btn">44</button>
                     <button class="page-btn"><i class="fas fa-chevron-right"></i></button>
                 </div>
             </div>
         </div>
+
+        <!-- Features Section -->
+        <section class="features-strip">
+            <div class="feature">
+                <i class="fas fa-shield-alt"></i>
+                <div class="feature-text">
+                    <h4>100% ORIGINAL</h4>
+                    <p>Guarantee for all products</p>
+                </div>
+            </div>
+            <div class="feature">
+                <i class="fas fa-undo"></i>
+                <div class="feature-text">
+                    <h4>EASY RETURNS</h4>
+                    <p>Return within 15 days</p>
+                </div>
+            </div>
+            <div class="feature">
+                <i class="fas fa-truck"></i>
+                <div class="feature-text">
+                    <h4>FREE DELIVERY</h4>
+                    <p>On orders above ₹999</p>
+                </div>
+            </div>
+            <div class="feature">
+                <i class="fas fa-lock"></i>
+                <div class="feature-text">
+                    <h4>SECURE PAYMENTS</h4>
+                    <p>100% secure payments</p>
+                </div>
+            </div>
+        </section>
     </main>
 
-    <footer class="footer-alt">
-        <div class="footer-content footer-alt-grid">
-            <div class="footer-col brand-col">
-                <h3>MODA</h3>
-                <p>Defining the vanguard of contemporary menswear through artisanal craftsmanship and architectural precision.</p>
+    <!-- Newsletter -->
+    <section class="newsletter-dark">
+        <div class="newsletter-left">
+            <h3>BE THE FIRST TO KNOW</h3>
+            <p>Sign up for updates from moda and get exclusive offers.</p>
+        </div>
+        <div class="newsletter-center">
+            <div class="input-group">
+                <input type="email" placeholder="Enter your email">
+                <button><i class="fas fa-arrow-right"></i></button>
             </div>
-            <div class="footer-col">
-                <h3>Customer Care</h3>
-                <ul>
-                    <li><a href="#">Returns</a></li>
-                    <li><a href="#">Shipping Info</a></li>
-                    <li><a href="#">Sizing Guide</a></li>
-                </ul>
+        </div>
+        <div class="newsletter-right">
+            <div class="perk">
+                <i class="fas fa-gift"></i>
+                <div>
+                    <h4>EXCLUSIVE OFFERS</h4>
+                    <p>Special offers & deals</p>
+                </div>
             </div>
-            <div class="footer-col">
-                <h3>Legal</h3>
-                <ul>
-                    <li><a href="#">Privacy Policy</a></li>
-                    <li><a href="#">Terms of Service</a></li>
-                    <li><a href="admin.html">Admin Dashboard</a></li>
-                </ul>
+            <div class="perk">
+                <i class="fas fa-gem"></i>
+                <div>
+                    <h4>NEW ARRIVALS</h4>
+                    <p>Updates on new products</p>
+                </div>
             </div>
-            <div class="footer-col newsletter-col">
-                <h3>Newsletter</h3>
-                <p>Subscribe to receive first access to new arrivals.</p>
-                <div class="newsletter-input">
-                    <input type="email" placeholder="Email Address">
-                    <button>JOIN</button>
+            <div class="perk">
+                <i class="fas fa-lightbulb"></i>
+                <div>
+                    <h4>STYLE TIPS</h4>
+                    <p>Fashion advice & more</p>
                 </div>
             </div>
         </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer-new">
+        <div class="footer-main">
+            <div class="footer-col brand-info">
+                <h2>M MODA</h2>
+                <p>Redefining men's fashion with style, quality & comfort.</p>
+                <div class="social-icons">
+                    <a href="#"><i class="fab fa-instagram"></i></a>
+                    <a href="#"><i class="fab fa-facebook-f"></i></a>
+                    <a href="#"><i class="fab fa-twitter"></i></a>
+                    <a href="#"><i class="fab fa-youtube"></i></a>
+                </div>
+            </div>
+            <div class="footer-col">
+                <h4>SHOP</h4>
+                <ul>
+                    <li><a href="#">Men</a></li>
+                    <li><a href="#">Women</a></li>
+                    <li><a href="#">New In</a></li>
+                    <li><a href="#">Sale</a></li>
+                    <li><a href="#">Gift Cards</a></li>
+                </ul>
+            </div>
+            <div class="footer-col">
+                <h4>CUSTOMER CARE</h4>
+                <ul>
+                    <li><a href="#">Contact Us</a></li>
+                    <li><a href="#">Track Order</a></li>
+                    <li><a href="#">Returns & Refunds</a></li>
+                    <li><a href="#">Shipping Info</a></li>
+                    <li><a href="admin.html">Admin panel</a></li>
+                </ul>
+            </div>
+            <div class="footer-col">
+                <h4>COMPANY</h4>
+                <ul>
+                    <li><a href="#">About Us</a></li>
+                    <li><a href="#">Careers</a></li>
+                    <li><a href="#">Store Locator</a></li>
+                    <li><a href="#">Terms & Conditions</a></li>
+                    <li><a href="#">Privacy Policy</a></li>
+                </ul>
+            </div>
+            <div class="footer-col">
+                <h4>POPULAR CATEGORIES</h4>
+                <ul>
+                    <li><a href="#">T-Shirts</a></li>
+                    <li><a href="#">Shirts</a></li>
+                    <li><a href="#">Jeans</a></li>
+                    <li><a href="#">Jackets</a></li>
+                    <li><a href="#">Sneakers</a></li>
+                </ul>
+            </div>
+        </div>
         <div class="footer-bottom">
-            <p>&copy; 2024 MODA ARCHIVE. ALL RIGHTS RESERVED.</p>
-            <div class="footer-socials">
-                <a href="#">INSTAGRAM</a>
-                <a href="#">PINTEREST</a>
-                <a href="#">TWITTER</a>
+            <p>&copy; 2024 MODA. All Rights Reserved.</p>
+            <div class="payment-methods">
+                <span>We Accept</span>
+                <img src="https://upload.wikimedia.org/wikipedia/commons/5/5e/Visa_Inc._logo.svg" alt="Visa">
+                <img src="https://upload.wikimedia.org/wikipedia/commons/2/2a/Mastercard-logo.svg" alt="Mastercard">
+                <img src="https://upload.wikimedia.org/wikipedia/commons/b/b5/PayPal.svg" alt="PayPal">
             </div>
         </div>
     </footer>
     <script src="script.js"></script>
 </body>
+
 </html>

@@ -151,7 +151,7 @@
                 <a href="index.html"><i class="fas fa-arrow-left"></i> Back to Site</a>
                 <a href="#" id="admin-nav-products" class="active"><i class="fas fa-box"></i> Products</a>
                 <a href="#" id="admin-nav-orders"><i class="fas fa-shopping-cart"></i> Orders</a>
-                <a href="#"><i class="fas fa-users"></i> Customers</a>
+                <a href="#" id="admin-nav-customers"><i class="fas fa-users"></i> Customers</a>
             </nav>
         </aside>
 
@@ -172,7 +172,7 @@
                                 <input type="text" id="prod-name" required placeholder="e.g. Italian Wool Blazer">
                             </div>
                             <div class="form-group">
-                                <label>Price ($)</label>
+                                <label>Price (₹)</label>
                                 <input type="number" id="prod-price" required step="0.01" placeholder="295.00">
                             </div>
                             <div class="form-group">
@@ -265,6 +265,44 @@
                             <!-- Rendered by JS -->
                         </tbody>
                     </table>
+                </div>
+            </div>
+
+            <!-- Customers Panel (Hidden by default) -->
+            <div id="admin-customers-panel" style="display: none;">
+                <div class="admin-header">
+                    <h1 class="admin-title">Customers Directory</h1>
+                </div>
+
+                <div class="admin-card">
+                    <h3 style="margin-bottom: 1.5rem; font-family: var(--font-heading); font-size: 1.5rem;">Registered Customers</h3>
+                    <table id="custom-customers-table" style="width: 100%;">
+                        <thead>
+                            <tr>
+                                <th style="width: 80px;">ID</th>
+                                <th>Customer Info</th>
+                                <th>Email Address</th>
+                                <th style="width: 150px; text-align: center;">Total Orders</th>
+                                <th style="width: 150px;">Lifetime Value</th>
+                                <th>Last Order</th>
+                                <th style="width: 100px;">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="custom-customers-tbody">
+                            <!-- Rendered by JS -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Customer Details Modal -->
+            <div id="customer-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; align-items: center; justify-content: center;">
+                <div style="background: #fff; width: 600px; max-width: 90%; max-height: 90vh; overflow-y: auto; border-radius: 8px; padding: 2rem; position: relative;">
+                    <button onclick="document.getElementById('customer-modal').style.display='none'" style="position: absolute; top: 1rem; right: 1rem; background: none; border: none; font-size: 1.5rem; cursor: pointer; color: #666;">&times;</button>
+                    <h2 style="font-family: var(--font-heading); margin-bottom: 1.5rem; border-bottom: 1px solid #eee; padding-bottom: 1rem;">Customer Profile</h2>
+                    <div id="customer-modal-content">
+                        <!-- Rendered by JS -->
+                    </div>
                 </div>
             </div>
         </main>

@@ -23,7 +23,12 @@ pool.connect((err, client, release) => {
         console.error('Error connecting to PostgreSQL', err.stack);
     } else {
         console.log('Connected to PostgreSQL database "moda_db".');
-        release();
+        
+        // Ensure user_id column exists on orders table
+        client.query('ALTER TABLE orders ADD COLUMN IF NOT EXISTS user_id INTEGER')
+            .then(() => console.log('Checked user_id column in orders table.'))
+            .catch(e => console.error('Error adding user_id column:', e.message))
+            .finally(() => release());
     }
 });
 
@@ -129,7 +134,7 @@ app.get('/api/orders', async (req, res) => {
 });
 
 app.post('/api/orders', async (req, res) => {
-    const { items, total_price, customer_info } = req.body;
+    const { items, total_price, customer_info, user_id } = req.body;
     
     const shipDate = new Date();
     shipDate.setDate(shipDate.getDate() + 3);
@@ -139,17 +144,32 @@ app.post('/api/orders', async (req, res) => {
 
     try {
         const query = `
-            INSERT INTO orders (items, total_price, customer_info, shipping_date)
-            VALUES ($1, $2, $3, $4) RETURNING id;
+            INSERT INTO orders (items, total_price, customer_info, shipping_date, user_id)
+            VALUES ($1, $2, $3, $4, $5) RETURNING id;
         `;
         const values = [
             JSON.stringify(items), 
             total_price, 
             JSON.stringify(customer_info), 
-            shipping_date
+            shipping_date,
+            user_id || null
         ];
         const { rows } = await pool.query(query, values);
         res.json({ id: rows[0].id, shipping_date });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
+app.get('/api/orders/user/:userId', async (req, res) => {
+    try {
+        const { rows } = await pool.query('SELECT * FROM orders WHERE user_id = $1 ORDER BY created_at DESC', [req.params.userId]);
+        const parsedRows = rows.map(row => {
+            try { row.items = JSON.parse(row.items); } catch (e) {}
+            try { row.customer_info = JSON.parse(row.customer_info); } catch (e) {}
+            return row;
+        });
+        res.json(parsedRows);
     } catch (err) {
         res.status(500).json({ error: err.message });
     }
@@ -168,6 +188,32 @@ app.delete('/api/orders/:id', async (req, res) => {
     try {
         await pool.query('DELETE FROM orders WHERE id = $1', [req.params.id]);
         res.json({ deletedID: req.params.id });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
+// ==========================================
+// ADMIN API
+// ==========================================
+
+app.get('/api/admin/customers', async (req, res) => {
+    try {
+        const query = `
+            SELECT 
+                u.id, 
+                u.name, 
+                u.email, 
+                COUNT(o.id) as total_orders, 
+                COALESCE(SUM(o.total_price), 0) as total_spent,
+                MAX(o.created_at) as last_order_date
+            FROM users u
+            LEFT JOIN orders o ON u.id = o.user_id
+            GROUP BY u.id
+            ORDER BY u.id DESC;
+        `;
+        const { rows } = await pool.query(query);
+        res.json(rows);
     } catch (err) {
         res.status(500).json({ error: err.message });
     }

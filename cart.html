@@ -6,6 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Shopping Cart - MODA</title>
     <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="mens.css">
     <link
         href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&family=Inter:wght@300;400;500;600&display=swap"
         rel="stylesheet">
@@ -13,25 +14,44 @@
 </head>
 
 <body>
-    <header class="navbar">
-        <div class="logo">MODA</div>
+    <!-- Top Announcement Bar -->
+    <div class="top-bar">
+        <div class="top-bar-center">
+            EXTRA 20% OFF ON FIRST ORDER | <span>USE CODE: MODA20</span>
+        </div>
+        <div class="top-bar-right">
+            <a href="#">Track Order</a>
+            <a href="#">Store Locator</a>
+            <a href="#">Help</a>
+        </div>
+    </div>
+
+    <!-- Main Navbar -->
+    <header class="navbar dark-navbar">
+        <div class="logo">M MODA</div>
         <nav class="nav-links">
-            <a href="index.html">Home</a>
-            <a href="mens.html">Men's</a>
-            <a href="womens.html">Women's</a>
-            <a href="all-products.html">All Products</a>
+            <a href="index.html">HOME</a>
+            <a href="mens.html">MEN</a>
+            <a href="womens.html">WOMEN</a>
+            <a href="all-products.html">ALL PRODUCTS</a>
         </nav>
         <div class="nav-actions">
             <div class="search-bar">
                 <i class="fas fa-search"></i>
-                <input type="text" placeholder="Search...">
+                <input type="text" placeholder="Search for products, brands and more">
             </div>
-            <a href="wishlist.html" class="icon"><i class="far fa-heart"></i></a>
-            <a href="cart.html" class="icon position-relative">
-                <i class="fas fa-shopping-bag"></i>
-                <span class="cart-badge" id="nav-cart-count">0</span>
+            <a href="wishlist.html" class="icon-link">
+                <i class="far fa-heart"></i>
+                <span>Wishlist</span>
             </a>
-            <a href="account.html" class="account account-link-nav">Account</a>
+            <a href="cart.html" class="icon-link bag">
+                <i class="fas fa-shopping-bag"></i>
+                <span>Bag</span>
+            </a>
+            <a href="account.html" class="icon-link">
+                <i class="far fa-user"></i>
+                <span>Account</span>
+            </a>
         </div>
     </header>
 
@@ -60,7 +80,7 @@
                     <h3>Order Summary</h3>
                     <div class="summary-row">
                         <span>Subtotal</span>
-                        <span id="summary-subtotal">$0.00</span>
+                        <span id="summary-subtotal">₹0.00</span>
                     </div>
                     <div class="summary-row">
                         <span>Shipping (Estimated)</span>
@@ -68,7 +88,7 @@
                     </div>
                     <div class="summary-row">
                         <span>Tax</span>
-                        <span id="summary-tax">$0.00</span>
+                        <span id="summary-tax">₹0.00</span>
                     </div>
 
                     <div class="promo-code">
@@ -81,7 +101,7 @@
 
                     <div class="summary-total">
                         <span>Grand Total</span>
-                        <span id="summary-total">$0.00</span>
+                        <span id="summary-total">₹0.00</span>
                     </div>
 
                     <button class="checkout-btn">PROCEED TO CHECKOUT</button>
@@ -208,7 +228,7 @@
                         </div>
 
                         <button type="submit" class="modal-pay-btn" id="submit-payment-btn">PAY <span
-                                id="modal-grand-total">$0.00</span></button>
+                                id="modal-grand-total">₹0.00</span></button>
                     </form>
                 </div>
 
