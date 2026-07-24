@@ -9,14 +9,20 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         .admin-layout {
-            display: grid;
-            grid-template-columns: 250px 1fr;
+            display: flex;
             min-height: 100vh;
         }
         .admin-sidebar {
             background-color: #000;
             color: #fff;
             padding: 2rem;
+            position: fixed;
+            top: 0;
+            left: 0;
+            height: 100vh;
+            width: 250px;
+            overflow-y: auto;
+            z-index: 100;
         }
         .admin-sidebar h2 {
             font-family: var(--font-heading);
@@ -43,6 +49,8 @@
         .admin-main {
             padding: 3rem;
             background-color: var(--bg-light);
+            margin-left: 250px;
+            width: calc(100% - 250px);
         }
         .admin-header {
             display: flex;
@@ -162,6 +170,17 @@
                     <h1 class="admin-title">Product Management</h1>
                 </div>
 
+                <!-- Category Visibility Form -->
+                <div class="admin-card" style="margin-bottom: 2rem;">
+                    <h3 style="margin-bottom: 1rem; font-family: var(--font-heading); font-size: 1.5rem;">Category Visibility</h3>
+                    <p style="margin-bottom: 1.5rem; color: #64748b;">Uncheck a category to hide it from the user-facing store pages.</p>
+                    <div id="category-visibility-grid" style="display: flex; gap: 15px; flex-wrap: wrap;">
+                        <!-- Checkboxes will be injected here by script.js -->
+                    </div>
+                    <button id="save-categories-btn" class="btn-primary" style="margin-top: 1.5rem; width: auto; padding: 0.75rem 1.5rem;">SAVE VISIBILITY</button>
+                    <div id="save-categories-msg" style="margin-top: 1rem; font-size: 0.9rem;"></div>
+                </div>
+
                 <!-- Upload Form -->
                 <div class="admin-card">
                     <h3 style="margin-bottom: 2rem; font-family: var(--font-heading); font-size: 1.5rem;">Upload New Product</h3>
@@ -190,6 +209,18 @@
                                     <option value="ELYSIAN">Elysian</option>
                                     <option value="NORDIC RAW">Nordic Raw</option>
                                 </select>
+                            </div>
+                            <div class="form-group full-width">
+                                <label>Product Description</label>
+                                <textarea id="prod-description" rows="4" placeholder="Enter a detailed description of the product..." style="padding: 0.9rem; border: 1px solid var(--border-color); font-family: var(--font-body); font-size: 0.9rem; outline: none; resize: vertical;"></textarea>
+                            </div>
+                            <div class="form-group full-width">
+                                <label>Material & Care</label>
+                                <textarea id="prod-material" rows="3" placeholder="Enter material and care information (e.g., 100% Cotton, Machine wash cold)..." style="padding: 0.9rem; border: 1px solid var(--border-color); font-family: var(--font-body); font-size: 0.9rem; outline: none; resize: vertical;"></textarea>
+                            </div>
+                            <div class="form-group full-width">
+                                <label>Shipping Information</label>
+                                <textarea id="prod-shipping" rows="3" placeholder="Enter shipping information (e.g., Free shipping on orders over ₹500)..." style="padding: 0.9rem; border: 1px solid var(--border-color); font-family: var(--font-body); font-size: 0.9rem; outline: none; resize: vertical;"></textarea>
                             </div>
                             <div class="form-group full-width">
                                 <label>Available Sizes</label>

@@ -1,7 +1,8 @@
 const express = require('express');
 const cors = require('cors');
 const { Pool } = require('pg');
-
+const fs = require('fs');
+const path = require('path');
 const app = express();
 const PORT = 3000;
 
@@ -68,14 +69,45 @@ app.post('/api/login', async (req, res) => {
     }
 });
 
+app.put('/api/users/:id', async (req, res) => {
+    const { name, email, password } = req.body;
+    try {
+        let query, values;
+        if (password && password.trim() !== '') {
+            query = 'UPDATE users SET name = $1, email = $2, password = $3 WHERE id = $4 RETURNING id, name, email;';
+            values = [name, email, password, req.params.id];
+        } else {
+            query = 'UPDATE users SET name = $1, email = $2 WHERE id = $3 RETURNING id, name, email;';
+            values = [name, email, req.params.id];
+        }
+        const { rows } = await pool.query(query, values);
+        if (rows.length > 0) {
+            res.json({ success: true, user: rows[0] });
+        } else {
+            res.status(404).json({ error: 'User not found.' });
+        }
+    } catch (err) {
+        if (err.code === '23505') { 
+            res.status(400).json({ error: 'Email already exists.' });
+        } else {
+            res.status(500).json({ error: err.message });
+        }
+    }
+});
+
 // ==========================================
 // PRODUCTS API
 // ==========================================
 
 app.get('/api/products', async (req, res) => {
     try {
-        const { rows } = await pool.query('SELECT * FROM products ORDER BY id DESC');
-        res.json(rows);
+        if (req.query.admin) {
+            const { rows } = await pool.query('SELECT * FROM products ORDER BY id DESC');
+            res.json(rows);
+        } else {
+            const { rows } = await pool.query('SELECT id, title, price, category, brand, img, sizes FROM products ORDER BY id DESC');
+            res.json(rows);
+        }
     } catch (err) {
         res.status(500).json({ error: err.message });
     }
@@ -92,16 +124,20 @@ app.get('/api/products/:id', async (req, res) => {
 });
 
 app.post('/api/products', async (req, res) => {
-    const { title, price, category, brand, img, img2, img3, sizes } = req.body;
+    const { title, price, category, brand, img, img2, img3, sizes, description, material, shipping } = req.body;
+    console.log('Received description:', description);
+    console.log('Received material:', material);
+    console.log('Received shipping:', shipping);
     try {
         const query = `
-            INSERT INTO products (title, price, category, brand, img, img2, img3, sizes)
-            VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING id;
+            INSERT INTO products (title, price, category, brand, img, img2, img3, sizes, description, material, shipping)
+            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11) RETURNING id;
         `;
-        const values = [title, price, category, brand, img, img2, img3, sizes || ''];
+        const values = [title, price, category, brand, img, img2, img3, sizes || '', description || '', material || '', shipping || ''];
         const { rows } = await pool.query(query, values);
         res.json({ id: rows[0].id });
     } catch (err) {
+        console.error('Error saving product:', err);
         res.status(500).json({ error: err.message });
     }
 });
@@ -175,10 +211,11 @@ app.get('/api/orders/user/:userId', async (req, res) => {
     }
 });
 
-app.put('/api/orders/:id/dispatch', async (req, res) => {
+app.put('/api/orders/:id/status', async (req, res) => {
+    const { status } = req.body;
     try {
-        await pool.query("UPDATE orders SET status = 'Dispatched' WHERE id = $1", [req.params.id]);
-        res.json({ updatedID: req.params.id, status: 'Dispatched' });
+        await pool.query("UPDATE orders SET status = $1 WHERE id = $2", [status, req.params.id]);
+        res.json({ updatedID: req.params.id, status });
     } catch (err) {
         res.status(500).json({ error: err.message });
     }
@@ -328,6 +365,34 @@ app.post('/api/wishlist/:sessionId', async (req, res) => {
         }
         res.json({ success: true });
     } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
+// ==========================================
+// SETTINGS API (Categories Visibility)
+// ==========================================
+const settingsPath = path.join(__dirname, 'settings.json');
+
+app.get('/api/settings/categories', (req, res) => {
+    try {
+        if (fs.existsSync(settingsPath)) {
+            const data = fs.readFileSync(settingsPath, 'utf8');
+            res.json(JSON.parse(data));
+        } else {
+            res.json({ hidden: [] });
+        }
+    } catch(err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
+app.post('/api/settings/categories', (req, res) => {
+    try {
+        const { hidden } = req.body;
+        fs.writeFileSync(settingsPath, JSON.stringify({ hidden }), 'utf8');
+        res.json({ success: true, hidden });
+    } catch(err) {
         res.status(500).json({ error: err.message });
     }
 });

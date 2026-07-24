@@ -298,6 +298,140 @@
             border: 1px solid #4ade80;
             display: block;
         }
+
+        /* Tracking Modal CSS */
+        .tracking-modal {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 9999;
+            align-items: center;
+            justify-content: center;
+        }
+        .tracking-modal-content {
+            background: #fff;
+            width: 90%;
+            max-width: 500px;
+            border-radius: 8px;
+            padding: 2rem;
+            position: relative;
+            animation: fadeIn 0.3s ease;
+        }
+        .tracking-close {
+            position: absolute;
+            top: 1rem; right: 1rem;
+            background: none; border: none;
+            font-size: 1.5rem; cursor: pointer;
+            color: #666;
+        }
+        .tracking-timeline {
+            margin-top: 1.5rem;
+            position: relative;
+            padding-left: 20px;
+        }
+        .tracking-timeline::before {
+            content: '';
+            position: absolute;
+            left: 5px; top: 0; bottom: 0;
+            width: 2px;
+            background: #eaeaea;
+        }
+        .tracking-step {
+            position: relative;
+            margin-bottom: 1.5rem;
+            color: #999;
+        }
+        .tracking-step::before {
+            content: '';
+            position: absolute;
+            left: -20px; top: 4px;
+            width: 12px; height: 12px;
+            border-radius: 50%;
+            background: #eaeaea;
+            border: 2px solid #fff;
+        }
+        .tracking-step.active {
+            color: #000;
+        }
+        .tracking-step.active::before {
+            background: #000;
+        }
+        .tracking-step-title {
+            font-weight: 600;
+            margin-bottom: 0.2rem;
+        }
+        .tracking-step-desc {
+            font-size: 0.85rem;
+        }
+
+        /* Delivered Animation CSS */
+        .tracking-step.delivered {
+            color: #10b981;
+        }
+        .tracking-step.delivered::before {
+            background: #10b981;
+            border-color: #10b981;
+            transform: scale(0);
+            animation: popIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+        }
+        .tracking-step.delivered::after {
+            content: '';
+            position: absolute;
+            left: -17px; top: 6px;
+            width: 4px; height: 9px;
+            border: solid white;
+            border-width: 0 2px 2px 0;
+            transform: rotate(45deg) scale(0);
+            animation: checkmark 0.4s ease-out 0.4s forwards;
+            z-index: 2;
+        }
+
+        .tracking-step.delivered .tracking-step-title {
+            animation: slideFadeIn 0.5s ease-out forwards;
+            color: #10b981;
+        }
+        .tracking-step.delivered .tracking-step-desc {
+            animation: slideFadeIn 0.5s ease-out 0.2s forwards;
+            opacity: 0;
+            color: #059669;
+        }
+
+        /* Confetti Container */
+        .confetti-wrapper {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            pointer-events: none;
+            overflow: hidden;
+            z-index: 999;
+            border-radius: 8px;
+        }
+        .confetti {
+            position: absolute;
+            width: 10px; height: 18px;
+            opacity: 0;
+            transform-origin: center;
+            animation: confettiBurst 2.5s cubic-bezier(0.25, 1, 0.5, 1) forwards;
+        }
+
+        @keyframes popIn {
+            0% { transform: scale(0); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.4); }
+            50% { box-shadow: 0 0 0 10px rgba(16, 185, 129, 0); }
+            100% { transform: scale(1.5); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
+        }
+        @keyframes checkmark {
+            0% { transform: rotate(45deg) scale(0); opacity: 0; }
+            100% { transform: rotate(45deg) scale(1); opacity: 1; }
+        }
+        @keyframes slideFadeIn {
+            0% { opacity: 0; transform: translateX(-15px); }
+            100% { opacity: 1; transform: translateX(0); }
+        }
+        @keyframes confettiBurst {
+            0% { transform: translate(0, 0) scale(0) rotate(0deg); opacity: 1; }
+            35% { transform: translate(var(--tx), var(--ty)) scale(1) rotate(calc(var(--rot) / 2)); opacity: 1; }
+            100% { transform: translate(calc(var(--tx) + (var(--tx) * 0.5)), calc(var(--ty) + 400px)) scale(1) rotate(var(--rot)); opacity: 0; }
+        }
     </style>
 </head>
 <body>
@@ -432,16 +566,46 @@
                         </div>
                     </div>
 
-                    <!-- Settings Panel (Placeholder for visual completeness) -->
+                    <!-- Settings Panel -->
                     <div id="panel-settings" class="dashboard-panel">
                         <h2 class="panel-title">Account Settings</h2>
-                        <p style="color: var(--text-light);">Settings and preferences will be available here soon.</p>
+                        <div class="info-card" style="max-width: 500px;">
+                            <form id="settings-form">
+                                <div class="form-group">
+                                    <label>Full Name</label>
+                                    <input type="text" id="settings-name" required>
+                                </div>
+                                <div class="form-group">
+                                    <label>Email Address</label>
+                                    <input type="email" id="settings-email" required>
+                                </div>
+                                <div class="form-group">
+                                    <label>New Password (leave blank to keep current)</label>
+                                    <input type="password" id="settings-password" placeholder="Enter new password">
+                                </div>
+                                <button type="submit" class="btn-submit">Save Changes</button>
+                                <div id="settings-message" class="form-message"></div>
+                            </form>
+                        </div>
                     </div>
 
                 </div>
             </div>
         </div>
     </main>
+
+    <!-- Tracking Modal -->
+    <div id="tracking-modal" class="tracking-modal">
+        <div class="tracking-modal-content">
+            <button class="tracking-close" onclick="document.getElementById('tracking-modal').style.display='none'">&times;</button>
+            <h2 style="font-family: 'Playfair Display', serif; margin-bottom: 0.5rem;" id="tracking-order-title">Track Package</h2>
+            <p style="color: #666; font-size: 0.9rem; margin-bottom: 1.5rem;" id="tracking-order-id">Loading...</p>
+            
+            <div class="tracking-timeline" id="tracking-timeline-container">
+                <!-- Dynamically populated -->
+            </div>
+        </div>
+    </div>
 
     <footer class="footer-alt">
         <div class="footer-content footer-alt-grid">

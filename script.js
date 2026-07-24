@@ -89,7 +89,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const renderAdminTable = async () => {
             try {
-                const res = await fetch('http://localhost:3000/api/products');
+                const res = await fetch('http://localhost:3000/api/products?admin=true');
                 const customProducts = await res.json();
                 if(tbody) {
                     tbody.innerHTML = customProducts.map((p) => `
@@ -110,6 +110,52 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             } catch (err) {
                 if(tbody) tbody.innerHTML = '<tr><td colspan="6" style="color: red; text-align: center;">Could not connect to database. Is the Node.js server running?</td></tr>';
+            }
+        };
+
+        const categoriesList = ['ALL', 'T-SHIRTS', 'SHIRTS', 'JEANS', 'JACKETS', 'TROUSERS', 'BLAZERS', 'SHOES', 'ACCESSORIES', 'TOPS', 'DRESSES', 'SKIRTS', 'BAGS'];
+        
+        const loadCategoryVisibility = async () => {
+            const grid = document.getElementById('category-visibility-grid');
+            if (!grid) return;
+            try {
+                const res = await fetch('http://localhost:3000/api/settings/categories');
+                const { hidden } = await res.json();
+                
+                grid.innerHTML = categoriesList.map(cat => `
+                    <label style="display: flex; align-items: center; gap: 5px; cursor: pointer; text-transform: none;">
+                        <input type="checkbox" value="${cat}" ${hidden.includes(cat) ? '' : 'checked'}>
+                        ${cat}
+                    </label>
+                `).join('');
+                
+                const saveBtn = document.getElementById('save-categories-btn');
+                const saveMsg = document.getElementById('save-categories-msg');
+                if (saveBtn) {
+                    saveBtn.onclick = async () => {
+                        const checkboxes = grid.querySelectorAll('input[type="checkbox"]');
+                        const newHidden = [];
+                        checkboxes.forEach(cb => {
+                            if (!cb.checked) newHidden.push(cb.value);
+                        });
+                        
+                        try {
+                            await fetch('http://localhost:3000/api/settings/categories', {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({ hidden: newHidden })
+                            });
+                            saveMsg.innerText = 'Visibility saved successfully!';
+                            saveMsg.style.color = '#10b981';
+                            setTimeout(() => saveMsg.innerText = '', 3000);
+                        } catch(e) {
+                            saveMsg.innerText = 'Error saving settings.';
+                            saveMsg.style.color = 'red';
+                        }
+                    };
+                }
+            } catch(e) {
+                grid.innerHTML = '<span style="color:red">Failed to load settings.</span>';
             }
         };
 
@@ -149,14 +195,21 @@ document.addEventListener('DOMContentLoaded', () => {
                         minute: '2-digit'
                     });
 
-                    const statusBadge = order.status === 'Dispatched' 
-                        ? `<span style="background-color: #2ecc71; color: white; padding: 3px 8px; border-radius: 3px; font-size: 0.75rem; font-weight: 500; text-transform: uppercase;">DISPATCHED</span>`
-                        : `<span style="background-color: #f39c12; color: white; padding: 3px 8px; border-radius: 3px; font-size: 0.75rem; font-weight: 500; text-transform: uppercase;">PROCESSING</span>`;
+                    let badgeColor = '#f39c12';
+                    if (order.status === 'Dispatched') badgeColor = '#3498db';
+                    else if (order.status === 'Out for Delivery') badgeColor = '#9b59b6';
+                    else if (order.status === 'Delivered') badgeColor = '#2ecc71';
 
-                    const dispatchBtn = order.status !== 'Dispatched'
-                        ? `<button class="checkout-btn" style="padding: 6px 12px; font-size: 0.7rem; border-radius: 3px; background-color: #2ecc71; color: white; border: none; cursor: pointer; margin: 0; width: auto;" onclick="dispatchOrder(${order.id})">DISPATCH</button>`
-                        : `<button style="padding: 6px 12px; font-size: 0.7rem; border-radius: 3px; background-color: #ddd; color: #777; border: none; cursor: not-allowed; margin: 0; width: auto;" disabled>DISPATCHED</button>`;
+                    const statusBadge = `<span style="background-color: ${badgeColor}; color: white; padding: 3px 8px; border-radius: 3px; font-size: 0.75rem; font-weight: 500; text-transform: uppercase;">${order.status === 'Pending' ? 'PROCESSING' : order.status.toUpperCase()}</span>`;
 
+                    const dispatchBtn = `
+                        <select onchange="updateOrderStatus(${order.id}, this.value)" style="padding: 4px; font-size: 0.75rem; border: 1px solid #ddd; border-radius: 3px; margin-right: 5px;">
+                            <option value="Pending" ${order.status === 'Pending' ? 'selected' : ''}>Processing</option>
+                            <option value="Dispatched" ${order.status === 'Dispatched' ? 'selected' : ''}>Dispatched</option>
+                            <option value="Out for Delivery" ${order.status === 'Out for Delivery' ? 'selected' : ''}>Out for Delivery</option>
+                            <option value="Delivered" ${order.status === 'Delivered' ? 'selected' : ''}>Delivered</option>
+                        </select>
+                    `;
                     const deleteBtn = `<button class="action-btn" style="margin-left: 15px;" onclick="deleteOrder(${order.id})"><i class="fas fa-trash"></i></button>`;
 
                     return `
@@ -342,7 +395,10 @@ document.addEventListener('DOMContentLoaded', () => {
             renderAdminTable();
         }
 
-        if (tbody) renderAdminTable();
+        if (tbody) {
+            renderAdminTable();
+            loadCategoryVisibility();
+        }
 
         if (form) {
             form.addEventListener('submit', async (e) => {
@@ -371,6 +427,13 @@ document.addEventListener('DOMContentLoaded', () => {
                         .map(cb => cb.value)
                         .join(',');
 
+                    const descriptionValue = document.getElementById('prod-description').value;
+                    const materialValue = document.getElementById('prod-material').value;
+                    const shippingValue = document.getElementById('prod-shipping').value;
+                    console.log('Description value:', descriptionValue);
+                    console.log('Material value:', materialValue);
+                    console.log('Shipping value:', shippingValue);
+
                     const newItem = {
                         title: document.getElementById('prod-name').value,
                         price: parseFloat(document.getElementById('prod-price').value),
@@ -379,7 +442,10 @@ document.addEventListener('DOMContentLoaded', () => {
                         img: img1Base64,
                         img2: img2Base64,
                         img3: img3Base64,
-                        sizes: checkedSizes
+                        sizes: checkedSizes,
+                        description: descriptionValue,
+                        material: materialValue,
+                        shipping: shippingValue
                     };
 
                     try {
@@ -415,15 +481,17 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         };
 
-        window.dispatchOrder = async (id) => {
+        window.updateOrderStatus = async (id, newStatus) => {
             try {
-                const res = await fetch(`http://localhost:3000/api/orders/${id}/dispatch`, {
-                    method: 'PUT'
+                const res = await fetch(`http://localhost:3000/api/orders/${id}/status`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ status: newStatus })
                 });
                 if (res.ok) {
                     renderAdminOrders();
                 } else {
-                    alert('Failed to dispatch order.');
+                    alert('Failed to update status.');
                 }
             } catch (err) {
                 console.error(err);
@@ -746,6 +814,46 @@ document.addEventListener('DOMContentLoaded', () => {
             
             const priceEl = document.querySelector('.product-detail-price');
             if (priceEl) priceEl.innerText = '₹' + currentProduct.price.toFixed(2);
+            
+            const descriptionEl = document.getElementById('product-description');
+            if (descriptionEl && currentProduct.description) {
+                descriptionEl.innerText = currentProduct.description;
+            }
+            
+            // Update tab content for Material & Care and Shipping
+            const tabContent = document.querySelector('.tab-content');
+            if (tabContent && currentProduct) {
+                let descriptionHtml = '';
+                if (currentProduct.description) {
+                    descriptionHtml = `<p>${currentProduct.description}</p>`;
+                } else {
+                    descriptionHtml = '<p>Product description not available.</p>';
+                }
+                
+                let materialHtml = '';
+                if (currentProduct.material) {
+                    materialHtml = `<p>${currentProduct.material}</p>`;
+                } else {
+                    materialHtml = '<p>Material and care information not available.</p>';
+                }
+                
+                let shippingHtml = '';
+                if (currentProduct.shipping) {
+                    shippingHtml = `<p>${currentProduct.shipping}</p>`;
+                } else {
+                    shippingHtml = '<p>Shipping information not available.</p>';
+                }
+                
+                // Store content for tabs
+                window.tabContents = {
+                    description: descriptionHtml,
+                    material: materialHtml,
+                    shipping: shippingHtml
+                };
+                
+                // Set initial tab content to description
+                tabContent.innerHTML = window.tabContents.description;
+            }
         }
 
         const productThumbs = document.querySelectorAll('.thumbnail-list .thumb');
@@ -757,6 +865,24 @@ document.addEventListener('DOMContentLoaded', () => {
                     productThumbs.forEach(t => t.classList.remove('active'));
                     this.classList.add('active');
                     productMainImg.src = this.src;
+                });
+            });
+        }
+
+        // Tab switching functionality
+        const tabHeaders = document.querySelectorAll('.tab-headers .tab');
+        const tabContent = document.querySelector('.tab-content');
+        
+        if (tabHeaders.length > 0 && tabContent) {
+            tabHeaders.forEach((tab, index) => {
+                tab.addEventListener('click', function() {
+                    tabHeaders.forEach(t => t.classList.remove('active'));
+                    this.classList.add('active');
+                    
+                    const tabName = this.innerText.toLowerCase();
+                    if (window.tabContents && window.tabContents[tabName]) {
+                        tabContent.innerHTML = window.tabContents[tabName];
+                    }
                 });
             });
         }
@@ -940,15 +1066,66 @@ document.addEventListener('DOMContentLoaded', () => {
         } catch(e) {}
     }
 
+    let isPromoApplied = false;
+
+    const promoBtn = document.getElementById('promo-btn');
+    if (promoBtn) {
+        promoBtn.addEventListener('click', async () => {
+            const input = document.getElementById('promo-input');
+            const msg = document.getElementById('promo-msg');
+            const code = input.value.trim().toUpperCase();
+            
+            if (code === 'MODA20') {
+                if (localStorage.getItem('moda20_used') === 'true') {
+                    msg.innerText = 'This promo code has already been used.';
+                    msg.style.color = '#e74c3c';
+                } else {
+                    isPromoApplied = true;
+                    msg.innerText = 'Promo code applied! 20% discount.';
+                    msg.style.color = '#10b981';
+                    try {
+                        const res = await fetch(`http://localhost:3000/api/cart/${getSessionId()}`);
+                        const cart = await res.json();
+                        updateTotals(cart);
+                    } catch(e){}
+                }
+            } else {
+                msg.innerText = 'Invalid promo code.';
+                msg.style.color = '#e74c3c';
+                isPromoApplied = false;
+                try {
+                    const res = await fetch(`http://localhost:3000/api/cart/${getSessionId()}`);
+                    const cart = await res.json();
+                    updateTotals(cart);
+                } catch(e){}
+            }
+        });
+    }
+
     function updateTotals(cart) {
         const subtotalEl = document.getElementById('summary-subtotal');
         const taxEl = document.getElementById('summary-tax');
         const totalEl = document.getElementById('summary-total');
+        const discountEl = document.getElementById('summary-discount');
+        const discountRow = document.getElementById('summary-discount-row');
+
         const subtotal = cart.reduce((sum, item) => sum + (item.price * item.qty), 0);
-        const tax = subtotal * 0.0824; 
-        const total = subtotal + tax;
+        const discountAmt = subtotal * (isPromoApplied ? 0.20 : 0);
+        const discountedSubtotal = subtotal - discountAmt;
+        const tax = discountedSubtotal * 0.0824; 
+        const total = discountedSubtotal + tax;
 
         if (subtotalEl) subtotalEl.innerText = '₹' + subtotal.toFixed(2);
+        
+        if (discountEl && discountRow) {
+            if (isPromoApplied) {
+                discountRow.style.display = 'flex';
+                discountEl.innerText = '-₹' + discountAmt.toFixed(2);
+            } else {
+                discountRow.style.display = 'none';
+            }
+        }
+        
         if (taxEl) taxEl.innerText = '₹' + tax.toFixed(2);
         if (totalEl) totalEl.innerText = '₹' + total.toFixed(2);
     }
@@ -985,8 +1162,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 window.currentCheckoutCart = cart;
 
                 const subtotal = cart.reduce((sum, item) => sum + (item.price * item.qty), 0);
-                const tax = subtotal * 0.0824;
-                const total = subtotal + tax;
+                const discountAmt = subtotal * (isPromoApplied ? 0.20 : 0);
+                const discountedSubtotal = subtotal - discountAmt;
+                const tax = discountedSubtotal * 0.0824;
+                const total = discountedSubtotal + tax;
 
                 if (modalGrandTotal) {
                     modalGrandTotal.innerText = '₹' + total.toFixed(2);
@@ -1023,8 +1202,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 
                 const cartData = window.currentCheckoutCart || [];
                 const subtotal = cartData.reduce((sum, item) => sum + (item.price * item.qty), 0);
-                const tax = subtotal * 0.0824;
-                const total = parseFloat((subtotal + tax).toFixed(2));
+                const discountAmt = subtotal * (isPromoApplied ? 0.20 : 0);
+                const discountedSubtotal = subtotal - discountAmt;
+                const tax = discountedSubtotal * 0.0824;
+                const total = parseFloat((discountedSubtotal + tax).toFixed(2));
 
                 let orderUserId = null;
                 try {
@@ -1067,6 +1248,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
                     if (res.ok) {
                         const data = await res.json();
+                        
+                        if (isPromoApplied) {
+                            localStorage.setItem('moda20_used', 'true');
+                        }
                         
                         if (successShippingDate) {
                             successShippingDate.innerText = data.shipping_date;
@@ -1190,6 +1375,12 @@ document.addEventListener('DOMContentLoaded', () => {
                         
                         const greetingEl = document.getElementById('greeting-name');
                         if (greetingEl) greetingEl.innerText = (u.name || 'User').split(' ')[0];
+
+                        const settingsName = document.getElementById('settings-name');
+                        const settingsEmail = document.getElementById('settings-email');
+                        if (settingsName) settingsName.value = u.name || '';
+                        if (settingsEmail) settingsEmail.value = u.email || '';
+
                         
                         fetch(`http://localhost:3000/api/orders/user/${u.id}`)
                             .then(res => res.json())
@@ -1228,12 +1419,97 @@ document.addEventListener('DOMContentLoaded', () => {
                                             </div>
                                             <div class="order-footer">
                                                 <span class="order-total">Total: ${formattedTotal}</span>
-                                                <button class="btn-outline">Track Package</button>
+                                                <button class="btn-outline" onclick="trackPackage(${order.id}, '${order.status}')">Track Package</button>
                                             </div>
                                         </div>
                                     `;
                                 });
                                 list.innerHTML = html;
+                                
+                                // Define trackPackage if not defined
+                                if (!window.trackPackage) {
+                                    window.trackPackage = (orderId, status) => {
+                                        const modal = document.getElementById('tracking-modal');
+                                        const title = document.getElementById('tracking-order-title');
+                                        const idText = document.getElementById('tracking-order-id');
+                                        const timeline = document.getElementById('tracking-timeline-container');
+                                        
+                                        if (modal && title && idText && timeline) {
+                                            title.innerText = 'Track Package';
+                                            idText.innerText = 'Order #' + orderId + ' • Tracking ID: TRK' + orderId + Math.floor(Math.random() * 10000);
+                                            
+                                            let timelineHtml = `
+                                                <div class="tracking-step active">
+                                                    <div class="tracking-step-title">Order Placed</div>
+                                                    <div class="tracking-step-desc">We have received your order.</div>
+                                                </div>
+                                                <div class="tracking-step ${['Dispatched', 'Out for Delivery', 'Delivered'].includes(status) ? 'active' : ''}">
+                                                    <div class="tracking-step-title">Processing</div>
+                                                    <div class="tracking-step-desc">${['Dispatched', 'Out for Delivery', 'Delivered'].includes(status) ? 'Your items have been picked and packed.' : 'Your items are being picked and packed.'}</div>
+                                                </div>
+                                                <div class="tracking-step ${['Dispatched', 'Out for Delivery', 'Delivered'].includes(status) ? 'active' : ''}">
+                                                    <div class="tracking-step-title">Dispatched</div>
+                                                    <div class="tracking-step-desc">${['Dispatched', 'Out for Delivery', 'Delivered'].includes(status) ? 'Your package is on the way. Courier: BlueDart.' : 'Pending'}</div>
+                                                </div>
+                                                <div class="tracking-step ${['Out for Delivery', 'Delivered'].includes(status) ? 'active' : ''}">
+                                                    <div class="tracking-step-title">Out for Delivery</div>
+                                                    <div class="tracking-step-desc">${['Out for Delivery', 'Delivered'].includes(status) ? 'Out for delivery today.' : 'Pending'}</div>
+                                                </div>
+                                                <div class="tracking-step ${status === 'Delivered' ? 'delivered' : ''}">
+                                                    <div class="tracking-step-title">Delivered</div>
+                                                    <div class="tracking-step-desc">${status === 'Delivered' ? 'Your package has been delivered! 🎉' : 'Pending'}</div>
+                                                </div>
+                                            `;
+                                            timeline.innerHTML = timelineHtml;
+                                            
+                                            // Handle confetti
+                                            const existingConfetti = modal.querySelector('.confetti-wrapper');
+                                            if (existingConfetti) existingConfetti.remove();
+                                            
+                                            if (status === 'Delivered') {
+                                                const confettiWrapper = document.createElement('div');
+                                                confettiWrapper.className = 'confetti-wrapper';
+                                                
+                                                // Create a burst of confetti from bottom center (party popper style)
+                                                for (let i = 0; i < 70; i++) {
+                                                    const confetti = document.createElement('div');
+                                                    confetti.className = 'confetti';
+                                                    
+                                                    // Math for burst physics
+                                                    const angle = (Math.random() * 80 + 230) * (Math.PI / 180); // Upwards cone
+                                                    const velocity = 150 + Math.random() * 300; 
+                                                    const tx = Math.cos(angle) * velocity;
+                                                    const ty = Math.sin(angle) * velocity;
+                                                    const rotate = (Math.random() - 0.5) * 1000;
+                                                    
+                                                    // Set custom css variables for the animation keyframes
+                                                    confetti.style.setProperty('--tx', `${tx}px`);
+                                                    confetti.style.setProperty('--ty', `${ty}px`);
+                                                    confetti.style.setProperty('--rot', `${rotate}deg`);
+                                                    
+                                                    // Start at bottom middle
+                                                    confetti.style.left = '50%';
+                                                    confetti.style.bottom = '-20px';
+                                                    confetti.style.animationDelay = (Math.random() * 0.15) + 's';
+                                                    
+                                                    // Random colors and shapes
+                                                    const colors = ['#f2d74e', '#95c3de', '#ff9a91', '#10b981', '#a855f7', '#ec4899'];
+                                                    confetti.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+                                                    if (Math.random() > 0.5) confetti.style.borderRadius = '50%';
+                                                    if (Math.random() > 0.7) {
+                                                        confetti.style.width = '12px';
+                                                        confetti.style.height = '12px';
+                                                    }
+                                                    
+                                                    confettiWrapper.appendChild(confetti);
+                                                }
+                                                modal.querySelector('.tracking-modal-content').appendChild(confettiWrapper);
+                                            }
+                                            
+                                            modal.style.display = 'flex';
+                                        }
+                                    };
+                                }
                             })
                             .catch(err => {
                                 const list = document.getElementById('user-orders-list');
@@ -1256,6 +1532,49 @@ document.addEventListener('DOMContentLoaded', () => {
         const loginForm = document.getElementById('login-form');
         const registerMsg = document.getElementById('register-message');
         const loginMsg = document.getElementById('login-message');
+        
+        const settingsForm = document.getElementById('settings-form');
+        if (settingsForm) {
+            settingsForm.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const uStr = localStorage.getItem('moda_user');
+                if (!uStr) return;
+                const u = JSON.parse(uStr);
+                const msgEl = document.getElementById('settings-message');
+                msgEl.style.display = 'block';
+                
+                const name = document.getElementById('settings-name').value;
+                const email = document.getElementById('settings-email').value;
+                const password = document.getElementById('settings-password').value;
+                
+                try {
+                    const res = await fetch(`http://localhost:3000/api/users/${u.id}`, {
+                        method: 'PUT',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ name, email, password })
+                    });
+                    const data = await res.json();
+                    
+                    if (res.ok && data.success) {
+                        msgEl.className = 'form-message success';
+                        msgEl.innerText = 'Profile updated successfully!';
+                        localStorage.setItem('moda_user', JSON.stringify(data.user));
+                        document.getElementById('profile-name').innerText = data.user.name;
+                        document.getElementById('profile-email').innerText = data.user.email;
+                        const greetingEl = document.getElementById('greeting-name');
+                        if (greetingEl) greetingEl.innerText = data.user.name.split(' ')[0];
+                        document.getElementById('settings-password').value = '';
+                        checkAuthState();
+                    } else {
+                        msgEl.className = 'form-message error';
+                        msgEl.innerText = data.error || 'Failed to update profile.';
+                    }
+                } catch (err) {
+                    msgEl.className = 'form-message error';
+                    msgEl.innerText = 'Network error. Try again.';
+                }
+            });
+        }
 
         if (registerForm) {
             registerForm.addEventListener('submit', async (e) => {
@@ -1344,6 +1663,39 @@ document.addEventListener('DOMContentLoaded', () => {
         const allSizes = ['XS', 'S', 'M', 'L', 'XL', 'XXL', '3XL', '5XL'];
         const sizeButtons = sizeGroup ? sizeGroup.querySelectorAll('.size-grid button') : [];
 
+        const categoryStripItems = document.querySelectorAll('.categories-strip .category-item');
+        let selectedCategoryItem = 'ALL';
+
+        if (categoryStripItems.length > 0) {
+            fetch('http://localhost:3000/api/settings/categories')
+                .then(res => res.json())
+                .then(data => {
+                    const hidden = data.hidden || [];
+                    categoryStripItems.forEach(item => {
+                        const catText = item.querySelector('span').textContent.trim().toUpperCase();
+                        if (hidden.includes(catText)) {
+                            item.style.display = 'none';
+                        }
+                        item.addEventListener('click', () => {
+                            categoryStripItems.forEach(i => i.classList.remove('active'));
+                            item.classList.add('active');
+                            selectedCategoryItem = catText;
+                            applyFilters();
+                        });
+                    });
+                })
+                .catch(e => {
+                    categoryStripItems.forEach(item => {
+                        item.addEventListener('click', () => {
+                            categoryStripItems.forEach(i => i.classList.remove('active'));
+                            item.classList.add('active');
+                            selectedCategoryItem = item.querySelector('span').textContent.trim().toUpperCase();
+                            applyFilters();
+                        });
+                    });
+                });
+        }
+
         const buildBrandUI = () => {
             if (!brandGroup) return;
             const ul = brandGroup.querySelector('.filter-list');
@@ -1423,7 +1775,24 @@ document.addEventListener('DOMContentLoaded', () => {
                     cardBrand.includes(urlSearchQueryLocal) || 
                     cardCategory.includes(urlSearchQueryLocal);
 
-                if (brandMatch && sizeMatch && searchMatch) {
+                let categoryStripMatch = true;
+                if (selectedCategoryItem !== 'ALL') {
+                    if (selectedCategoryItem === 'T-SHIRTS') categoryStripMatch = cardTitle.includes('t-shirt') || cardTitle.includes('tshirt');
+                    else if (selectedCategoryItem === 'SHIRTS') categoryStripMatch = cardTitle.includes('shirt') && !cardTitle.includes('t-shirt') && !cardTitle.includes('tshirt');
+                    else if (selectedCategoryItem === 'JEANS') categoryStripMatch = cardTitle.includes('jean') || cardTitle.includes('denim');
+                    else if (selectedCategoryItem === 'JACKETS') categoryStripMatch = cardTitle.includes('jacket') || cardTitle.includes('coat');
+                    else if (selectedCategoryItem === 'TROUSERS') categoryStripMatch = cardTitle.includes('trouser') || cardTitle.includes('pant') || cardTitle.includes('chino');
+                    else if (selectedCategoryItem === 'BLAZERS') categoryStripMatch = cardTitle.includes('blazer') || cardTitle.includes('suit');
+                    else if (selectedCategoryItem === 'SHOES') categoryStripMatch = cardTitle.includes('shoe') || cardTitle.includes('sneaker') || cardTitle.includes('boot');
+                    else if (selectedCategoryItem === 'ACCESSORIES') categoryStripMatch = cardTitle.includes('watch') || cardTitle.includes('belt') || cardTitle.includes('wallet') || cardTitle.includes('accessory');
+                    else if (selectedCategoryItem === 'TOPS') categoryStripMatch = cardTitle.includes('top') || cardTitle.includes('blouse') || cardTitle.includes('tee');
+                    else if (selectedCategoryItem === 'DRESSES') categoryStripMatch = cardTitle.includes('dress') || cardTitle.includes('gown');
+                    else if (selectedCategoryItem === 'SKIRTS') categoryStripMatch = cardTitle.includes('skirt');
+                    else if (selectedCategoryItem === 'BAGS') categoryStripMatch = cardTitle.includes('bag') || cardTitle.includes('purse') || cardTitle.includes('tote');
+                    else categoryStripMatch = cardTitle.includes(selectedCategoryItem.toLowerCase());
+                }
+
+                if (brandMatch && sizeMatch && searchMatch && categoryStripMatch) {
                     card.style.display = '';
                     visibleCount++;
                 } else {

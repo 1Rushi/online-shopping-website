@@ -91,12 +91,18 @@
                         <span id="summary-tax">₹0.00</span>
                     </div>
 
+                    <div class="summary-row" id="summary-discount-row" style="display: none; color: #10b981;">
+                        <span>Discount (20%)</span>
+                        <span id="summary-discount">-₹0.00</span>
+                    </div>
+
                     <div class="promo-code">
                         <label>PROMO CODE</label>
                         <div class="promo-input">
-                            <input type="text" placeholder="Enter code">
-                            <button>APPLY</button>
+                            <input type="text" id="promo-input" placeholder="Enter code">
+                            <button id="promo-btn">APPLY</button>
                         </div>
+                        <div id="promo-msg" style="font-size: 0.75rem; margin-top: 5px;"></div>
                     </div>
 
                     <div class="summary-total">
