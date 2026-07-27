@@ -87,29 +87,123 @@ document.addEventListener('DOMContentLoaded', () => {
         const tbody = document.querySelector('#custom-products-table tbody');
         const ordersTbody = document.getElementById('custom-orders-tbody');
 
+        let allAdminProducts = [];
+        let filteredAdminProducts = [];
+        let adminProductsCurrentPage = 1;
+        const adminProductsPerPage = 5;
+
+        const populateAdminCategoryFilter = () => {
+            const filterDropdown = document.getElementById('products-category-filter');
+            if (!filterDropdown) return;
+            
+            const categories = ['T-SHIRTS', 'SHIRTS', 'JEANS', 'JACKETS', 'TROUSERS', 'BLAZERS', 'SHOES', 'ACCESSORIES', 'TOPS', 'DRESSES', 'SKIRTS', 'BAGS'];
+            
+            filterDropdown.innerHTML = '<option value="ALL">ALL</option>' + 
+                categories.map(cat => `<option value="${cat}">${cat}</option>`).join('');
+        };
+
+        window.filterAdminProducts = () => {
+            const filterDropdown = document.getElementById('products-category-filter');
+            const sectionDropdown = document.getElementById('products-section-filter');
+            if (!filterDropdown) return;
+            
+            const selectedCategory = filterDropdown.value.toUpperCase();
+            const selectedSection = sectionDropdown ? sectionDropdown.value : 'ALL';
+            
+            let tempProducts = [...allAdminProducts];
+            
+            if (selectedSection !== 'ALL') {
+                tempProducts = tempProducts.filter(p => p.category === selectedSection);
+            }
+            
+            if (selectedCategory !== 'ALL') {
+                let searchWord = selectedCategory.toLowerCase();
+                if (searchWord === 'shoes') searchWord = 'shoe';
+                else if (searchWord === 'accessories') searchWord = 'accessory';
+                else if (searchWord === 'dresses') searchWord = 'dress';
+                else if (searchWord.endsWith('s')) searchWord = searchWord.slice(0, -1);
+                
+                tempProducts = tempProducts.filter(p => {
+                    const cat = (p.category || '').toUpperCase();
+                    const title = (p.title || '').toLowerCase();
+                    return cat === selectedCategory || title.includes(searchWord) || title.includes(selectedCategory.toLowerCase());
+                });
+            }
+            
+            filteredAdminProducts = tempProducts;
+            adminProductsCurrentPage = 1;
+            displayAdminProducts();
+        };
+
+        const renderAdminProductsPagination = () => {
+            const paginationContainer = document.getElementById('products-pagination');
+            if (!paginationContainer) return;
+            
+            const totalPages = Math.ceil(filteredAdminProducts.length / adminProductsPerPage);
+            if (totalPages <= 1) {
+                paginationContainer.innerHTML = '';
+                return;
+            }
+
+            let html = `
+                <button class="btn-primary" style="padding: 0.5rem 1rem; font-size: 0.75rem;" onclick="changeAdminProductsPage(${adminProductsCurrentPage - 1})" ${adminProductsCurrentPage === 1 ? 'disabled style="opacity: 0.5; cursor: not-allowed;"' : ''}>Prev</button>
+                <span style="font-size: 0.85rem; font-weight: 500; color: #062b2b;">Page ${adminProductsCurrentPage} of ${totalPages}</span>
+                <button class="btn-primary" style="padding: 0.5rem 1rem; font-size: 0.75rem;" onclick="changeAdminProductsPage(${adminProductsCurrentPage + 1})" ${adminProductsCurrentPage === totalPages ? 'disabled style="opacity: 0.5; cursor: not-allowed;"' : ''}>Next</button>
+            `;
+            paginationContainer.innerHTML = html;
+        };
+
+        window.changeAdminProductsPage = (page) => {
+            const totalPages = Math.ceil(filteredAdminProducts.length / adminProductsPerPage);
+            if (page >= 1 && page <= totalPages) {
+                adminProductsCurrentPage = page;
+                displayAdminProducts();
+            }
+        };
+
+        const displayAdminProducts = () => {
+            if (!tbody) return;
+            
+            if (filteredAdminProducts.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="8" style="text-align: center; color: #64748b; padding: 2rem;">No products found in this category.</td></tr>';
+                renderAdminProductsPagination();
+                return;
+            }
+
+            const start = (adminProductsCurrentPage - 1) * adminProductsPerPage;
+            const end = start + adminProductsPerPage;
+            const paginatedProducts = filteredAdminProducts.slice(start, end);
+
+            tbody.innerHTML = paginatedProducts.map((p) => `
+                <tr>
+                    <td class="td-img" style="display: flex; gap: 5px;">
+                        <img src="${p.img}" alt="${p.title}">
+                        ${p.img2 ? `<img src="${p.img2}" alt="thumb 2">` : ''}
+                        ${p.img3 ? `<img src="${p.img3}" alt="thumb 3">` : ''}
+                    </td>
+                    <td>${p.title}</td>
+                    <td>${p.category}</td>
+                    <td>${p.brand}</td>
+                    <td>₹${parseFloat(p.price).toFixed(2)}</td>
+                    <td>${p.stock !== undefined ? p.stock : 0}</td>
+                    <td>${p.sizes || 'N/A'}</td>
+                    <td><button class="action-btn" onclick="deleteCustomProduct(${p.id})"><i class="fas fa-trash"></i></button></td>
+                </tr>
+            `).join('');
+
+            renderAdminProductsPagination();
+        };
+
         const renderAdminTable = async () => {
             try {
                 const res = await fetch('http://localhost:3000/api/products?admin=true');
-                const customProducts = await res.json();
-                if(tbody) {
-                    tbody.innerHTML = customProducts.map((p) => `
-                        <tr>
-                            <td class="td-img" style="display: flex; gap: 5px;">
-                                <img src="${p.img}" alt="${p.title}">
-                                ${p.img2 ? `<img src="${p.img2}" alt="thumb 2">` : ''}
-                                ${p.img3 ? `<img src="${p.img3}" alt="thumb 3">` : ''}
-                            </td>
-                            <td>${p.title}</td>
-                            <td>${p.category}</td>
-                            <td>${p.brand}</td>
-                            <td>₹${parseFloat(p.price).toFixed(2)}</td>
-                            <td>${p.sizes || 'N/A'}</td>
-                            <td><button class="action-btn" onclick="deleteCustomProduct(${p.id})"><i class="fas fa-trash"></i></button></td>
-                        </tr>
-                    `).join('');
-                }
+                allAdminProducts = await res.json();
+                filteredAdminProducts = [...allAdminProducts];
+                adminProductsCurrentPage = 1;
+                populateAdminCategoryFilter();
+                displayAdminProducts();
             } catch (err) {
-                if(tbody) tbody.innerHTML = '<tr><td colspan="6" style="color: red; text-align: center;">Could not connect to database. Is the Node.js server running?</td></tr>';
+                if(tbody) tbody.innerHTML = '<tr><td colspan="8" style="color: red; text-align: center;">Could not connect to database. Is the Node.js server running?</td></tr>';
             }
         };
 
@@ -175,11 +269,11 @@ document.addEventListener('DOMContentLoaded', () => {
                     try {
                         const parsedItems = typeof order.items === 'string' ? JSON.parse(order.items) : order.items;
                         itemsList = parsedItems.map(item => `
-                            <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 8px; border-bottom: 1px solid #f0f0f0; padding-bottom: 4px;">
-                                <img src="${item.img}" style="width: 35px; height: 45px; object-fit: cover; border-radius: 2px;" alt="${item.title}">
+                            <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 12px;">
+                                <img src="${item.img}" style="width: 45px; height: 55px; object-fit: cover; border-radius: 4px; box-shadow: 0 2px 4px rgba(0,0,0,0.05);" alt="${item.title}">
                                 <div>
-                                    <div style="font-weight: 500; font-size: 0.85rem;">${item.title}</div>
-                                    <div style="font-size: 0.75rem; color: #666;">Size: ${item.size} | Color: ${item.color} | Qty: ${item.qty}</div>
+                                    <div style="font-weight: 700; font-size: 0.8rem; color: #0f172a; text-transform: uppercase; letter-spacing: 0.5px;">${item.title}</div>
+                                    <div style="font-size: 0.75rem; color: #64748b; margin-top: 3px;">Size: ${item.size} | Color: ${item.color} | Qty: ${item.qty}</div>
                                 </div>
                             </div>
                         `).join('');
@@ -187,42 +281,44 @@ document.addEventListener('DOMContentLoaded', () => {
                         itemsList = '<span style="color: red;">Error reading items</span>';
                     }
 
-                    const dateStr = new Date(order.created_at).toLocaleDateString('en-US', {
-                        month: 'short',
-                        day: 'numeric',
-                        year: 'numeric',
-                        hour: '2-digit',
-                        minute: '2-digit'
-                    });
+                    const dateObj = new Date(order.created_at);
+                    const dateStr = dateObj.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+                    const timeStr = dateObj.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
 
-                    let badgeColor = '#f39c12';
-                    if (order.status === 'Dispatched') badgeColor = '#3498db';
-                    else if (order.status === 'Out for Delivery') badgeColor = '#9b59b6';
-                    else if (order.status === 'Delivered') badgeColor = '#2ecc71';
+                    let badgeColor = '#f59e0b';
+                    if (order.status === 'Dispatched') badgeColor = '#3b82f6';
+                    else if (order.status === 'Out for Delivery') badgeColor = '#8b5cf6';
+                    else if (order.status === 'Delivered') badgeColor = '#10b981';
 
-                    const statusBadge = `<span style="background-color: ${badgeColor}; color: white; padding: 3px 8px; border-radius: 3px; font-size: 0.75rem; font-weight: 500; text-transform: uppercase;">${order.status === 'Pending' ? 'PROCESSING' : order.status.toUpperCase()}</span>`;
+                    const statusBadge = `<span style="background-color: ${badgeColor}; color: white; padding: 4px 10px; border-radius: 4px; font-size: 0.7rem; font-weight: 700; letter-spacing: 0.5px; text-transform: uppercase; display: inline-block;">${order.status === 'Pending' ? 'PROCESSING' : order.status.toUpperCase()}</span>`;
 
                     const dispatchBtn = `
-                        <select onchange="updateOrderStatus(${order.id}, this.value)" style="padding: 4px; font-size: 0.75rem; border: 1px solid #ddd; border-radius: 3px; margin-right: 5px;">
+                        <select onchange="updateOrderStatus(${order.id}, this.value)" style="padding: 6px 8px; font-size: 0.75rem; border: 1px solid #cbd5e1; border-radius: 4px; outline: none; background: white; cursor: pointer; color: #0f172a; font-weight: 500; min-width: 100px;">
                             <option value="Pending" ${order.status === 'Pending' ? 'selected' : ''}>Processing</option>
                             <option value="Dispatched" ${order.status === 'Dispatched' ? 'selected' : ''}>Dispatched</option>
                             <option value="Out for Delivery" ${order.status === 'Out for Delivery' ? 'selected' : ''}>Out for Delivery</option>
                             <option value="Delivered" ${order.status === 'Delivered' ? 'selected' : ''}>Delivered</option>
                         </select>
                     `;
-                    const deleteBtn = `<button class="action-btn" style="margin-left: 15px;" onclick="deleteOrder(${order.id})"><i class="fas fa-trash"></i></button>`;
+                    
+                    const deleteBtn = `<button class="action-btn" style="color: #ef4444; background: #fee2e2; width: 28px; height: 28px; border-radius: 4px; display: flex; align-items: center; justify-content: center; font-size: 0.8rem; transition: 0.2s; border: none; cursor: pointer;" onclick="deleteOrder(${order.id})" onmouseover="this.style.background='#fecaca'" onmouseout="this.style.background='#fee2e2'"><i class="fas fa-trash"></i></button>`;
 
                     return `
                         <tr>
-                            <td style="font-weight: 600;">#${order.id}</td>
-                            <td style="font-size: 0.8rem; color: #666;">${dateStr}</td>
+                            <td style="font-weight: 700; color: #0f172a; font-size: 0.85rem;">#${order.id}</td>
+                            <td style="font-size: 0.8rem; color: #64748b; line-height: 1.5;">${dateStr},<br>${timeStr}</td>
                             <td>${itemsList}</td>
-                            <td style="font-weight: 600;">₹${parseFloat(order.total_price).toFixed(2)}</td>
+                            <td style="font-weight: 700; color: #0f172a; font-size: 0.9rem;">₹${parseFloat(order.total_price).toFixed(2)}</td>
                             <td>${statusBadge}</td>
-                            <td style="font-size: 0.85rem; font-weight: 500;">${order.customer_info?.name || ''}<br>${order.customer_info?.phone || ''}<br>${order.customer_info?.address || ''} ${order.customer_info?.city || ''} ${order.customer_info?.state || ''} ${order.customer_info?.zip || ''}<br>${order.customer_info?.country || ''}</td>
-                            <td style="font-size: 0.85rem; font-weight: 500;">${order.shipping_date || 'N/A'}</td>
-                            <td>
-                                <div style="display: flex; align-items: center;">
+                            <td style="font-size: 0.8rem; color: #334155; line-height: 1.5;">
+                                <span style="font-weight: 600; color: #0f172a; text-transform: lowercase;">${order.customer_info?.name || ''}</span><br>
+                                ${order.customer_info?.phone || ''}<br>
+                                ${order.customer_info?.address || ''}, ${order.customer_info?.city || ''} ${order.customer_info?.zip || ''}<br>
+                                ${order.customer_info?.country || 'US'}
+                            </td>
+                            <td style="font-size: 0.85rem; font-weight: 500;">
+                                <div style="margin-bottom: 6px; font-weight: 600; font-size: 0.75rem; color: #0f172a;">${order.shipping_date || 'N/A'}</div>
+                                <div style="display: flex; align-items: center; gap: 8px;">
                                     ${dispatchBtn}
                                     ${deleteBtn}
                                 </div>
@@ -445,7 +541,8 @@ document.addEventListener('DOMContentLoaded', () => {
                         sizes: checkedSizes,
                         description: descriptionValue,
                         material: materialValue,
-                        shipping: shippingValue
+                        shipping: shippingValue,
+                        stock: parseInt(document.getElementById('prod-stock').value) || 0
                     };
 
                     try {
@@ -854,6 +951,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 // Set initial tab content to description
                 tabContent.innerHTML = window.tabContents.description;
             }
+            
+            // Fade in main section after loading
+            const mainSection = document.getElementById('product-main-section');
+            if (mainSection) {
+                mainSection.style.opacity = '1';
+            }
         }
 
         const productThumbs = document.querySelectorAll('.thumbnail-list .thumb');
@@ -979,6 +1082,212 @@ document.addEventListener('DOMContentLoaded', () => {
                 // window.location.href = 'wishlist.html'; 
             });
         }
+
+        // Fetch related products dynamically
+        if (currentProduct && currentProduct.category) {
+            try {
+                const res = await fetch('http://localhost:3000/api/products');
+                if (res.ok) {
+                    const allProducts = await res.json();
+                    const relatedProducts = allProducts.filter(p => p.category === currentProduct.category && p.id !== currentProduct.id).slice(0, 4);
+                    const grid = document.getElementById('related-products-grid');
+                    if (grid) {
+                        if (relatedProducts.length > 0) {
+                            grid.innerHTML = relatedProducts.map(p => `
+                                <div class="product-card" data-product-id="${p.id}" data-category="${p.category}" style="cursor: pointer;">
+                                    <div class="product-img-wrap">
+                                        <button class="wishlist-btn"><i class="far fa-heart"></i></button>
+                                        <img src="${p.img}" alt="${p.title}">
+                                    </div>
+                                    <div class="product-info">
+                                        <div class="brand">${p.brand || 'MODA ARCHIVE'}</div>
+                                        <h4 class="title">${p.title}</h4>
+                                        <div class="price-wrap">
+                                            <span class="price">₹${parseFloat(p.price).toFixed(2)}</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            `).join('');
+
+                            // Setup click listener to navigate to the related product
+                            grid.querySelectorAll('.product-card').forEach(card => {
+                                card.addEventListener('click', (e) => {
+                                    if (e.target.closest('.wishlist-btn')) return;
+                                    localStorage.setItem('current_product_id', card.dataset.productId);
+                                    const prod = allProducts.find(p => p.id == card.dataset.productId);
+                                    if (prod) localStorage.setItem('current_product', JSON.stringify(prod));
+                                    window.location.href = 'product.html';
+                                });
+                            });
+
+                            // Setup wishlist button click listener
+                            grid.querySelectorAll('.wishlist-btn').forEach(btn => {
+                                btn.addEventListener('click', async (e) => {
+                                    e.stopPropagation();
+                                    const card = e.target.closest('.product-card');
+                                    const prod = allProducts.find(p => p.id == card.dataset.productId);
+                                    if (prod) {
+                                        const icon = btn.querySelector('i');
+                                        if (icon) {
+                                            icon.classList.remove('far');
+                                            icon.classList.add('fas');
+                                            icon.style.color = 'var(--primary-color, #111)';
+                                        }
+                                        if (typeof toggleWishlist === 'function') {
+                                            await toggleWishlist({
+                                                img: prod.img,
+                                                title: prod.title,
+                                                price: prod.price,
+                                                brand: prod.brand || 'MODA ARCHIVE'
+                                            });
+                                        }
+                                    }
+                                });
+                            });
+                        } else {
+                            grid.innerHTML = '<p>No related products found.</p>';
+                        }
+                    }
+                }
+            } catch(e) {
+                console.error('Error fetching related products:', e);
+            }
+        }
+
+        // Fetch and handle reviews
+        if (currentProduct) {
+            const fetchReviews = async () => {
+                try {
+                    const res = await fetch(`http://localhost:3000/api/reviews/${currentProduct.id}`);
+                    if (res.ok) {
+                        const reviews = await res.json();
+                        const listContainer = document.getElementById('reviews-list-container');
+                        const avgRatingEl = document.getElementById('review-avg-rating');
+                        const countTextEl = document.getElementById('review-count-text');
+                        const starsEl = document.getElementById('review-avg-stars');
+
+                        if (!listContainer) return;
+
+                        if (reviews.length === 0) {
+                            listContainer.innerHTML = '<p style="padding-top: 2rem;">No reviews yet. Be the first to review this product!</p>';
+                            if (avgRatingEl) avgRatingEl.innerText = '0.0';
+                            if (countTextEl) countTextEl.innerText = 'BASED ON 0 REVIEWS';
+                            if (starsEl) starsEl.innerHTML = '<i class="far fa-star"></i><i class="far fa-star"></i><i class="far fa-star"></i><i class="far fa-star"></i><i class="far fa-star"></i>';
+                            return;
+                        }
+
+                        let totalRating = 0;
+                        listContainer.innerHTML = reviews.map(r => {
+                            totalRating += r.rating;
+                            const d = new Date(r.created_at);
+                            const dateStr = d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }).toUpperCase();
+                            let starHtml = '';
+                            for (let i = 1; i <= 5; i++) {
+                                starHtml += i <= r.rating ? '<i class="fas fa-star"></i>' : '<i class="far fa-star"></i>';
+                            }
+                            return `
+                                <div class="review-item">
+                                    <div class="review-header">
+                                        <span class="reviewer-name">${r.reviewer_name.toUpperCase()}</span>
+                                        <span class="review-date">${dateStr}</span>
+                                    </div>
+                                    <div class="stars">${starHtml}</div>
+                                    <h5>${r.title}</h5>
+                                    <p>${r.content}</p>
+                                </div>
+                            `;
+                        }).join('');
+
+                        const avgRating = (totalRating / reviews.length).toFixed(1);
+                        if (avgRatingEl) avgRatingEl.innerText = avgRating;
+                        if (countTextEl) countTextEl.innerText = `BASED ON ${reviews.length} REVIEW${reviews.length > 1 ? 'S' : ''}`;
+                        if (starsEl) {
+                            let avgStarHtml = '';
+                            const fullStars = Math.floor(avgRating);
+                            const halfStar = avgRating - fullStars >= 0.5;
+                            for (let i = 1; i <= 5; i++) {
+                                if (i <= fullStars) {
+                                    avgStarHtml += '<i class="fas fa-star"></i>';
+                                } else if (i === fullStars + 1 && halfStar) {
+                                    avgStarHtml += '<i class="fas fa-star-half-alt"></i>';
+                                } else {
+                                    avgStarHtml += '<i class="far fa-star"></i>';
+                                }
+                            }
+                            starsEl.innerHTML = avgStarHtml;
+                        }
+                    }
+                } catch(e) {
+                    console.error('Error fetching reviews:', e);
+                }
+            };
+
+            await fetchReviews();
+
+            // Review Modal Logic
+            const modal = document.getElementById('review-modal');
+            const openBtn = document.getElementById('open-review-modal-btn');
+            const closeBtn = document.getElementById('close-review-modal');
+            const reviewForm = document.getElementById('review-form');
+
+            if (modal && openBtn && closeBtn && reviewForm) {
+                openBtn.addEventListener('click', () => {
+                    modal.style.display = 'flex';
+                    const userStr = localStorage.getItem('moda_user');
+                    if (userStr) {
+                        try {
+                            const user = JSON.parse(userStr);
+                            if (user && user.name) {
+                                const nameInput = document.getElementById('review-name');
+                                nameInput.value = user.name;
+                                nameInput.readOnly = true;
+                                nameInput.style.backgroundColor = '#f0f0f0'; // Visual cue that it's disabled
+                            }
+                        } catch(e) {}
+                    }
+                });
+                closeBtn.addEventListener('click', () => modal.style.display = 'none');
+                window.addEventListener('click', (e) => {
+                    if (e.target === modal) modal.style.display = 'none';
+                });
+
+                reviewForm.addEventListener('submit', async (e) => {
+                    e.preventDefault();
+                    const btn = reviewForm.querySelector('button[type="submit"]');
+                    btn.disabled = true;
+                    btn.innerText = 'SUBMITTING...';
+
+                    const newReview = {
+                        product_id: currentProduct.id,
+                        reviewer_name: document.getElementById('review-name').value,
+                        rating: parseInt(document.getElementById('review-rating').value),
+                        title: document.getElementById('review-title').value,
+                        content: document.getElementById('review-content').value
+                    };
+
+                    try {
+                        const res = await fetch('http://localhost:3000/api/reviews', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify(newReview)
+                        });
+                        if (res.ok) {
+                            modal.style.display = 'none';
+                            reviewForm.reset();
+                            await fetchReviews();
+                        } else {
+                            alert('Failed to submit review.');
+                        }
+                    } catch (err) {
+                        alert('Error submitting review.');
+                    } finally {
+                        btn.disabled = false;
+                        btn.innerText = 'SUBMIT REVIEW';
+                    }
+                });
+            }
+        }
+        
         };
         loadProductPage();
     }

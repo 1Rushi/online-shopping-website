@@ -25,10 +25,13 @@ pool.connect((err, client, release) => {
     } else {
         console.log('Connected to PostgreSQL database "moda_db".');
         
-        // Ensure user_id column exists on orders table
-        client.query('ALTER TABLE orders ADD COLUMN IF NOT EXISTS user_id INTEGER')
-            .then(() => console.log('Checked user_id column in orders table.'))
-            .catch(e => console.error('Error adding user_id column:', e.message))
+        // Ensure user_id column exists on orders table and stock on products table
+        Promise.all([
+            client.query('ALTER TABLE orders ADD COLUMN IF NOT EXISTS user_id INTEGER'),
+            client.query('ALTER TABLE products ADD COLUMN IF NOT EXISTS stock INTEGER DEFAULT 0')
+        ])
+            .then(() => console.log('Checked user_id column in orders and stock column in products.'))
+            .catch(e => console.error('Error altering tables:', e.message))
             .finally(() => release());
     }
 });
@@ -124,16 +127,16 @@ app.get('/api/products/:id', async (req, res) => {
 });
 
 app.post('/api/products', async (req, res) => {
-    const { title, price, category, brand, img, img2, img3, sizes, description, material, shipping } = req.body;
+    const { title, price, category, brand, img, img2, img3, sizes, description, material, shipping, stock } = req.body;
     console.log('Received description:', description);
     console.log('Received material:', material);
     console.log('Received shipping:', shipping);
     try {
         const query = `
-            INSERT INTO products (title, price, category, brand, img, img2, img3, sizes, description, material, shipping)
-            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11) RETURNING id;
+            INSERT INTO products (title, price, category, brand, img, img2, img3, sizes, description, material, shipping, stock)
+            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12) RETURNING id;
         `;
-        const values = [title, price, category, brand, img, img2, img3, sizes || '', description || '', material || '', shipping || ''];
+        const values = [title, price, category, brand, img, img2, img3, sizes || '', description || '', material || '', shipping || '', stock || 0];
         const { rows } = await pool.query(query, values);
         res.json({ id: rows[0].id });
     } catch (err) {
@@ -146,6 +149,34 @@ app.delete('/api/products/:id', async (req, res) => {
     try {
         await pool.query('DELETE FROM products WHERE id = $1', [req.params.id]);
         res.json({ deletedID: req.params.id });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
+// ==========================================
+// REVIEWS API
+// ==========================================
+
+app.get('/api/reviews/:productId', async (req, res) => {
+    try {
+        const { rows } = await pool.query('SELECT * FROM reviews WHERE product_id = $1 ORDER BY created_at DESC', [req.params.productId]);
+        res.json(rows);
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
+app.post('/api/reviews', async (req, res) => {
+    const { product_id, reviewer_name, rating, title, content } = req.body;
+    try {
+        const query = `
+            INSERT INTO reviews (product_id, reviewer_name, rating, title, content)
+            VALUES ($1, $2, $3, $4, $5) RETURNING *;
+        `;
+        const values = [product_id, reviewer_name, rating, title, content];
+        const { rows } = await pool.query(query, values);
+        res.json({ success: true, review: rows[0] });
     } catch (err) {
         res.status(500).json({ error: err.message });
     }
@@ -179,6 +210,8 @@ app.post('/api/orders', async (req, res) => {
     });
 
     try {
+        await pool.query('BEGIN');
+        
         const query = `
             INSERT INTO orders (items, total_price, customer_info, shipping_date, user_id)
             VALUES ($1, $2, $3, $4, $5) RETURNING id;
@@ -191,8 +224,19 @@ app.post('/api/orders', async (req, res) => {
             user_id || null
         ];
         const { rows } = await pool.query(query, values);
+        
+        if (items && items.length > 0) {
+            for (const item of items) {
+                if (item.title && item.qty) {
+                    await pool.query('UPDATE products SET stock = GREATEST(stock - $1, 0) WHERE title = $2', [item.qty, item.title]);
+                }
+            }
+        }
+        
+        await pool.query('COMMIT');
         res.json({ id: rows[0].id, shipping_date });
     } catch (err) {
+        await pool.query('ROLLBACK');
         res.status(500).json({ error: err.message });
     }
 });

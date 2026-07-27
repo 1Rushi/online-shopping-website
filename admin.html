@@ -8,12 +8,18 @@
     <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
+        body {
+            background-color: #f4f8f7;
+        }
         .admin-layout {
             display: flex;
             min-height: 100vh;
         }
         .admin-sidebar {
-            background-color: #000;
+            background-color: #062b2b;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1440 320'%3E%3Cpath fill='%23ffffff' fill-opacity='0.03' d='M0,96L48,112C96,128,192,160,288,165.3C384,171,480,149,576,144C672,139,768,149,864,154.7C960,160,1056,160,1152,144C1248,128,1344,96,1392,80L1440,64L1440,320L1392,320C1344,320,1248,320,1152,320C1056,320,960,320,864,320C768,320,672,320,576,320C480,320,384,320,288,320C192,320,96,320,48,320L0,320Z'%3E%3C/path%3E%3Cpath fill='%23ffffff' fill-opacity='0.02' d='M0,160L48,144C96,128,192,96,288,106.7C384,117,480,171,576,165.3C672,160,768,96,864,96C960,96,1056,160,1152,176C1248,192,1344,160,1392,144L1440,128L1440,320L1392,320C1344,320,1248,320,1152,320C1056,320,960,320,864,320C768,320,672,320,576,320C480,320,384,320,288,320C192,320,96,320,48,320L0,320Z'%3E%3C/path%3E%3C/svg%3E");
+            background-size: cover;
+            background-position: bottom;
             color: #fff;
             padding: 2rem;
             position: fixed;
@@ -23,32 +29,46 @@
             width: 250px;
             overflow-y: auto;
             z-index: 100;
+            border-right: 1px solid rgba(255,255,255,0.05);
         }
         .admin-sidebar h2 {
             font-family: var(--font-heading);
             margin-bottom: 3rem;
             letter-spacing: 2px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 1.5rem;
+            line-height: 1.2;
+        }
+        .admin-sidebar h2 .logo-icon {
+            color: #2dd4bf;
+            font-size: 2rem;
         }
         .admin-nav {
             display: flex;
             flex-direction: column;
-            gap: 1.5rem;
+            gap: 0.5rem;
         }
         .admin-nav a {
-            color: #aaa;
+            color: #94a3b8;
             text-transform: uppercase;
             font-size: 0.8rem;
             letter-spacing: 1px;
             display: flex;
             align-items: center;
             gap: 1rem;
+            padding: 0.8rem 1rem;
+            border-radius: 6px;
+            font-weight: 500;
         }
         .admin-nav a.active, .admin-nav a:hover {
             color: #fff;
+            background-color: #0f4f4f;
         }
         .admin-main {
-            padding: 3rem;
-            background-color: var(--bg-light);
+            padding: 2rem 3rem;
+            background-color: #f4f8f7;
             margin-left: 250px;
             width: calc(100% - 250px);
         }
@@ -56,32 +76,75 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 3rem;
+            margin-bottom: 2rem;
         }
         .admin-title {
             font-family: var(--font-heading);
-            font-size: 2rem;
+            font-size: 2.2rem;
+            color: #062b2b;
+        }
+        .admin-header-actions {
+            display: flex;
+            align-items: center;
+            gap: 1.8rem;
+        }
+        .admin-header-actions i {
+            font-size: 1.2rem;
+            color: #062b2b;
+            cursor: pointer;
+        }
+        .admin-profile {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            cursor: pointer;
+        }
+        .admin-profile img {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            object-fit: cover;
+        }
+        .admin-profile span {
+            font-size: 0.9rem;
+            font-weight: 500;
+            color: #062b2b;
         }
         .btn-primary {
-            background-color: var(--accent-blue);
+            background-color: #0d7f7f;
             color: #fff;
             border: none;
-            padding: 1rem 2rem;
+            padding: 0.8rem 1.8rem;
             text-transform: uppercase;
-            letter-spacing: 1.5px;
+            letter-spacing: 1px;
             font-size: 0.85rem;
-            font-weight: 500;
+            font-weight: 600;
             cursor: pointer;
             transition: 0.3s;
+            border-radius: 6px;
         }
         .btn-primary:hover {
-            background-color: #1e40d8;
+            background-color: #095959;
         }
         .admin-card {
             background: #fff;
             padding: 2.5rem;
-            border: 1px solid var(--border-color);
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
             margin-bottom: 2rem;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+        }
+        .category-visibility-card {
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1440 320'%3E%3Cpath fill='%230b5c5c' fill-opacity='0.15' d='M0,160L48,144C96,128,192,96,288,106.7C384,117,480,171,576,165.3C672,160,768,96,864,96C960,96,1056,160,1152,176C1248,192,1344,160,1392,144L1440,128L1440,320L1392,320C1344,320,1248,320,1152,320C1056,320,960,320,864,320C768,320,672,320,576,320C480,320,384,320,288,320C192,320,96,320,48,320L0,320Z'%3E%3C/path%3E%3Cpath fill='%23084747' fill-opacity='0.2' d='M0,256L48,229.3C96,203,192,149,288,154.7C384,160,480,224,576,218.7C672,213,768,139,864,128C960,117,1056,171,1152,197.3C1248,224,1344,224,1392,224L1440,224L1440,320L1392,320C1344,320,1248,320,1152,320C1056,320,960,320,864,320C768,320,672,320,576,320C480,320,384,320,288,320C192,320,96,320,48,320L0,320Z'%3E%3C/path%3E%3C/svg%3E"), linear-gradient(135deg, #ccfbf1 0%, #5eead4 50%, #14b8a6 100%);
+            background-size: cover;
+            border: none;
+            color: #062b2b;
+        }
+        .category-visibility-card h3 {
+            color: #042f2e;
+        }
+        .category-visibility-card p {
+            color: #0f766e !important;
         }
         
         .form-grid {
@@ -102,17 +165,27 @@
             font-size: 0.75rem;
             text-transform: uppercase;
             letter-spacing: 1px;
-            font-weight: 500;
+            font-weight: 600;
+            color: #475569;
         }
-        .form-group input, .form-group select {
+        .form-group input, .form-group select, .form-group textarea {
             padding: 0.9rem;
-            border: 1px solid var(--border-color);
+            border: 1px solid #cbd5e1;
             font-family: var(--font-body);
             font-size: 0.9rem;
             outline: none;
+            border-radius: 8px;
+            transition: 0.3s;
         }
-        .form-group input:focus, .form-group select:focus {
-            border-color: #000;
+        .form-group input:focus, .form-group select:focus, .form-group textarea:focus {
+            border-color: #0d7f7f;
+            box-shadow: 0 0 0 3px rgba(13, 127, 127, 0.1);
+        }
+        input[type="checkbox"] {
+            accent-color: #0d7f7f;
+            width: 16px;
+            height: 16px;
+            cursor: pointer;
         }
         
         table {
@@ -122,39 +195,39 @@
         th, td {
             padding: 1.2rem 1rem;
             text-align: left;
-            border-bottom: 1px solid var(--border-color);
+            border-bottom: 1px solid #e2e8f0;
             font-size: 0.85rem;
         }
         th {
             text-transform: uppercase;
             letter-spacing: 1.5px;
-            font-weight: 500;
-            color: var(--text-light);
+            font-weight: 600;
+            color: #64748b;
             font-size: 0.75rem;
         }
         .td-img img {
             width: 50px;
             height: 60px;
             object-fit: cover;
-            border-radius: 4px;
+            border-radius: 6px;
         }
         .action-btn {
             background: none;
             border: none;
-            color: #d9534f;
+            color: #ef4444;
             cursor: pointer;
             font-size: 1.2rem;
             transition: 0.3s;
         }
         .action-btn:hover {
-            color: #c9302c;
+            color: #dc2626;
         }
     </style>
 </head>
 <body>
     <div class="admin-layout">
         <aside class="admin-sidebar">
-            <h2>MODA<br>ADMIN</h2>
+            <h2><i class="fas fa-layer-group logo-icon"></i> <div>MODA<br>ADMIN</div></h2>
             <nav class="admin-nav">
                 <a href="index.html"><i class="fas fa-arrow-left"></i> Back to Site</a>
                 <a href="#" id="admin-nav-products" class="active"><i class="fas fa-box"></i> Products</a>
@@ -171,7 +244,7 @@
                 </div>
 
                 <!-- Category Visibility Form -->
-                <div class="admin-card" style="margin-bottom: 2rem;">
+                <div class="admin-card category-visibility-card" style="margin-bottom: 2rem;">
                     <h3 style="margin-bottom: 1rem; font-family: var(--font-heading); font-size: 1.5rem;">Category Visibility</h3>
                     <p style="margin-bottom: 1.5rem; color: #64748b;">Uncheck a category to hide it from the user-facing store pages.</p>
                     <div id="category-visibility-grid" style="display: flex; gap: 15px; flex-wrap: wrap;">
@@ -193,6 +266,10 @@
                             <div class="form-group">
                                 <label>Price (₹)</label>
                                 <input type="number" id="prod-price" required step="0.01" placeholder="295.00">
+                            </div>
+                            <div class="form-group">
+                                <label>Stock Count</label>
+                                <input type="number" id="prod-stock" min="0" required placeholder="10">
                             </div>
                             <div class="form-group">
                                 <label>Category Section</label>
@@ -252,7 +329,25 @@
 
                 <!-- Display Uploaded Products -->
                 <div class="admin-card">
-                    <h3 style="margin-bottom: 1.5rem; font-family: var(--font-heading); font-size: 1.5rem;">Custom Uploaded Products</h3>
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+                        <h3 style="margin-bottom: 0; font-family: var(--font-heading); font-size: 1.5rem;">Custom Uploaded Products</h3>
+                        <div style="display: flex; align-items: center; gap: 15px;">
+                            <div style="display: flex; align-items: center; gap: 8px;">
+                                <label for="products-section-filter" style="font-size: 0.85rem; font-weight: 500; color: #475569;">Section:</label>
+                                <select id="products-section-filter" onchange="filterAdminProducts()" style="padding: 0.5rem; border: 1px solid #cbd5e1; border-radius: 6px; outline: none; font-family: var(--font-body); font-size: 0.85rem; cursor: pointer;">
+                                    <option value="ALL">All</option>
+                                    <option value="Men's">Men's</option>
+                                    <option value="Women's">Women's</option>
+                                </select>
+                            </div>
+                            <div style="display: flex; align-items: center; gap: 8px;">
+                                <label for="products-category-filter" style="font-size: 0.85rem; font-weight: 500; color: #475569;">Category:</label>
+                                <select id="products-category-filter" onchange="filterAdminProducts()" style="padding: 0.5rem; border: 1px solid #cbd5e1; border-radius: 6px; outline: none; font-family: var(--font-body); font-size: 0.85rem; cursor: pointer;">
+                                    <option value="ALL">ALL</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
                     <table id="custom-products-table">
                         <thead>
                             <tr>
@@ -261,6 +356,7 @@
                                 <th>Category</th>
                                 <th>Brand</th>
                                 <th>Price</th>
+                                <th>Stock</th>
                                 <th>Sizes</th>
                                 <th>Action</th>
                             </tr>
@@ -269,6 +365,7 @@
                             <!-- Rendered by JS -->
                         </tbody>
                     </table>
+                    <div id="products-pagination" style="display: flex; justify-content: flex-end; align-items: center; gap: 15px; margin-top: 1.5rem;"></div>
                 </div>
             </div>
 
