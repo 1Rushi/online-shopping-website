@@ -1,11 +1,41 @@
 document.addEventListener('DOMContentLoaded', () => {
+    window.appSettings = { promoCode: 'MODA20', promoDiscount: 20 };
+    const fetchGlobalSettings = async () => {
+        try {
+            const res = await fetch('http://localhost:3000/api/settings');
+            const data = await res.json();
+            if (data.promoCode) window.appSettings.promoCode = data.promoCode;
+            if (data.promoDiscount !== undefined) window.appSettings.promoDiscount = data.promoDiscount;
+
+            // Auto-inject promo banner if it's missing from the HTML
+            let bannerText = document.querySelector('.promo-banner-text');
+            if (!bannerText) {
+                const navbar = document.querySelector('.navbar');
+                if (navbar) {
+                    const banner = document.createElement('div');
+                    banner.className = 'promo-banner';
+                    bannerText = document.createElement('div');
+                    bannerText.className = 'promo-banner-text';
+                    banner.appendChild(bannerText);
+                    navbar.parentNode.insertBefore(banner, navbar);
+                }
+            }
+
+            const banners = document.querySelectorAll('.promo-banner-text');
+            banners.forEach(b => {
+                b.innerHTML = `EXTRA ${window.appSettings.promoDiscount}% OFF ON FIRST ORDER | <span>USE CODE: ${window.appSettings.promoCode}</span>`;
+            });
+        } catch (e) { }
+    };
+    fetchGlobalSettings();
+
     const getSessionId = () => {
         const userStr = localStorage.getItem('moda_user');
         if (userStr) {
             try {
                 const user = JSON.parse(userStr);
                 if (user && user.id) return 'user_' + user.id;
-            } catch(e) {}
+            } catch (e) { }
         }
         let sid = localStorage.getItem('moda_session_id');
         if (!sid) {
@@ -41,7 +71,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const updateCartBadge = async () => {
         try {
             const res = await fetch(`http://localhost:3000/api/cart/${getSessionId()}`);
-            if(!res.ok) return;
+            if (!res.ok) return;
             const cart = await res.json();
             const totalItems = cart.reduce((sum, item) => sum + item.qty, 0);
             const badges = document.querySelectorAll('.cart-badge, .bag-count');
@@ -49,7 +79,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 b.innerText = totalItems;
                 b.style.display = totalItems > 0 ? 'flex' : 'none';
             });
-        } catch(e) {}
+        } catch (e) { }
     };
 
     setupNavCart();
@@ -83,6 +113,27 @@ document.addEventListener('DOMContentLoaded', () => {
     // ADMIN PANEL & DYNAMIC INJECTION (PostgreSQL)
     // ==========================================
     if (window.location.pathname.includes('admin.html')) {
+        let adminToken = localStorage.getItem('admin_token');
+        if (!adminToken) {
+            adminToken = prompt('Enter Admin Password:');
+            if (!adminToken) {
+                window.location.href = 'index.html';
+            } else {
+                localStorage.setItem('admin_token', adminToken);
+            }
+        }
+
+        const originalFetch = window.fetch;
+        window.fetch = function () {
+            let [resource, config] = arguments;
+            if (typeof resource === 'string' && (resource.includes('/api/admin') || resource.includes('admin=true') || resource.includes('/api/settings') || (resource.includes('/api/products') && config && config.method && config.method !== 'GET') || (resource.includes('/api/orders') && config && (config.method === 'PUT' || config.method === 'DELETE')))) {
+                config = config || {};
+                config.headers = config.headers || {};
+                config.headers['x-admin-token'] = localStorage.getItem('admin_token') || '';
+            }
+            return originalFetch(resource, config);
+        };
+
         const form = document.getElementById('add-product-form');
         const tbody = document.querySelector('#custom-products-table tbody');
         const ordersTbody = document.getElementById('custom-orders-tbody');
@@ -90,15 +141,15 @@ document.addEventListener('DOMContentLoaded', () => {
         let allAdminProducts = [];
         let filteredAdminProducts = [];
         let adminProductsCurrentPage = 1;
-        const adminProductsPerPage = 5;
+        const adminProductsPerPage = 15;
 
         const populateAdminCategoryFilter = () => {
             const filterDropdown = document.getElementById('products-category-filter');
             if (!filterDropdown) return;
-            
+
             const categories = ['T-SHIRTS', 'SHIRTS', 'JEANS', 'JACKETS', 'TROUSERS', 'BLAZERS', 'SHOES', 'ACCESSORIES', 'TOPS', 'DRESSES', 'SKIRTS', 'BAGS'];
-            
-            filterDropdown.innerHTML = '<option value="ALL">ALL</option>' + 
+
+            filterDropdown.innerHTML = '<option value="ALL">ALL</option>' +
                 categories.map(cat => `<option value="${cat}">${cat}</option>`).join('');
         };
 
@@ -106,30 +157,30 @@ document.addEventListener('DOMContentLoaded', () => {
             const filterDropdown = document.getElementById('products-category-filter');
             const sectionDropdown = document.getElementById('products-section-filter');
             if (!filterDropdown) return;
-            
+
             const selectedCategory = filterDropdown.value.toUpperCase();
             const selectedSection = sectionDropdown ? sectionDropdown.value : 'ALL';
-            
+
             let tempProducts = [...allAdminProducts];
-            
+
             if (selectedSection !== 'ALL') {
                 tempProducts = tempProducts.filter(p => p.category === selectedSection);
             }
-            
+
             if (selectedCategory !== 'ALL') {
                 let searchWord = selectedCategory.toLowerCase();
                 if (searchWord === 'shoes') searchWord = 'shoe';
                 else if (searchWord === 'accessories') searchWord = 'accessory';
                 else if (searchWord === 'dresses') searchWord = 'dress';
                 else if (searchWord.endsWith('s')) searchWord = searchWord.slice(0, -1);
-                
+
                 tempProducts = tempProducts.filter(p => {
                     const cat = (p.category || '').toUpperCase();
                     const title = (p.title || '').toLowerCase();
                     return cat === selectedCategory || title.includes(searchWord) || title.includes(selectedCategory.toLowerCase());
                 });
             }
-            
+
             filteredAdminProducts = tempProducts;
             adminProductsCurrentPage = 1;
             displayAdminProducts();
@@ -138,7 +189,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const renderAdminProductsPagination = () => {
             const paginationContainer = document.getElementById('products-pagination');
             if (!paginationContainer) return;
-            
+
             const totalPages = Math.ceil(filteredAdminProducts.length / adminProductsPerPage);
             if (totalPages <= 1) {
                 paginationContainer.innerHTML = '';
@@ -163,7 +214,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const displayAdminProducts = () => {
             if (!tbody) return;
-            
+
             if (filteredAdminProducts.length === 0) {
                 tbody.innerHTML = '<tr><td colspan="8" style="text-align: center; color: #64748b; padding: 2rem;">No products found in this category.</td></tr>';
                 renderAdminProductsPagination();
@@ -185,7 +236,11 @@ document.addEventListener('DOMContentLoaded', () => {
                     <td>${p.category}</td>
                     <td>${p.brand}</td>
                     <td>₹${parseFloat(p.price).toFixed(2)}</td>
-                    <td>${p.stock !== undefined ? p.stock : 0}</td>
+                    <td>
+                        <input type="number" min="0" value="${p.stock !== undefined ? p.stock : 0}" 
+                               style="width: 70px; padding: 6px; border: 1px solid #cbd5e1; border-radius: 4px; outline: none;"
+                               onchange="updateCustomProductStock(${p.id}, this.value)">
+                    </td>
                     <td>${p.sizes || 'N/A'}</td>
                     <td><button class="action-btn" onclick="deleteCustomProduct(${p.id})"><i class="fas fa-trash"></i></button></td>
                 </tr>
@@ -194,35 +249,77 @@ document.addEventListener('DOMContentLoaded', () => {
             renderAdminProductsPagination();
         };
 
+        const updateAdminStats = () => {
+            const statsContainer = document.getElementById('admin-stats-cards');
+            if (!statsContainer) return;
+
+            let totalProducts = allAdminProducts.length;
+            let categoryStocks = {};
+
+            allAdminProducts.forEach(p => {
+                let stock = p.stock || 0;
+                let cat = p.category || 'Uncategorized';
+                if (!categoryStocks[cat]) {
+                    categoryStocks[cat] = 0;
+                }
+                categoryStocks[cat] += stock;
+            });
+
+            let html = `
+                <div class="admin-card" style="margin-bottom: 0; padding: 1.5rem; background-image: linear-gradient(to right, #0f172a, #1e293b); color: white;">
+                    <h4 style="color: #cbd5e1; font-size: 0.85rem; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 0.5rem;">Total Products</h4>
+                    <div style="font-size: 2rem; font-weight: 700; font-family: var(--font-heading);">${totalProducts}</div>
+                </div>
+            `;
+
+            for (const [cat, stock] of Object.entries(categoryStocks)) {
+                html += `
+                    <div class="admin-card" style="margin-bottom: 0; padding: 1.5rem;">
+                        <h4 style="color: #64748b; font-size: 0.85rem; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 0.5rem;">${cat} Stock</h4>
+                        <div style="font-size: 2rem; font-weight: 700; font-family: var(--font-heading); color: #0f172a;">${stock}</div>
+                    </div>
+                `;
+            }
+
+            statsContainer.innerHTML = html;
+        };
+
         const renderAdminTable = async () => {
             try {
                 const res = await fetch('http://localhost:3000/api/products?admin=true');
+                if (res.status === 401) {
+                    alert('Invalid Admin Password!');
+                    localStorage.removeItem('admin_token');
+                    window.location.href = 'index.html';
+                    return;
+                }
                 allAdminProducts = await res.json();
                 filteredAdminProducts = [...allAdminProducts];
                 adminProductsCurrentPage = 1;
                 populateAdminCategoryFilter();
                 displayAdminProducts();
+                updateAdminStats();
             } catch (err) {
-                if(tbody) tbody.innerHTML = '<tr><td colspan="8" style="color: red; text-align: center;">Could not connect to database. Is the Node.js server running?</td></tr>';
+                if (tbody) tbody.innerHTML = '<tr><td colspan="8" style="color: red; text-align: center;">Could not connect to database. Is the Node.js server running?</td></tr>';
             }
         };
 
         const categoriesList = ['ALL', 'T-SHIRTS', 'SHIRTS', 'JEANS', 'JACKETS', 'TROUSERS', 'BLAZERS', 'SHOES', 'ACCESSORIES', 'TOPS', 'DRESSES', 'SKIRTS', 'BAGS'];
-        
+
         const loadCategoryVisibility = async () => {
             const grid = document.getElementById('category-visibility-grid');
             if (!grid) return;
             try {
                 const res = await fetch('http://localhost:3000/api/settings/categories');
                 const { hidden } = await res.json();
-                
+
                 grid.innerHTML = categoriesList.map(cat => `
                     <label style="display: flex; align-items: center; gap: 5px; cursor: pointer; text-transform: none;">
                         <input type="checkbox" value="${cat}" ${hidden.includes(cat) ? '' : 'checked'}>
                         ${cat}
                     </label>
                 `).join('');
-                
+
                 const saveBtn = document.getElementById('save-categories-btn');
                 const saveMsg = document.getElementById('save-categories-msg');
                 if (saveBtn) {
@@ -232,7 +329,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         checkboxes.forEach(cb => {
                             if (!cb.checked) newHidden.push(cb.value);
                         });
-                        
+
                         try {
                             await fetch('http://localhost:3000/api/settings/categories', {
                                 method: 'POST',
@@ -242,14 +339,53 @@ document.addEventListener('DOMContentLoaded', () => {
                             saveMsg.innerText = 'Visibility saved successfully!';
                             saveMsg.style.color = '#10b981';
                             setTimeout(() => saveMsg.innerText = '', 3000);
-                        } catch(e) {
+                        } catch (e) {
                             saveMsg.innerText = 'Error saving settings.';
                             saveMsg.style.color = 'red';
                         }
                     };
                 }
-            } catch(e) {
+            } catch (e) {
                 grid.innerHTML = '<span style="color:red">Failed to load settings.</span>';
+            }
+        };
+
+        const loadPromoSettings = async () => {
+            const promoInput = document.getElementById('promo-code-input');
+            const discountInput = document.getElementById('promo-discount-input');
+            if (!promoInput || !discountInput) return;
+            try {
+                const res = await fetch('http://localhost:3000/api/settings');
+                const data = await res.json();
+                promoInput.value = data.promoCode || 'MODA20';
+                discountInput.value = data.promoDiscount || 20;
+
+                const saveBtn = document.getElementById('save-promo-btn');
+                const saveMsg = document.getElementById('save-promo-msg');
+                if (saveBtn) {
+                    saveBtn.onclick = async () => {
+                        try {
+                            const newCode = promoInput.value.trim().toUpperCase();
+                            const newDiscount = parseFloat(discountInput.value) || 0;
+                            await fetch('http://localhost:3000/api/settings/promo', {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/json',
+                                    'x-admin-token': 'secret'
+                                },
+                                body: JSON.stringify({ promoCode: newCode, promoDiscount: newDiscount })
+                            });
+                            saveMsg.innerText = 'Promo settings saved!';
+                            saveMsg.style.color = '#10b981';
+                            setTimeout(() => saveMsg.innerText = '', 3000);
+                        } catch (e) {
+                            saveMsg.innerText = 'Error saving promo settings.';
+                            saveMsg.style.color = 'red';
+                        }
+                    };
+                }
+            } catch (e) {
+                console.error('Failed to load promo settings');
             }
         };
 
@@ -258,7 +394,7 @@ document.addEventListener('DOMContentLoaded', () => {
             try {
                 const res = await fetch('http://localhost:3000/api/orders');
                 const orders = await res.json();
-                
+
                 if (orders.length === 0) {
                     ordersTbody.innerHTML = '<tr><td colspan="7" style="text-align: center; color: var(--text-light); padding: 2rem;">No orders placed yet.</td></tr>';
                     return;
@@ -300,7 +436,7 @@ document.addEventListener('DOMContentLoaded', () => {
                             <option value="Delivered" ${order.status === 'Delivered' ? 'selected' : ''}>Delivered</option>
                         </select>
                     `;
-                    
+
                     const deleteBtn = `<button class="action-btn" style="color: #ef4444; background: #fee2e2; width: 28px; height: 28px; border-radius: 4px; display: flex; align-items: center; justify-content: center; font-size: 0.8rem; transition: 0.2s; border: none; cursor: pointer;" onclick="deleteOrder(${order.id})" onmouseover="this.style.background='#fecaca'" onmouseout="this.style.background='#fee2e2'"><i class="fas fa-trash"></i></button>`;
 
                     return `
@@ -340,7 +476,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 const res = await fetch('http://localhost:3000/api/admin/customers');
                 const customers = await res.json();
                 window.adminCustomers = customers; // Save for modal
-                
+
                 if (customers.length === 0) {
                     customersTbody.innerHTML = '<tr><td colspan="7" style="text-align: center; color: var(--text-light); padding: 2rem;">No customers found.</td></tr>';
                     return;
@@ -348,10 +484,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 customersTbody.innerHTML = customers.map((c) => {
                     const avatarStr = c.name ? c.name.charAt(0).toUpperCase() : '?';
-                    const lastOrderStr = c.last_order_date 
+                    const lastOrderStr = c.last_order_date
                         ? new Date(c.last_order_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
                         : '<span style="color: #999;">Never</span>';
-                        
+
                     return `
                         <tr>
                             <td style="font-weight: 600;">#${c.id}</td>
@@ -397,41 +533,49 @@ document.addEventListener('DOMContentLoaded', () => {
             try {
                 const res = await fetch(`http://localhost:3000/api/orders/user/${userId}`);
                 const orders = await res.json();
-                
+
                 let ordersHtml = '';
                 if (orders.length === 0) {
                     ordersHtml = '<p style="color: #666; padding: 1rem 0;">No order history available for this customer.</p>';
                 } else {
                     ordersHtml = `
-                        <div style="margin-top: 1.5rem;">
-                            <h3 style="font-size: 1.1rem; margin-bottom: 1rem; border-bottom: 1px solid #eee; padding-bottom: 0.5rem;">Recent Orders</h3>
-                            <div style="display: flex; flex-direction: column; gap: 1rem; max-height: 400px; overflow-y: auto; padding-right: 10px;">
-                                ${orders.map(o => `
-                                    <div style="border: 1px solid #e2e8f0; border-radius: 6px; padding: 1rem; background: #f8fafc;">
-                                        <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
-                                            <span style="font-weight: 600;">Order #${o.id}</span>
-                                            <span style="color: #64748b; font-size: 0.85rem;">${new Date(o.created_at).toLocaleDateString()}</span>
+                        <div style="margin-top: 2rem;">
+                            <h3 style="font-size: 1.2rem; font-family: var(--font-heading); color: #0f172a; margin-bottom: 1.2rem; border-bottom: 2px solid #f1f5f9; padding-bottom: 0.8rem; letter-spacing: 0.5px;">Recent Orders</h3>
+                            <div style="display: flex; flex-direction: column; gap: 1.2rem; max-height: 420px; overflow-y: auto; padding-right: 15px; padding-bottom: 10px; scrollbar-width: thin; scrollbar-color: #cbd5e1 transparent;">
+                                ${orders.map(o => {
+                        let statusBg = '#fef3c7';
+                        let statusColor = '#d97706';
+                        if (o.status === 'Dispatched') { statusBg = '#dbeafe'; statusColor = '#2563eb'; }
+                        else if (o.status === 'Out for Delivery') { statusBg = '#f3e8ff'; statusColor = '#9333ea'; }
+                        else if (o.status === 'Delivered') { statusBg = '#d1fae5'; statusColor = '#059669'; }
+
+                        return `
+                                    <div style="border: 1px solid #e2e8f0; border-radius: 12px; padding: 1.2rem; background: #ffffff; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05), 0 2px 4px -2px rgba(0,0,0,0.05); transition: transform 0.2s ease, box-shadow 0.2s ease;" onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 10px 15px -3px rgba(0,0,0,0.1)';" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 6px -1px rgba(0,0,0,0.05), 0 2px 4px -2px rgba(0,0,0,0.05)';">
+                                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.8rem;">
+                                            <span style="font-weight: 700; color: #1e293b; font-size: 1rem;">Order #${o.id}</span>
+                                            <span style="color: #64748b; font-size: 0.8rem; font-weight: 500; background: #f8fafc; padding: 4px 10px; border-radius: 20px;">${new Date(o.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</span>
                                         </div>
-                                        <div style="display: flex; justify-content: space-between; font-size: 0.9rem;">
-                                            <span>Status: <strong style="color: ${o.status !== 'Dispatched' ? '#f59e0b' : '#10b981'}">${o.status === 'Pending' ? 'Processing' : o.status}</strong></span>
-                                            <span style="font-weight: 600;">₹${parseFloat(o.total_price).toFixed(2)}</span>
+                                        <div style="display: flex; justify-content: space-between; align-items: center; font-size: 0.9rem;">
+                                            <span style="background: ${statusBg}; color: ${statusColor}; padding: 4px 12px; border-radius: 20px; font-weight: 600; font-size: 0.75rem; letter-spacing: 0.5px; text-transform: uppercase;">${o.status === 'Pending' ? 'Processing' : o.status}</span>
+                                            <span style="font-weight: 700; font-size: 1.1rem; color: #0f172a; font-family: 'Inter', sans-serif;">₹${parseFloat(o.total_price).toFixed(2)}</span>
                                         </div>
                                     </div>
-                                `).join('')}
+                                    `;
+                    }).join('')}
                             </div>
                         </div>
                     `;
                 }
 
                 content.innerHTML = `
-                    <div style="display: flex; gap: 1.5rem; margin-bottom: 2rem;">
-                        <div style="width: 80px; height: 80px; min-width: 80px; border-radius: 50%; background: #000; color: #fff; display: flex; align-items: center; justify-content: center; font-size: 2.5rem; font-weight: 600; font-family: var(--font-heading);">
+                    <div style="display: flex; gap: 2rem; margin-bottom: 1rem; align-items: center; padding: 1.5rem; background: linear-gradient(145deg, #f8fafc, #f1f5f9); border-radius: 16px; border: 1px solid #e2e8f0; box-shadow: inset 0 2px 4px rgba(255,255,255,0.5);">
+                        <div style="width: 90px; height: 90px; min-width: 90px; border-radius: 50%; background: linear-gradient(135deg, #0f172a 0%, #334155 100%); color: #fff; display: flex; align-items: center; justify-content: center; font-size: 3rem; font-weight: 600; font-family: var(--font-heading); box-shadow: 0 10px 15px -3px rgba(15, 23, 42, 0.3); border: 3px solid #fff;">
                             ${customer.name ? customer.name.charAt(0).toUpperCase() : '?'}
                         </div>
                         <div style="display: flex; flex-direction: column; justify-content: center;">
-                            <h3 style="font-size: 1.5rem; margin-bottom: 0.4rem;">${customer.name || 'Unknown'}</h3>
-                            <div style="color: #64748b; font-size: 0.95rem; margin-bottom: 0.3rem;"><i class="fas fa-envelope" style="width: 20px;"></i> ${customer.email}</div>
-                            <div style="color: #64748b; font-size: 0.95rem;"><i class="fas fa-shopping-bag" style="width: 20px;"></i> ${customer.total_orders} Orders (Lifetime Value: <strong style="color:#000;">₹${parseFloat(customer.total_spent).toFixed(2)}</strong>)</div>
+                            <h3 style="font-size: 1.8rem; margin-bottom: 0.5rem; font-family: var(--font-heading); color: #0f172a; letter-spacing: -0.5px;">${customer.name || 'Unknown'}</h3>
+                            <div style="color: #475569; font-size: 0.95rem; margin-bottom: 0.4rem; display: flex; align-items: center; gap: 8px;"><i class="fas fa-envelope" style="color: #94a3b8;"></i> <span>${customer.email}</span></div>
+                            <div style="color: #475569; font-size: 0.95rem; display: flex; align-items: center; gap: 8px;"><i class="fas fa-shopping-bag" style="color: #94a3b8;"></i> <span><strong style="color:#0f172a;">${customer.total_orders}</strong> Orders (Lifetime Value: <strong style="color:#0f172a; font-family: 'Inter', sans-serif;">₹${parseFloat(customer.total_spent).toFixed(2)}</strong>)</span></div>
                         </div>
                     </div>
                     ${ordersHtml}
@@ -446,18 +590,22 @@ document.addEventListener('DOMContentLoaded', () => {
         const navProducts = document.getElementById('admin-nav-products');
         const navOrders = document.getElementById('admin-nav-orders');
         const navCustomers = document.getElementById('admin-nav-customers');
+        const navReports = document.getElementById('admin-nav-reports');
         const productsPanel = document.getElementById('admin-products-panel');
         const ordersPanel = document.getElementById('admin-orders-panel');
         const customersPanel = document.getElementById('admin-customers-panel');
+        const reportsPanel = document.getElementById('admin-reports-panel');
 
-        if (navProducts && navOrders && navCustomers && productsPanel && ordersPanel && customersPanel) {
+        if (navProducts && navOrders && navCustomers && navReports && productsPanel && ordersPanel && customersPanel && reportsPanel) {
             const clearTabs = () => {
                 navProducts.classList.remove('active');
                 navOrders.classList.remove('active');
                 navCustomers.classList.remove('active');
+                navReports.classList.remove('active');
                 productsPanel.style.display = 'none';
                 ordersPanel.style.display = 'none';
                 customersPanel.style.display = 'none';
+                reportsPanel.style.display = 'none';
             };
 
             navProducts.addEventListener('click', (e) => {
@@ -483,7 +631,15 @@ document.addEventListener('DOMContentLoaded', () => {
                 customersPanel.style.display = 'block';
                 renderAdminCustomers();
             });
-            
+
+            navReports.addEventListener('click', (e) => {
+                e.preventDefault();
+                clearTabs();
+                navReports.classList.add('active');
+                reportsPanel.style.display = 'block';
+                renderAdminReports();
+            });
+
             // Set default tab on load
             clearTabs();
             navProducts.classList.add('active');
@@ -491,15 +647,273 @@ document.addEventListener('DOMContentLoaded', () => {
             renderAdminTable();
         }
 
+        let revenueChartInstance = null;
+        let salesChartInstance = null;
+
+        window.renderAdminReports = async () => {
+            try {
+                // Fetch best-selling product
+                let bestSellingProduct = null;
+                const dateFilter = document.getElementById('date-filter') ? document.getElementById('date-filter').value : 'all';
+                const queryParam = dateFilter !== 'all' ? `?days=${dateFilter}` : '';
+                try {
+                    const bestRes = await fetch(`http://localhost:3000/api/admin/bestselling-product${queryParam}`);
+                    bestSellingProduct = await bestRes.json();
+                } catch (e) {
+                    console.error('Error fetching best-selling product:', e);
+                }
+
+                // Render best-selling product
+                const bestProductContainer = document.getElementById('best-selling-product-container');
+                if (bestProductContainer) {
+                    if (bestSellingProduct) {
+                        bestProductContainer.innerHTML = `
+                            <div style="display: flex; gap: 1.5rem; align-items: center;">
+                                <div style="width: 120px; height: 120px; flex-shrink: 0; border-radius: 8px; overflow: hidden; border: 1px solid #e2e8f0;">
+                                    <img src="${bestSellingProduct.img}" alt="${bestSellingProduct.title}" style="width: 100%; height: 100%; object-fit: cover;">
+                                </div>
+                                <div style="flex: 1;">
+                                    <div style="margin-bottom: 0.5rem;">
+                                        <span style="background: #fef3c7; color: #d97706; padding: 0.25rem 0.75rem; border-radius: 20px; font-size: 0.75rem; font-weight: 600; text-transform: uppercase;">Top Seller</span>
+                                    </div>
+                                    <h4 style="font-family: 'Inter', sans-serif; font-size: 1.1rem; color: #1e293b; margin: 0 0 0.5rem 0; font-weight: 600;">${bestSellingProduct.title}</h4>
+                                    <div style="color: #64748b; font-size: 0.9rem; margin-bottom: 0.75rem;">${bestSellingProduct.brand}</div>
+                                    <div style="display: flex; gap: 2rem;">
+                                        <div>
+                                            <div style="font-size: 0.8rem; color: #64748b; text-transform: uppercase; font-weight: 500;">Units Sold</div>
+                                            <div style="font-size: 1.25rem; font-weight: 700; color: #0f172a;">${bestSellingProduct.total_sold}</div>
+                                        </div>
+                                        <div>
+                                            <div style="font-size: 0.8rem; color: #64748b; text-transform: uppercase; font-weight: 500;">Revenue</div>
+                                            <div style="font-size: 1.25rem; font-weight: 700; color: #0f172a;">₹${parseFloat(bestSellingProduct.total_revenue).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</div>
+                                        </div>
+                                        <div>
+                                            <div style="font-size: 0.8rem; color: #64748b; text-transform: uppercase; font-weight: 500;">Price</div>
+                                            <div style="font-size: 1.25rem; font-weight: 700; color: #0f172a;">₹${parseFloat(bestSellingProduct.price).toFixed(2)}</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+                    } else {
+                        bestProductContainer.innerHTML = `
+                            <div style="text-align: center; padding: 2rem; color: #64748b;">
+                                <i class="fas fa-box-open" style="font-size: 2rem; margin-bottom: 1rem; opacity: 0.5;"></i>
+                                <p style="margin: 0;">No sales data available yet.</p>
+                            </div>
+                        `;
+                    }
+                }
+
+                // Fetch and render category sales percentage
+                let categorySalesData = [];
+                try {
+                    const categoryRes = await fetch(`http://localhost:3000/api/admin/category-sales-percentage${queryParam}`);
+                    categorySalesData = await categoryRes.json();
+                    console.log('Category sales data:', categorySalesData);
+                } catch (e) {
+                    console.error('Error fetching category sales percentage:', e);
+                }
+
+                const categoryChartContainer = document.getElementById('category-sales-chart-container');
+                if (categoryChartContainer) {
+                    if (categorySalesData && categorySalesData.length > 0) {
+                        const colors = ['#ef4444', '#f97316', '#14b8a6', '#475569', '#1e40af', '#3b82f6'];
+                        categoryChartContainer.innerHTML = `
+                            <div style="display: flex; flex-direction: column; gap: 1rem;">
+                                ${categorySalesData.map((cat, index) => `
+                                    <div style="display: flex; align-items: center; gap: 1rem;">
+                                        <div style="width: 110px; text-align: right; font-size: 0.9rem; font-weight: 600; color: #1e293b;">${cat.category}</div>
+                                        <div style="flex: 1; height: 24px; background: #f1f5f9; border-radius: 4px; overflow: hidden; position: relative;">
+                                            <div style="height: 100%; background: ${colors[index % colors.length]}; width: ${parseFloat(cat.percentage_sold)}%; transition: width 0.5s ease;"></div>
+                                        </div>
+                                        <div style="width: 60px; font-size: 0.9rem; font-weight: 600; color: #1e293b;">${parseFloat(cat.percentage_sold).toFixed(1)}%</div>
+                                    </div>
+                                `).join('')}
+                            </div>
+                        `;
+                    } else {
+                        categoryChartContainer.innerHTML = `
+                            <div style="text-align: center; padding: 2rem; color: #64748b;">
+                                <i class="fas fa-chart-bar" style="font-size: 2rem; margin-bottom: 1rem; opacity: 0.5;"></i>
+                                <p style="margin: 0;">No category sales data available yet.</p>
+                            </div>
+                        `;
+                    }
+                }
+
+                const res = await fetch(`http://localhost:3000/api/orders${queryParam}`);
+                const orders = await res.json();
+
+                const monthlyData = {};
+                let totalRevenue = 0;
+                let totalOrdersCount = 0;
+                let totalProductsSold = 0;
+
+                orders.forEach(order => {
+                    if (order.status === 'Cancelled') return; // Skip cancelled orders
+
+                    totalOrdersCount++;
+                    const orderRev = parseFloat(order.total_price || 0);
+                    totalRevenue += orderRev;
+
+                    let itemsCount = 0;
+                    if (Array.isArray(order.items)) {
+                        order.items.forEach(item => {
+                            itemsCount += parseInt(item.qty || 1);
+                        });
+                    }
+                    totalProductsSold += itemsCount;
+
+                    const date = new Date(order.created_at);
+                    const monthKey = date.toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
+
+                    if (!monthlyData[monthKey]) {
+                        monthlyData[monthKey] = { revenue: 0, productsSold: 0, ordersCount: 0 };
+                    }
+                    monthlyData[monthKey].revenue += orderRev;
+                    monthlyData[monthKey].productsSold += itemsCount;
+                    monthlyData[monthKey].ordersCount++;
+                });
+
+                // Inject KPI Cards
+                const kpiContainer = document.getElementById('reports-kpi-container');
+                if (kpiContainer) {
+                    kpiContainer.innerHTML = `
+                        <div style="background: #fff; padding: 1.5rem; border-radius: 12px; border: 1px solid #e2e8f0; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); display: flex; flex-direction: column;">
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+                                <span style="color: #64748b; font-size: 0.95rem; font-weight: 600;">Gross Sales</span>
+                                <div style="background: #dbeafe; color: #2563eb; width: 36px; height: 36px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 1.2rem;"><i class="fas fa-wallet"></i></div>
+                            </div>
+                            <h2 style="font-size: 2rem; font-family: 'Inter', sans-serif; color: #0f172a; margin: 0;">₹${totalRevenue.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</h2>
+                        </div>
+                        <div style="background: #fff; padding: 1.5rem; border-radius: 12px; border: 1px solid #e2e8f0; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); display: flex; flex-direction: column;">
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+                                <span style="color: #64748b; font-size: 0.95rem; font-weight: 600;">Total Orders</span>
+                                <div style="background: #f3e8ff; color: #9333ea; width: 36px; height: 36px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 1.2rem;"><i class="fas fa-shopping-bag"></i></div>
+                            </div>
+                            <h2 style="font-size: 2rem; font-family: 'Inter', sans-serif; color: #0f172a; margin: 0;">${totalOrdersCount.toLocaleString('en-IN')}</h2>
+                        </div>
+                        <div style="background: #fff; padding: 1.5rem; border-radius: 12px; border: 1px solid #e2e8f0; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); display: flex; flex-direction: column;">
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+                                <span style="color: #64748b; font-size: 0.95rem; font-weight: 600;">Units Sold</span>
+                                <div style="background: #d1fae5; color: #059669; width: 36px; height: 36px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 1.2rem;"><i class="fas fa-box-open"></i></div>
+                            </div>
+                            <h2 style="font-size: 2rem; font-family: 'Inter', sans-serif; color: #0f172a; margin: 0;">${totalProductsSold.toLocaleString('en-IN')}</h2>
+                        </div>
+                    `;
+                }
+
+                const labels = Object.keys(monthlyData).reverse();
+                const revenueData = labels.map(label => monthlyData[label].revenue);
+                const salesData = labels.map(label => monthlyData[label].productsSold);
+
+                // Populate Monthly Summary Table
+                const tableBody = document.getElementById('reports-monthly-table');
+                if (tableBody) {
+                    if (labels.length === 0) {
+                        tableBody.innerHTML = '<tr><td colspan="4" style="text-align: center; padding: 2rem; color: #64748b;">No sales data available yet.</td></tr>';
+                    } else {
+                        tableBody.innerHTML = labels.map(label => `
+                            <tr style="border-bottom: 1px solid #f1f5f9; transition: background 0.2s;" onmouseover="this.style.background='#f8fafc'" onmouseout="this.style.background='transparent'">
+                                <td style="padding: 1.2rem 1rem; font-weight: 600;">${label}</td>
+                                <td style="padding: 1.2rem 1rem;">${monthlyData[label].ordersCount}</td>
+                                <td style="padding: 1.2rem 1rem;">${monthlyData[label].productsSold}</td>
+                                <td style="padding: 1.2rem 1rem; font-weight: 600; color: #0ea5e9;">₹${monthlyData[label].revenue.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                            </tr>
+                        `).join('');
+                    }
+                }
+
+                if (revenueChartInstance) revenueChartInstance.destroy();
+                if (salesChartInstance) salesChartInstance.destroy();
+
+                const commonOptions = {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            backgroundColor: '#1e293b',
+                            titleFont: { family: 'Inter', size: 13 },
+                            bodyFont: { family: 'Inter', size: 14, weight: 'bold' },
+                            padding: 12,
+                            cornerRadius: 8,
+                            displayColors: false
+                        }
+                    },
+                    scales: {
+                        x: { grid: { display: false }, ticks: { font: { family: 'Inter', size: 12 }, color: '#64748b' } },
+                        y: {
+                            border: { display: false },
+                            grid: { color: '#f1f5f9', drawTicks: false },
+                            ticks: { font: { family: 'Inter', size: 12 }, color: '#64748b', padding: 10 }
+                        }
+                    }
+                };
+
+                const revCtx = document.getElementById('revenueChart').getContext('2d');
+
+                // Create gradient for Revenue chart
+                const gradient = revCtx.createLinearGradient(0, 0, 0, 400);
+                gradient.addColorStop(0, 'rgba(37, 99, 235, 0.2)');
+                gradient.addColorStop(1, 'rgba(37, 99, 235, 0.0)');
+
+                revenueChartInstance = new Chart(revCtx, {
+                    type: 'line',
+                    data: {
+                        labels: labels,
+                        datasets: [{
+                            label: 'Total Revenue (₹)',
+                            data: revenueData,
+                            borderColor: '#2563eb',
+                            backgroundColor: gradient,
+                            borderWidth: 3,
+                            fill: true,
+                            tension: 0.4,
+                            pointBackgroundColor: '#fff',
+                            pointBorderColor: '#2563eb',
+                            pointBorderWidth: 2,
+                            pointRadius: 4,
+                            pointHoverRadius: 6
+                        }]
+                    },
+                    options: commonOptions
+                });
+
+                const salesCtx = document.getElementById('salesChart').getContext('2d');
+                salesChartInstance = new Chart(salesCtx, {
+                    type: 'bar',
+                    data: {
+                        labels: labels,
+                        datasets: [{
+                            label: 'Products Sold',
+                            data: salesData,
+                            backgroundColor: '#10b981',
+                            borderRadius: 6,
+                            barThickness: 'flex',
+                            maxBarThickness: 40
+                        }]
+                    },
+                    options: commonOptions
+                });
+
+            } catch (e) {
+                console.error("Error generating reports:", e);
+            }
+        };
+
+
         if (tbody) {
             renderAdminTable();
             loadCategoryVisibility();
+            loadPromoSettings();
         }
 
         if (form) {
             form.addEventListener('submit', async (e) => {
                 e.preventDefault();
-                
+
                 const readAsBase64 = (file) => {
                     return new Promise((resolve) => {
                         if (!file) return resolve(null);
@@ -517,7 +931,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     const img1Base64 = await readAsBase64(file1);
                     const img2Base64 = await readAsBase64(file2);
                     const img3Base64 = await readAsBase64(file3);
-                    
+
                     const checkedSizes = Array.from(document.querySelectorAll('#prod-sizes input[type="checkbox"]'))
                         .filter(cb => cb.checked)
                         .map(cb => cb.value)
@@ -552,7 +966,7 @@ document.addEventListener('DOMContentLoaded', () => {
                             body: JSON.stringify(newItem)
                         });
 
-                        if(response.ok) {
+                        if (response.ok) {
                             form.reset();
                             renderAdminTable();
                             alert('Success! The product and all images are now live on the website.');
@@ -575,6 +989,29 @@ document.addEventListener('DOMContentLoaded', () => {
             } catch (err) {
                 console.error('Failed to delete product', err);
                 alert('Could not delete product.');
+            }
+        };
+
+        window.updateCustomProductStock = async (id, newStock) => {
+            try {
+                const res = await fetch(`http://localhost:3000/api/products/${id}/stock`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ stock: parseInt(newStock) || 0 })
+                });
+                if (!res.ok) {
+                    alert('Failed to update stock');
+                } else {
+                    // Update the local array to reflect the change
+                    const productIndex = allAdminProducts.findIndex(p => p.id === id);
+                    if (productIndex !== -1) {
+                        allAdminProducts[productIndex].stock = parseInt(newStock) || 0;
+                        updateAdminStats(); // refresh the stats
+                    }
+                }
+            } catch (err) {
+                console.error('Failed to update stock', err);
+                alert('Could not update stock.');
             }
         };
 
@@ -643,11 +1080,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
             if (targetGrid) {
                 let htmlToInject = '';
-                window.dynamicProductsMap = {}; 
-                
+                window.dynamicProductsMap = {};
+
                 [...customProducts].reverse().forEach(p => {
                     window.dynamicProductsMap[p.id] = p;
-                    if (allowedCategory === 'All' || p.category === allowedCategory) {
+                    // Only display product if it has stock > 0
+                    if (p.stock > 0 && (allowedCategory === 'All' || p.category === allowedCategory)) {
                         htmlToInject += `
                             <div class="product-card" data-product-id="${p.id}" data-category="${p.category}">
                                 <div class="product-img-wrap">
@@ -693,10 +1131,10 @@ document.addEventListener('DOMContentLoaded', () => {
     const updateWishlistUI = async () => {
         try {
             const res = await fetch(`http://localhost:3000/api/wishlist/${getSessionId()}`);
-            if(!res.ok) return;
+            if (!res.ok) return;
             const wishlist = await res.json();
             const wishlistBtns = document.querySelectorAll('.wishlist-btn, .btn-wishlist-outline');
-            
+
             wishlistBtns.forEach(btn => {
                 const card = btn.closest('.product-card');
                 let title = '';
@@ -705,20 +1143,20 @@ document.addEventListener('DOMContentLoaded', () => {
                     if (titleEl) title = titleEl.innerText.trim();
                 } else if (btn.classList.contains('btn-wishlist-outline')) {
                     const titleEl = document.querySelector('.product-detail-title');
-                    if(titleEl) title = titleEl.innerText.trim();
+                    if (titleEl) title = titleEl.innerText.trim();
                 }
 
                 if (title) {
                     const exists = wishlist.find(i => i.title === title);
                     const icon = btn.querySelector('i');
                     if (exists) {
-                        if(icon) {
+                        if (icon) {
                             icon.classList.remove('far');
                             icon.classList.add('fas');
                             icon.style.color = 'var(--primary-color)';
                         }
                     } else {
-                        if(icon) {
+                        if (icon) {
                             icon.classList.remove('fas');
                             icon.classList.add('far');
                             icon.style.color = '';
@@ -726,29 +1164,29 @@ document.addEventListener('DOMContentLoaded', () => {
                     }
                 }
             });
-        } catch(e) {}
+        } catch (e) { }
     };
 
     const toggleWishlist = async (product) => {
         try {
             await fetch(`http://localhost:3000/api/wishlist/${getSessionId()}`, {
                 method: 'POST',
-                headers: {'Content-Type': 'application/json'},
+                headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(product)
             });
             updateWishlistUI();
             if (window.renderWishlistPage) window.renderWishlistPage();
-        } catch(e) {}
+        } catch (e) { }
     };
 
     document.addEventListener('click', (e) => {
         const btnSmall = e.target.closest('.wishlist-btn');
         const btnOutline = e.target.closest('.btn-wishlist-outline');
-        
+
         if (btnSmall) {
             e.preventDefault();
             e.stopPropagation();
-            
+
             const card = btnSmall.closest('.product-card');
             if (card) {
                 const imgEl = card.querySelector('img');
@@ -781,9 +1219,9 @@ document.addEventListener('DOMContentLoaded', () => {
         productCards.forEach(card => {
             const newCard = card.cloneNode(true);
             card.parentNode.replaceChild(newCard, card);
-            
+
             newCard.addEventListener('click', (e) => {
-                if(e.target.closest('.wishlist-btn')) {
+                if (e.target.closest('.wishlist-btn')) {
                     return;
                 }
 
@@ -791,11 +1229,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 const img = imgEl ? imgEl.src : '';
                 const titleEl = newCard.querySelector('h4');
                 const title = titleEl ? titleEl.innerText.trim() : 'Unknown Product';
-                
+
                 const priceEl = newCard.querySelector('.price');
                 const priceText = priceEl ? priceEl.innerText : '₹0.00';
                 const price = parseFloat(priceText.replace('₹', '').replace(',', ''));
-                
+
                 const brandEl = newCard.querySelector('.brand');
                 const brand = brandEl ? brandEl.innerText.trim() : 'MODA ARCHIVE';
 
@@ -826,7 +1264,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     localStorage.setItem('current_product', JSON.stringify(currentProduct));
                     localStorage.removeItem('current_product_id');
                 }
-                
+
                 window.location.href = 'product.html';
             });
         });
@@ -838,11 +1276,11 @@ document.addEventListener('DOMContentLoaded', () => {
     const searchInputs = document.querySelectorAll('.search-bar input');
     const urlParams = new URLSearchParams(window.location.search);
     const searchQuery = (urlParams.get('search') || '').trim();
-    
+
     if (searchQuery) {
         searchInputs.forEach(input => input.value = searchQuery);
     }
-    
+
     searchInputs.forEach(input => {
         input.addEventListener('keypress', (e) => {
             if (e.key === 'Enter') {
@@ -872,228 +1310,228 @@ document.addEventListener('DOMContentLoaded', () => {
                     if (res.ok) {
                         currentProduct = await res.json();
                     }
-                } catch(e) {}
+                } catch (e) { }
             } else {
                 currentProduct = JSON.parse(localStorage.getItem('current_product'));
             }
-            
+
             if (currentProduct) {
-            const mainImg = document.querySelector('.main-product-img');
-            if (mainImg) mainImg.src = currentProduct.img;
+                const mainImg = document.querySelector('.main-product-img');
+                if (mainImg) mainImg.src = currentProduct.img;
 
-            const thumbs = document.querySelectorAll('.thumbnail-list .thumb');
-            if (thumbs.length >= 3) {
-                thumbs[0].src = currentProduct.img;
-                thumbs[0].style.display = 'block';
+                const thumbs = document.querySelectorAll('.thumbnail-list .thumb');
+                if (thumbs.length >= 3) {
+                    thumbs[0].src = currentProduct.img;
+                    thumbs[0].style.display = 'block';
 
-                if (currentProduct.img2 && currentProduct.img2 !== currentProduct.img) {
-                    thumbs[1].src = currentProduct.img2;
-                    thumbs[1].style.display = 'block';
-                } else {
-                    thumbs[1].style.display = 'none';
-                }
-
-                if (currentProduct.img3 && currentProduct.img3 !== currentProduct.img && currentProduct.img3 !== currentProduct.img2) {
-                    thumbs[2].src = currentProduct.img3;
-                    thumbs[2].style.display = 'block';
-                } else {
-                    thumbs[2].style.display = 'none';
-                }
-            } else {
-                thumbs.forEach(thumb => {
-                    thumb.src = currentProduct.img;
-                    thumb.style.display = 'block';
-                });
-            }
-            
-            const titleEl = document.querySelector('.product-detail-title');
-            if (titleEl) titleEl.innerText = currentProduct.title;
-            
-            const priceEl = document.querySelector('.product-detail-price');
-            if (priceEl) priceEl.innerText = '₹' + currentProduct.price.toFixed(2);
-            
-            const descriptionEl = document.getElementById('product-description');
-            if (descriptionEl && currentProduct.description) {
-                descriptionEl.innerText = currentProduct.description;
-            }
-            
-            // Update tab content for Material & Care and Shipping
-            const tabContent = document.querySelector('.tab-content');
-            if (tabContent && currentProduct) {
-                let descriptionHtml = '';
-                if (currentProduct.description) {
-                    descriptionHtml = `<p>${currentProduct.description}</p>`;
-                } else {
-                    descriptionHtml = '<p>Product description not available.</p>';
-                }
-                
-                let materialHtml = '';
-                if (currentProduct.material) {
-                    materialHtml = `<p>${currentProduct.material}</p>`;
-                } else {
-                    materialHtml = '<p>Material and care information not available.</p>';
-                }
-                
-                let shippingHtml = '';
-                if (currentProduct.shipping) {
-                    shippingHtml = `<p>${currentProduct.shipping}</p>`;
-                } else {
-                    shippingHtml = '<p>Shipping information not available.</p>';
-                }
-                
-                // Store content for tabs
-                window.tabContents = {
-                    description: descriptionHtml,
-                    material: materialHtml,
-                    shipping: shippingHtml
-                };
-                
-                // Set initial tab content to description
-                tabContent.innerHTML = window.tabContents.description;
-            }
-            
-            // Fade in main section after loading
-            const mainSection = document.getElementById('product-main-section');
-            if (mainSection) {
-                mainSection.style.opacity = '1';
-            }
-        }
-
-        const productThumbs = document.querySelectorAll('.thumbnail-list .thumb');
-        const productMainImg = document.querySelector('.main-product-img');
-        
-        if (productThumbs.length > 0 && productMainImg) {
-            productThumbs.forEach(thumb => {
-                thumb.addEventListener('click', function() {
-                    productThumbs.forEach(t => t.classList.remove('active'));
-                    this.classList.add('active');
-                    productMainImg.src = this.src;
-                });
-            });
-        }
-
-        // Tab switching functionality
-        const tabHeaders = document.querySelectorAll('.tab-headers .tab');
-        const tabContent = document.querySelector('.tab-content');
-        
-        if (tabHeaders.length > 0 && tabContent) {
-            tabHeaders.forEach((tab, index) => {
-                tab.addEventListener('click', function() {
-                    tabHeaders.forEach(t => t.classList.remove('active'));
-                    this.classList.add('active');
-                    
-                    const tabName = this.innerText.toLowerCase();
-                    if (window.tabContents && window.tabContents[tabName]) {
-                        tabContent.innerHTML = window.tabContents[tabName];
+                    if (currentProduct.img2 && currentProduct.img2 !== currentProduct.img) {
+                        thumbs[1].src = currentProduct.img2;
+                        thumbs[1].style.display = 'block';
+                    } else {
+                        thumbs[1].style.display = 'none';
                     }
-                });
-            });
-        }
 
-        const sizeBtns = document.querySelectorAll('.pdp-sizes .size-btn');
-        if (sizeBtns.length > 0) {
-            sizeBtns.forEach(btn => {
-                btn.addEventListener('click', function() {
-                    sizeBtns.forEach(b => b.classList.remove('active'));
-                    this.classList.add('active');
-                });
-            });
-        }
-
-        const colorBtns = document.querySelectorAll('.pdp-colors .color-btn');
-        const selectedColorText = document.getElementById('pdp-selected-color');
-        if (colorBtns.length > 0) {
-            colorBtns.forEach(btn => {
-                btn.addEventListener('click', function() {
-                    colorBtns.forEach(b => b.classList.remove('active'));
-                    this.classList.add('active');
-                    if (selectedColorText) {
-                        const colorName = this.getAttribute('data-color') || 'CHARCOAL GREY';
-                        selectedColorText.innerText = colorName.toUpperCase();
+                    if (currentProduct.img3 && currentProduct.img3 !== currentProduct.img && currentProduct.img3 !== currentProduct.img2) {
+                        thumbs[2].src = currentProduct.img3;
+                        thumbs[2].style.display = 'block';
+                    } else {
+                        thumbs[2].style.display = 'none';
                     }
-                });
-            });
-        }
-
-        const addToCartBtn = document.getElementById('pdp-add-to-cart');
-        if (addToCartBtn) {
-            addToCartBtn.addEventListener('click', async () => {
-                if (!currentProduct) return;
-
-                const activeSizeBtn = document.querySelector('.pdp-sizes .size-btn.active');
-                const selectedSize = activeSizeBtn ? activeSizeBtn.innerText.trim() : 'M';
-
-                const activeColorBtn = document.querySelector('.pdp-colors .color-btn.active');
-                const selectedColor = activeColorBtn ? (activeColorBtn.getAttribute('data-color') || 'CHARCOAL GREY') : 'CHARCOAL GREY';
-
-                const item = {
-                    img: currentProduct.img,
-                    title: currentProduct.title,
-                    price: currentProduct.price,
-                    brand: currentProduct.brand,
-                    qty: 1,
-                    size: selectedSize,
-                    color: selectedColor
-                };
-
-                try {
-                    const submitBtn = document.getElementById('pdp-add-to-cart');
-                    if (submitBtn) submitBtn.disabled = true;
-                    
-                    await fetch(`http://localhost:3000/api/cart/${getSessionId()}`, {
-                        method: 'POST',
-                        headers: {'Content-Type': 'application/json'},
-                        body: JSON.stringify(item)
+                } else {
+                    thumbs.forEach(thumb => {
+                        thumb.src = currentProduct.img;
+                        thumb.style.display = 'block';
                     });
-                    
-                    window.location.href = 'cart.html';
-                } catch(e) {
-                    alert('Error adding to cart. Is the backend running?');
-                    const submitBtn = document.getElementById('pdp-add-to-cart');
-                    if (submitBtn) submitBtn.disabled = false;
-                }
-            });
-        }
-
-        const pdpWishlistBtn = document.querySelector('.btn-wishlist-outline');
-        if (pdpWishlistBtn) {
-            pdpWishlistBtn.addEventListener('click', async () => {
-                if (!currentProduct) return;
-                
-                // Add loading state or feedback
-                const icon = pdpWishlistBtn.querySelector('i');
-                if (icon) {
-                    icon.classList.remove('far');
-                    icon.classList.add('fas');
-                    icon.style.color = 'var(--primary-color, #111)';
                 }
 
-                await toggleWishlist({
-                    img: currentProduct.img,
-                    title: currentProduct.title,
-                    price: currentProduct.price,
-                    brand: currentProduct.brand
+                const titleEl = document.querySelector('.product-detail-title');
+                if (titleEl) titleEl.innerText = currentProduct.title;
+
+                const priceEl = document.querySelector('.product-detail-price');
+                if (priceEl) priceEl.innerText = '₹' + currentProduct.price.toFixed(2);
+
+                const descriptionEl = document.getElementById('product-description');
+                if (descriptionEl && currentProduct.description) {
+                    descriptionEl.innerText = currentProduct.description;
+                }
+
+                // Update tab content for Material & Care and Shipping
+                const tabContent = document.querySelector('.tab-content');
+                if (tabContent && currentProduct) {
+                    let descriptionHtml = '';
+                    if (currentProduct.description) {
+                        descriptionHtml = `<p>${currentProduct.description}</p>`;
+                    } else {
+                        descriptionHtml = '<p>Product description not available.</p>';
+                    }
+
+                    let materialHtml = '';
+                    if (currentProduct.material) {
+                        materialHtml = `<p>${currentProduct.material}</p>`;
+                    } else {
+                        materialHtml = '<p>Material and care information not available.</p>';
+                    }
+
+                    let shippingHtml = '';
+                    if (currentProduct.shipping) {
+                        shippingHtml = `<p>${currentProduct.shipping}</p>`;
+                    } else {
+                        shippingHtml = '<p>Shipping information not available.</p>';
+                    }
+
+                    // Store content for tabs
+                    window.tabContents = {
+                        description: descriptionHtml,
+                        material: materialHtml,
+                        shipping: shippingHtml
+                    };
+
+                    // Set initial tab content to description
+                    tabContent.innerHTML = window.tabContents.description;
+                }
+
+                // Fade in main section after loading
+                const mainSection = document.getElementById('product-main-section');
+                if (mainSection) {
+                    mainSection.style.opacity = '1';
+                }
+            }
+
+            const productThumbs = document.querySelectorAll('.thumbnail-list .thumb');
+            const productMainImg = document.querySelector('.main-product-img');
+
+            if (productThumbs.length > 0 && productMainImg) {
+                productThumbs.forEach(thumb => {
+                    thumb.addEventListener('click', function () {
+                        productThumbs.forEach(t => t.classList.remove('active'));
+                        this.classList.add('active');
+                        productMainImg.src = this.src;
+                    });
                 });
-                
-                // Show a quick alert or change text to let user know it worked
-                pdpWishlistBtn.innerHTML = '<i class="fas fa-heart" style="color: var(--primary-color, #111);"></i> ADDED TO WISHLIST';
-                
-                // Optionally redirect to wishlist page
-                // window.location.href = 'wishlist.html'; 
-            });
-        }
+            }
 
-        // Fetch related products dynamically
-        if (currentProduct && currentProduct.category) {
-            try {
-                const res = await fetch('http://localhost:3000/api/products');
-                if (res.ok) {
-                    const allProducts = await res.json();
-                    const relatedProducts = allProducts.filter(p => p.category === currentProduct.category && p.id !== currentProduct.id).slice(0, 4);
-                    const grid = document.getElementById('related-products-grid');
-                    if (grid) {
-                        if (relatedProducts.length > 0) {
-                            grid.innerHTML = relatedProducts.map(p => `
+            // Tab switching functionality
+            const tabHeaders = document.querySelectorAll('.tab-headers .tab');
+            const tabContent = document.querySelector('.tab-content');
+
+            if (tabHeaders.length > 0 && tabContent) {
+                tabHeaders.forEach((tab, index) => {
+                    tab.addEventListener('click', function () {
+                        tabHeaders.forEach(t => t.classList.remove('active'));
+                        this.classList.add('active');
+
+                        const tabName = this.innerText.toLowerCase();
+                        if (window.tabContents && window.tabContents[tabName]) {
+                            tabContent.innerHTML = window.tabContents[tabName];
+                        }
+                    });
+                });
+            }
+
+            const sizeBtns = document.querySelectorAll('.pdp-sizes .size-btn');
+            if (sizeBtns.length > 0) {
+                sizeBtns.forEach(btn => {
+                    btn.addEventListener('click', function () {
+                        sizeBtns.forEach(b => b.classList.remove('active'));
+                        this.classList.add('active');
+                    });
+                });
+            }
+
+            const colorBtns = document.querySelectorAll('.pdp-colors .color-btn');
+            const selectedColorText = document.getElementById('pdp-selected-color');
+            if (colorBtns.length > 0) {
+                colorBtns.forEach(btn => {
+                    btn.addEventListener('click', function () {
+                        colorBtns.forEach(b => b.classList.remove('active'));
+                        this.classList.add('active');
+                        if (selectedColorText) {
+                            const colorName = this.getAttribute('data-color') || 'CHARCOAL GREY';
+                            selectedColorText.innerText = colorName.toUpperCase();
+                        }
+                    });
+                });
+            }
+
+            const addToCartBtn = document.getElementById('pdp-add-to-cart');
+            if (addToCartBtn) {
+                addToCartBtn.addEventListener('click', async () => {
+                    if (!currentProduct) return;
+
+                    const activeSizeBtn = document.querySelector('.pdp-sizes .size-btn.active');
+                    const selectedSize = activeSizeBtn ? activeSizeBtn.innerText.trim() : 'M';
+
+                    const activeColorBtn = document.querySelector('.pdp-colors .color-btn.active');
+                    const selectedColor = activeColorBtn ? (activeColorBtn.getAttribute('data-color') || 'CHARCOAL GREY') : 'CHARCOAL GREY';
+
+                    const item = {
+                        img: currentProduct.img,
+                        title: currentProduct.title,
+                        price: currentProduct.price,
+                        brand: currentProduct.brand,
+                        qty: 1,
+                        size: selectedSize,
+                        color: selectedColor
+                    };
+
+                    try {
+                        const submitBtn = document.getElementById('pdp-add-to-cart');
+                        if (submitBtn) submitBtn.disabled = true;
+
+                        await fetch(`http://localhost:3000/api/cart/${getSessionId()}`, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify(item)
+                        });
+
+                        window.location.href = 'cart.html';
+                    } catch (e) {
+                        alert('Error adding to cart. Is the backend running?');
+                        const submitBtn = document.getElementById('pdp-add-to-cart');
+                        if (submitBtn) submitBtn.disabled = false;
+                    }
+                });
+            }
+
+            const pdpWishlistBtn = document.querySelector('.btn-wishlist-outline');
+            if (pdpWishlistBtn) {
+                pdpWishlistBtn.addEventListener('click', async () => {
+                    if (!currentProduct) return;
+
+                    // Add loading state or feedback
+                    const icon = pdpWishlistBtn.querySelector('i');
+                    if (icon) {
+                        icon.classList.remove('far');
+                        icon.classList.add('fas');
+                        icon.style.color = 'var(--primary-color, #111)';
+                    }
+
+                    await toggleWishlist({
+                        img: currentProduct.img,
+                        title: currentProduct.title,
+                        price: currentProduct.price,
+                        brand: currentProduct.brand
+                    });
+
+                    // Show a quick alert or change text to let user know it worked
+                    pdpWishlistBtn.innerHTML = '<i class="fas fa-heart" style="color: var(--primary-color, #111);"></i> ADDED TO WISHLIST';
+
+                    // Optionally redirect to wishlist page
+                    // window.location.href = 'wishlist.html'; 
+                });
+            }
+
+            // Fetch related products dynamically
+            if (currentProduct && currentProduct.category) {
+                try {
+                    const res = await fetch('http://localhost:3000/api/products');
+                    if (res.ok) {
+                        const allProducts = await res.json();
+                        const relatedProducts = allProducts.filter(p => p.category === currentProduct.category && p.id !== currentProduct.id).slice(0, 4);
+                        const grid = document.getElementById('related-products-grid');
+                        if (grid) {
+                            if (relatedProducts.length > 0) {
+                                grid.innerHTML = relatedProducts.map(p => `
                                 <div class="product-card" data-product-id="${p.id}" data-category="${p.category}" style="cursor: pointer;">
                                     <div class="product-img-wrap">
                                         <button class="wishlist-btn"><i class="far fa-heart"></i></button>
@@ -1109,83 +1547,83 @@ document.addEventListener('DOMContentLoaded', () => {
                                 </div>
                             `).join('');
 
-                            // Setup click listener to navigate to the related product
-                            grid.querySelectorAll('.product-card').forEach(card => {
-                                card.addEventListener('click', (e) => {
-                                    if (e.target.closest('.wishlist-btn')) return;
-                                    localStorage.setItem('current_product_id', card.dataset.productId);
-                                    const prod = allProducts.find(p => p.id == card.dataset.productId);
-                                    if (prod) localStorage.setItem('current_product', JSON.stringify(prod));
-                                    window.location.href = 'product.html';
+                                // Setup click listener to navigate to the related product
+                                grid.querySelectorAll('.product-card').forEach(card => {
+                                    card.addEventListener('click', (e) => {
+                                        if (e.target.closest('.wishlist-btn')) return;
+                                        localStorage.setItem('current_product_id', card.dataset.productId);
+                                        const prod = allProducts.find(p => p.id == card.dataset.productId);
+                                        if (prod) localStorage.setItem('current_product', JSON.stringify(prod));
+                                        window.location.href = 'product.html';
+                                    });
                                 });
-                            });
 
-                            // Setup wishlist button click listener
-                            grid.querySelectorAll('.wishlist-btn').forEach(btn => {
-                                btn.addEventListener('click', async (e) => {
-                                    e.stopPropagation();
-                                    const card = e.target.closest('.product-card');
-                                    const prod = allProducts.find(p => p.id == card.dataset.productId);
-                                    if (prod) {
-                                        const icon = btn.querySelector('i');
-                                        if (icon) {
-                                            icon.classList.remove('far');
-                                            icon.classList.add('fas');
-                                            icon.style.color = 'var(--primary-color, #111)';
+                                // Setup wishlist button click listener
+                                grid.querySelectorAll('.wishlist-btn').forEach(btn => {
+                                    btn.addEventListener('click', async (e) => {
+                                        e.stopPropagation();
+                                        const card = e.target.closest('.product-card');
+                                        const prod = allProducts.find(p => p.id == card.dataset.productId);
+                                        if (prod) {
+                                            const icon = btn.querySelector('i');
+                                            if (icon) {
+                                                icon.classList.remove('far');
+                                                icon.classList.add('fas');
+                                                icon.style.color = 'var(--primary-color, #111)';
+                                            }
+                                            if (typeof toggleWishlist === 'function') {
+                                                await toggleWishlist({
+                                                    img: prod.img,
+                                                    title: prod.title,
+                                                    price: prod.price,
+                                                    brand: prod.brand || 'MODA ARCHIVE'
+                                                });
+                                            }
                                         }
-                                        if (typeof toggleWishlist === 'function') {
-                                            await toggleWishlist({
-                                                img: prod.img,
-                                                title: prod.title,
-                                                price: prod.price,
-                                                brand: prod.brand || 'MODA ARCHIVE'
-                                            });
-                                        }
-                                    }
+                                    });
                                 });
-                            });
-                        } else {
-                            grid.innerHTML = '<p>No related products found.</p>';
+                            } else {
+                                grid.innerHTML = '<p>No related products found.</p>';
+                            }
                         }
                     }
+                } catch (e) {
+                    console.error('Error fetching related products:', e);
                 }
-            } catch(e) {
-                console.error('Error fetching related products:', e);
             }
-        }
 
-        // Fetch and handle reviews
-        if (currentProduct) {
-            const fetchReviews = async () => {
-                try {
-                    const res = await fetch(`http://localhost:3000/api/reviews/${currentProduct.id}`);
-                    if (res.ok) {
-                        const reviews = await res.json();
-                        const listContainer = document.getElementById('reviews-list-container');
-                        const avgRatingEl = document.getElementById('review-avg-rating');
-                        const countTextEl = document.getElementById('review-count-text');
-                        const starsEl = document.getElementById('review-avg-stars');
+            // Fetch and handle reviews
+            if (currentProduct) {
+                const fetchReviews = async () => {
+                    try {
+                        const res = await fetch(`http://localhost:3000/api/reviews/${currentProduct.id}`);
+                        if (res.ok) {
+                            const reviews = await res.json();
+                            const listContainer = document.getElementById('reviews-list-container');
+                            const avgRatingEl = document.getElementById('review-avg-rating');
+                            const countTextEl = document.getElementById('review-count-text');
+                            const starsEl = document.getElementById('review-avg-stars');
 
-                        if (!listContainer) return;
+                            if (!listContainer) return;
 
-                        if (reviews.length === 0) {
-                            listContainer.innerHTML = '<p style="padding-top: 2rem;">No reviews yet. Be the first to review this product!</p>';
-                            if (avgRatingEl) avgRatingEl.innerText = '0.0';
-                            if (countTextEl) countTextEl.innerText = 'BASED ON 0 REVIEWS';
-                            if (starsEl) starsEl.innerHTML = '<i class="far fa-star"></i><i class="far fa-star"></i><i class="far fa-star"></i><i class="far fa-star"></i><i class="far fa-star"></i>';
-                            return;
-                        }
-
-                        let totalRating = 0;
-                        listContainer.innerHTML = reviews.map(r => {
-                            totalRating += r.rating;
-                            const d = new Date(r.created_at);
-                            const dateStr = d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }).toUpperCase();
-                            let starHtml = '';
-                            for (let i = 1; i <= 5; i++) {
-                                starHtml += i <= r.rating ? '<i class="fas fa-star"></i>' : '<i class="far fa-star"></i>';
+                            if (reviews.length === 0) {
+                                listContainer.innerHTML = '<p style="padding-top: 2rem;">No reviews yet. Be the first to review this product!</p>';
+                                if (avgRatingEl) avgRatingEl.innerText = '0.0';
+                                if (countTextEl) countTextEl.innerText = 'BASED ON 0 REVIEWS';
+                                if (starsEl) starsEl.innerHTML = '<i class="far fa-star"></i><i class="far fa-star"></i><i class="far fa-star"></i><i class="far fa-star"></i><i class="far fa-star"></i>';
+                                return;
                             }
-                            return `
+
+                            let totalRating = 0;
+                            listContainer.innerHTML = reviews.map(r => {
+                                totalRating += r.rating;
+                                const d = new Date(r.created_at);
+                                const dateStr = d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }).toUpperCase();
+                                let starHtml = '';
+                                for (let i = 1; i <= 5; i++) {
+                                    starHtml += i <= r.rating ? '<i class="fas fa-star"></i>' : '<i class="far fa-star"></i>';
+                                }
+                                return `
                                 <div class="review-item">
                                     <div class="review-header">
                                         <span class="reviewer-name">${r.reviewer_name.toUpperCase()}</span>
@@ -1196,98 +1634,98 @@ document.addEventListener('DOMContentLoaded', () => {
                                     <p>${r.content}</p>
                                 </div>
                             `;
-                        }).join('');
+                            }).join('');
 
-                        const avgRating = (totalRating / reviews.length).toFixed(1);
-                        if (avgRatingEl) avgRatingEl.innerText = avgRating;
-                        if (countTextEl) countTextEl.innerText = `BASED ON ${reviews.length} REVIEW${reviews.length > 1 ? 'S' : ''}`;
-                        if (starsEl) {
-                            let avgStarHtml = '';
-                            const fullStars = Math.floor(avgRating);
-                            const halfStar = avgRating - fullStars >= 0.5;
-                            for (let i = 1; i <= 5; i++) {
-                                if (i <= fullStars) {
-                                    avgStarHtml += '<i class="fas fa-star"></i>';
-                                } else if (i === fullStars + 1 && halfStar) {
-                                    avgStarHtml += '<i class="fas fa-star-half-alt"></i>';
-                                } else {
-                                    avgStarHtml += '<i class="far fa-star"></i>';
+                            const avgRating = (totalRating / reviews.length).toFixed(1);
+                            if (avgRatingEl) avgRatingEl.innerText = avgRating;
+                            if (countTextEl) countTextEl.innerText = `BASED ON ${reviews.length} REVIEW${reviews.length > 1 ? 'S' : ''}`;
+                            if (starsEl) {
+                                let avgStarHtml = '';
+                                const fullStars = Math.floor(avgRating);
+                                const halfStar = avgRating - fullStars >= 0.5;
+                                for (let i = 1; i <= 5; i++) {
+                                    if (i <= fullStars) {
+                                        avgStarHtml += '<i class="fas fa-star"></i>';
+                                    } else if (i === fullStars + 1 && halfStar) {
+                                        avgStarHtml += '<i class="fas fa-star-half-alt"></i>';
+                                    } else {
+                                        avgStarHtml += '<i class="far fa-star"></i>';
+                                    }
                                 }
+                                starsEl.innerHTML = avgStarHtml;
                             }
-                            starsEl.innerHTML = avgStarHtml;
                         }
+                    } catch (e) {
+                        console.error('Error fetching reviews:', e);
                     }
-                } catch(e) {
-                    console.error('Error fetching reviews:', e);
-                }
-            };
+                };
 
-            await fetchReviews();
+                await fetchReviews();
 
-            // Review Modal Logic
-            const modal = document.getElementById('review-modal');
-            const openBtn = document.getElementById('open-review-modal-btn');
-            const closeBtn = document.getElementById('close-review-modal');
-            const reviewForm = document.getElementById('review-form');
+                // Review Modal Logic
+                const modal = document.getElementById('review-modal');
+                const openBtn = document.getElementById('open-review-modal-btn');
+                const closeBtn = document.getElementById('close-review-modal');
+                const reviewForm = document.getElementById('review-form');
 
-            if (modal && openBtn && closeBtn && reviewForm) {
-                openBtn.addEventListener('click', () => {
-                    modal.style.display = 'flex';
-                    const userStr = localStorage.getItem('moda_user');
-                    if (userStr) {
+                if (modal && openBtn && closeBtn && reviewForm) {
+                    openBtn.addEventListener('click', () => {
+                        modal.style.display = 'flex';
+                        const userStr = localStorage.getItem('moda_user');
+                        if (userStr) {
+                            try {
+                                const user = JSON.parse(userStr);
+                                if (user && user.name) {
+                                    const nameInput = document.getElementById('review-name');
+                                    nameInput.value = user.name;
+                                    nameInput.readOnly = true;
+                                    nameInput.style.backgroundColor = '#f0f0f0'; // Visual cue that it's disabled
+                                }
+                            } catch (e) { }
+                        }
+                    });
+                    closeBtn.addEventListener('click', () => modal.style.display = 'none');
+                    window.addEventListener('click', (e) => {
+                        if (e.target === modal) modal.style.display = 'none';
+                    });
+
+                    reviewForm.addEventListener('submit', async (e) => {
+                        e.preventDefault();
+                        const btn = reviewForm.querySelector('button[type="submit"]');
+                        btn.disabled = true;
+                        btn.innerText = 'SUBMITTING...';
+
+                        const newReview = {
+                            product_id: currentProduct.id,
+                            reviewer_name: document.getElementById('review-name').value,
+                            rating: parseInt(document.getElementById('review-rating').value),
+                            title: document.getElementById('review-title').value,
+                            content: document.getElementById('review-content').value
+                        };
+
                         try {
-                            const user = JSON.parse(userStr);
-                            if (user && user.name) {
-                                const nameInput = document.getElementById('review-name');
-                                nameInput.value = user.name;
-                                nameInput.readOnly = true;
-                                nameInput.style.backgroundColor = '#f0f0f0'; // Visual cue that it's disabled
+                            const res = await fetch('http://localhost:3000/api/reviews', {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify(newReview)
+                            });
+                            if (res.ok) {
+                                modal.style.display = 'none';
+                                reviewForm.reset();
+                                await fetchReviews();
+                            } else {
+                                alert('Failed to submit review.');
                             }
-                        } catch(e) {}
-                    }
-                });
-                closeBtn.addEventListener('click', () => modal.style.display = 'none');
-                window.addEventListener('click', (e) => {
-                    if (e.target === modal) modal.style.display = 'none';
-                });
-
-                reviewForm.addEventListener('submit', async (e) => {
-                    e.preventDefault();
-                    const btn = reviewForm.querySelector('button[type="submit"]');
-                    btn.disabled = true;
-                    btn.innerText = 'SUBMITTING...';
-
-                    const newReview = {
-                        product_id: currentProduct.id,
-                        reviewer_name: document.getElementById('review-name').value,
-                        rating: parseInt(document.getElementById('review-rating').value),
-                        title: document.getElementById('review-title').value,
-                        content: document.getElementById('review-content').value
-                    };
-
-                    try {
-                        const res = await fetch('http://localhost:3000/api/reviews', {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify(newReview)
-                        });
-                        if (res.ok) {
-                            modal.style.display = 'none';
-                            reviewForm.reset();
-                            await fetchReviews();
-                        } else {
-                            alert('Failed to submit review.');
+                        } catch (err) {
+                            alert('Error submitting review.');
+                        } finally {
+                            btn.disabled = false;
+                            btn.innerText = 'SUBMIT REVIEW';
                         }
-                    } catch (err) {
-                        alert('Error submitting review.');
-                    } finally {
-                        btn.disabled = false;
-                        btn.innerText = 'SUBMIT REVIEW';
-                    }
-                });
+                    });
+                }
             }
-        }
-        
+
         };
         loadProductPage();
     }
@@ -1304,7 +1742,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const container = document.getElementById('cart-items-container');
         if (!container) return;
         container.innerHTML = '<p style="padding: 2rem 0; color: var(--text-light);">Loading cart...</p>';
-        
+
         try {
             const res = await fetch(`http://localhost:3000/api/cart/${getSessionId()}`);
             const cart = await res.json();
@@ -1348,31 +1786,31 @@ document.addEventListener('DOMContentLoaded', () => {
 
             updateTotals(cart);
             updateWishlistUI();
-        } catch(e) {
+        } catch (e) {
             container.innerHTML = '<p style="padding: 2rem 0; color: red;">Error loading cart. Is backend running?</p>';
         }
     }
 
-    window.updateQty = async function(itemId, delta) {
+    window.updateQty = async function (itemId, delta) {
         try {
             await fetch(`http://localhost:3000/api/cart/${getSessionId()}/${itemId}`, {
                 method: 'PUT',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({delta})
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ delta })
             });
             renderCart();
             updateCartBadge();
-        } catch(e) {}
+        } catch (e) { }
     }
 
-    window.removeItem = async function(itemId) {
+    window.removeItem = async function (itemId) {
         try {
             await fetch(`http://localhost:3000/api/cart/${getSessionId()}/${itemId}`, {
                 method: 'DELETE'
             });
             renderCart();
             updateCartBadge();
-        } catch(e) {}
+        } catch (e) { }
     }
 
     let isPromoApplied = false;
@@ -1383,20 +1821,21 @@ document.addEventListener('DOMContentLoaded', () => {
             const input = document.getElementById('promo-input');
             const msg = document.getElementById('promo-msg');
             const code = input.value.trim().toUpperCase();
-            
-            if (code === 'MODA20') {
-                if (localStorage.getItem('moda20_used') === 'true') {
+
+            const expectedCode = (window.appSettings.promoCode || 'MODA20').toUpperCase();
+            if (code === expectedCode) {
+                if (localStorage.getItem('promo_used_' + expectedCode) === 'true') {
                     msg.innerText = 'This promo code has already been used.';
                     msg.style.color = '#e74c3c';
                 } else {
                     isPromoApplied = true;
-                    msg.innerText = 'Promo code applied! 20% discount.';
+                    msg.innerText = `Promo code applied! ${window.appSettings.promoDiscount}% discount.`;
                     msg.style.color = '#10b981';
                     try {
                         const res = await fetch(`http://localhost:3000/api/cart/${getSessionId()}`);
                         const cart = await res.json();
                         updateTotals(cart);
-                    } catch(e){}
+                    } catch (e) { }
                 }
             } else {
                 msg.innerText = 'Invalid promo code.';
@@ -1406,7 +1845,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     const res = await fetch(`http://localhost:3000/api/cart/${getSessionId()}`);
                     const cart = await res.json();
                     updateTotals(cart);
-                } catch(e){}
+                } catch (e) { }
             }
         });
     }
@@ -1419,13 +1858,14 @@ document.addEventListener('DOMContentLoaded', () => {
         const discountRow = document.getElementById('summary-discount-row');
 
         const subtotal = cart.reduce((sum, item) => sum + (item.price * item.qty), 0);
-        const discountAmt = subtotal * (isPromoApplied ? 0.20 : 0);
+        const discountMultiplier = window.appSettings.promoDiscount / 100;
+        const discountAmt = subtotal * (isPromoApplied ? discountMultiplier : 0);
         const discountedSubtotal = subtotal - discountAmt;
-        const tax = discountedSubtotal * 0.0824; 
+        const tax = discountedSubtotal * 0.0824;
         const total = discountedSubtotal + tax;
 
         if (subtotalEl) subtotalEl.innerText = '₹' + subtotal.toFixed(2);
-        
+
         if (discountEl && discountRow) {
             if (isPromoApplied) {
                 discountRow.style.display = 'flex';
@@ -1434,7 +1874,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 discountRow.style.display = 'none';
             }
         }
-        
+
         if (taxEl) taxEl.innerText = '₹' + tax.toFixed(2);
         if (totalEl) totalEl.innerText = '₹' + total.toFixed(2);
     }
@@ -1462,7 +1902,7 @@ document.addEventListener('DOMContentLoaded', () => {
             try {
                 const res = await fetch(`http://localhost:3000/api/cart/${getSessionId()}`);
                 const cart = await res.json();
-                
+
                 if (cart.length === 0) {
                     alert('Your shopping cart is empty!');
                     return;
@@ -1471,7 +1911,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 window.currentCheckoutCart = cart;
 
                 const subtotal = cart.reduce((sum, item) => sum + (item.price * item.qty), 0);
-                const discountAmt = subtotal * (isPromoApplied ? 0.20 : 0);
+                const discountMultiplier = window.appSettings.promoDiscount / 100;
+                const discountAmt = subtotal * (isPromoApplied ? discountMultiplier : 0);
                 const discountedSubtotal = subtotal - discountAmt;
                 const tax = discountedSubtotal * 0.0824;
                 const total = discountedSubtotal + tax;
@@ -1508,10 +1949,11 @@ document.addEventListener('DOMContentLoaded', () => {
         if (form) {
             form.addEventListener('submit', async (e) => {
                 e.preventDefault();
-                
+
                 const cartData = window.currentCheckoutCart || [];
                 const subtotal = cartData.reduce((sum, item) => sum + (item.price * item.qty), 0);
-                const discountAmt = subtotal * (isPromoApplied ? 0.20 : 0);
+                const discountMultiplier = window.appSettings.promoDiscount / 100;
+                const discountAmt = subtotal * (isPromoApplied ? discountMultiplier : 0);
                 const discountedSubtotal = subtotal - discountAmt;
                 const tax = discountedSubtotal * 0.0824;
                 const total = parseFloat((discountedSubtotal + tax).toFixed(2));
@@ -1520,10 +1962,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 try {
                     const u = JSON.parse(localStorage.getItem('moda_user'));
                     if (u && u.id) orderUserId = u.id;
-                } catch(e) {}
+                } catch (e) { }
 
                 const orderData = {
                     items: cartData.map(item => ({
+                        product_id: item.product_id || item.id,
                         title: item.title,
                         price: item.price,
                         qty: item.qty,
@@ -1532,6 +1975,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         img: item.img
                     })),
                     total_price: total,
+                    promo_code: isPromoApplied ? (window.appSettings.promoCode || 'MODA20').toUpperCase() : null,
                     user_id: orderUserId,
                     customer_info: {
                         name: document.getElementById('cust-name')?.value || '',
@@ -1557,11 +2001,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
                     if (res.ok) {
                         const data = await res.json();
-                        
+
                         if (isPromoApplied) {
-                            localStorage.setItem('moda20_used', 'true');
+                            const expectedCode = (window.appSettings.promoCode || 'MODA20').toUpperCase();
+                            localStorage.setItem('promo_used_' + expectedCode, 'true');
                         }
-                        
+
                         if (successShippingDate) {
                             successShippingDate.innerText = data.shipping_date;
                         }
@@ -1588,13 +2033,13 @@ document.addEventListener('DOMContentLoaded', () => {
     if (window.location.pathname.includes('wishlist.html')) {
         const container = document.getElementById('wishlist-container');
         const emptyMsg = document.getElementById('empty-wishlist-msg');
-        
+
         window.renderWishlistPage = async () => {
             if (!container || !emptyMsg) return;
             try {
                 const res = await fetch(`http://localhost:3000/api/wishlist/${getSessionId()}`);
                 const wishlist = await res.json();
-                
+
                 if (wishlist.length === 0) {
                     container.innerHTML = '';
                     emptyMsg.style.display = 'block';
@@ -1623,10 +2068,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 const cards = container.querySelectorAll('.product-card');
                 cards.forEach(card => {
                     card.addEventListener('click', (e) => {
-                        if(e.target.closest('.wishlist-btn-small')) return;
+                        if (e.target.closest('.wishlist-btn-small')) return;
                         const title = card.querySelector('h4').innerText.trim();
                         const item = wishlist.find(i => i.title === title);
-                        if(item) {
+                        if (item) {
                             localStorage.setItem('current_product', JSON.stringify({
                                 img: item.img, title: item.title, price: item.price, brand: item.brand, color: 'Default'
                             }));
@@ -1634,7 +2079,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         }
                     });
                 });
-            } catch(e) {}
+            } catch (e) { }
         };
 
         renderWishlistPage();
@@ -1646,7 +2091,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const checkAuthState = () => {
         const userJson = localStorage.getItem('moda_user');
         const accountLinks = document.querySelectorAll('.account-link-nav');
-        
+
         if (userJson) {
             try {
                 const user = JSON.parse(userJson);
@@ -1674,14 +2119,14 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (u && u.id) {
                     const profileSection = document.getElementById('profile-section');
                     const authWrapper = document.getElementById('auth-wrapper');
-                    
+
                     if (profileSection && authWrapper) {
                         profileSection.style.display = 'block';
                         authWrapper.style.display = 'none';
-                        
+
                         document.getElementById('profile-name').innerText = u.name || '';
                         document.getElementById('profile-email').innerText = u.email || '';
-                        
+
                         const greetingEl = document.getElementById('greeting-name');
                         if (greetingEl) greetingEl.innerText = (u.name || 'User').split(' ')[0];
 
@@ -1690,7 +2135,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         if (settingsName) settingsName.value = u.name || '';
                         if (settingsEmail) settingsEmail.value = u.email || '';
 
-                        
+
                         fetch(`http://localhost:3000/api/orders/user/${u.id}`)
                             .then(res => res.json())
                             .then(orders => {
@@ -1734,7 +2179,7 @@ document.addEventListener('DOMContentLoaded', () => {
                                     `;
                                 });
                                 list.innerHTML = html;
-                                
+
                                 // Define trackPackage if not defined
                                 if (!window.trackPackage) {
                                     window.trackPackage = (orderId, status) => {
@@ -1742,11 +2187,11 @@ document.addEventListener('DOMContentLoaded', () => {
                                         const title = document.getElementById('tracking-order-title');
                                         const idText = document.getElementById('tracking-order-id');
                                         const timeline = document.getElementById('tracking-timeline-container');
-                                        
+
                                         if (modal && title && idText && timeline) {
                                             title.innerText = 'Track Package';
                                             idText.innerText = 'Order #' + orderId + ' • Tracking ID: TRK' + orderId + Math.floor(Math.random() * 10000);
-                                            
+
                                             let timelineHtml = `
                                                 <div class="tracking-step active">
                                                     <div class="tracking-step-title">Order Placed</div>
@@ -1770,37 +2215,37 @@ document.addEventListener('DOMContentLoaded', () => {
                                                 </div>
                                             `;
                                             timeline.innerHTML = timelineHtml;
-                                            
+
                                             // Handle confetti
                                             const existingConfetti = modal.querySelector('.confetti-wrapper');
                                             if (existingConfetti) existingConfetti.remove();
-                                            
+
                                             if (status === 'Delivered') {
                                                 const confettiWrapper = document.createElement('div');
                                                 confettiWrapper.className = 'confetti-wrapper';
-                                                
+
                                                 // Create a burst of confetti from bottom center (party popper style)
                                                 for (let i = 0; i < 70; i++) {
                                                     const confetti = document.createElement('div');
                                                     confetti.className = 'confetti';
-                                                    
+
                                                     // Math for burst physics
                                                     const angle = (Math.random() * 80 + 230) * (Math.PI / 180); // Upwards cone
-                                                    const velocity = 150 + Math.random() * 300; 
+                                                    const velocity = 150 + Math.random() * 300;
                                                     const tx = Math.cos(angle) * velocity;
                                                     const ty = Math.sin(angle) * velocity;
                                                     const rotate = (Math.random() - 0.5) * 1000;
-                                                    
+
                                                     // Set custom css variables for the animation keyframes
                                                     confetti.style.setProperty('--tx', `${tx}px`);
                                                     confetti.style.setProperty('--ty', `${ty}px`);
                                                     confetti.style.setProperty('--rot', `${rotate}deg`);
-                                                    
+
                                                     // Start at bottom middle
                                                     confetti.style.left = '50%';
                                                     confetti.style.bottom = '-20px';
                                                     confetti.style.animationDelay = (Math.random() * 0.15) + 's';
-                                                    
+
                                                     // Random colors and shapes
                                                     const colors = ['#f2d74e', '#95c3de', '#ff9a91', '#10b981', '#a855f7', '#ec4899'];
                                                     confetti.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
@@ -1809,12 +2254,12 @@ document.addEventListener('DOMContentLoaded', () => {
                                                         confetti.style.width = '12px';
                                                         confetti.style.height = '12px';
                                                     }
-                                                    
+
                                                     confettiWrapper.appendChild(confetti);
                                                 }
                                                 modal.querySelector('.tracking-modal-content').appendChild(confettiWrapper);
                                             }
-                                            
+
                                             modal.style.display = 'flex';
                                         }
                                     };
@@ -1826,7 +2271,7 @@ document.addEventListener('DOMContentLoaded', () => {
                             });
                     }
                 }
-            } catch(e) {}
+            } catch (e) { }
         } else {
             const urlParams = new URLSearchParams(window.location.search);
             if (urlParams.get('msg') === 'checkout') {
@@ -1841,7 +2286,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const loginForm = document.getElementById('login-form');
         const registerMsg = document.getElementById('register-message');
         const loginMsg = document.getElementById('login-message');
-        
+
         const settingsForm = document.getElementById('settings-form');
         if (settingsForm) {
             settingsForm.addEventListener('submit', async (e) => {
@@ -1851,11 +2296,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 const u = JSON.parse(uStr);
                 const msgEl = document.getElementById('settings-message');
                 msgEl.style.display = 'block';
-                
+
                 const name = document.getElementById('settings-name').value;
                 const email = document.getElementById('settings-email').value;
                 const password = document.getElementById('settings-password').value;
-                
+
                 try {
                     const res = await fetch(`http://localhost:3000/api/users/${u.id}`, {
                         method: 'PUT',
@@ -1863,7 +2308,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         body: JSON.stringify({ name, email, password })
                     });
                     const data = await res.json();
-                    
+
                     if (res.ok && data.success) {
                         msgEl.className = 'form-message success';
                         msgEl.innerText = 'Profile updated successfully!';
@@ -1935,7 +2380,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         loginMsg.className = 'form-message success';
                         loginMsg.innerText = 'Login successful! Redirecting...';
                         loginMsg.style.display = 'block';
-                        
+
                         setTimeout(() => {
                             window.location.href = 'index.html';
                         }, 1000);
@@ -1959,10 +2404,13 @@ document.addEventListener('DOMContentLoaded', () => {
     const initMensFilters = () => {
         if (!document.querySelector('.sidebar-filters') || !document.querySelector('.product-area')) return;
 
+        let currentPage = 1;
+        const productsPerPage = 20;
+
         const filterGroups = document.querySelectorAll('.filter-group');
         let brandGroup = null;
         let sizeGroup = null;
-        
+
         filterGroups.forEach(group => {
             const title = group.querySelector('.filter-title');
             if (title && title.textContent.includes('BRAND')) brandGroup = group;
@@ -2017,12 +2465,12 @@ document.addEventListener('DOMContentLoaded', () => {
             // Re-scan all products
             const allCards = document.querySelectorAll('.product-area .product-card');
             const brandCounts = {};
-            
+
             allCards.forEach(card => {
                 const brandEl = card.querySelector('.brand');
                 const cardBrand = brandEl ? brandEl.textContent.trim() : 'MODA ARCHIVE';
                 brandCounts[cardBrand] = (brandCounts[cardBrand] || 0) + 1;
-                
+
                 if (!card.dataset.sizes) {
                     const cardId = card.getAttribute('data-product-id');
                     if (cardId && window.dynamicProductsMap && window.dynamicProductsMap[cardId] && window.dynamicProductsMap[cardId].sizes) {
@@ -2035,7 +2483,7 @@ document.addEventListener('DOMContentLoaded', () => {
             });
 
             ul.innerHTML = '';
-            
+
             Object.keys(brandCounts).sort().forEach(brandName => {
                 const li = document.createElement('li');
                 const isChecked = previouslySelected.includes(brandName) ? 'checked' : '';
@@ -2045,12 +2493,47 @@ document.addEventListener('DOMContentLoaded', () => {
 
             const newCheckboxes = ul.querySelectorAll('input[type="checkbox"]');
             newCheckboxes.forEach(cb => {
-                cb.addEventListener('change', applyFilters);
+                cb.addEventListener('change', () => {
+                    currentPage = 1;
+                    applyFilters();
+                });
             });
         };
 
+        const renderPagination = (totalPages) => {
+            const paginationContainer = document.querySelector('.pagination');
+            if (!paginationContainer) return;
+
+            if (totalPages <= 1) {
+                paginationContainer.innerHTML = '';
+                return;
+            }
+
+            let html = '';
+
+            html += `<button class="page-btn" ${currentPage === 1 ? 'disabled style="opacity: 0.5; cursor: not-allowed;"' : ''} onclick="window.changePage(${currentPage - 1})"><i class="fas fa-chevron-left"></i></button>`;
+
+            for (let i = 1; i <= totalPages; i++) {
+                if (i === 1 || i === totalPages || (i >= currentPage - 1 && i <= currentPage + 1)) {
+                    html += `<button class="page-btn ${currentPage === i ? 'active' : ''}" onclick="window.changePage(${i})">${i}</button>`;
+                } else if (i === currentPage - 2 || i === currentPage + 2) {
+                    html += `<span class="page-dots">...</span>`;
+                }
+            }
+
+            html += `<button class="page-btn" ${currentPage === totalPages ? 'disabled style="opacity: 0.5; cursor: not-allowed;"' : ''} onclick="window.changePage(${currentPage + 1})"><i class="fas fa-chevron-right"></i></button>`;
+
+            paginationContainer.innerHTML = html;
+        };
+
+        window.changePage = (page) => {
+            currentPage = page;
+            applyFilters();
+            const grid = document.querySelector('.product-area');
+            if (grid) grid.scrollIntoView({ behavior: 'smooth' });
+        };
+
         const applyFilters = () => {
-            // Extract selected brands from UI
             let selectedBrands = [];
             if (brandGroup) {
                 const activeCheckboxes = brandGroup.querySelectorAll('input[type="checkbox"]:checked');
@@ -2064,24 +2547,24 @@ document.addEventListener('DOMContentLoaded', () => {
             const urlParamsLocal = new URLSearchParams(window.location.search);
             const urlSearchQueryLocal = (urlParamsLocal.get('search') || '').trim().toLowerCase();
 
-            let visibleCount = 0;
+            let matchedCards = [];
             const currentCards = document.querySelectorAll('.product-area .product-card');
-            
+
             currentCards.forEach(card => {
                 const brandEl = card.querySelector('.brand');
                 const cardBrand = brandEl ? brandEl.textContent.trim().toLowerCase() : 'moda archive';
                 const titleEl = card.querySelector('.title, h4');
                 const cardTitle = titleEl ? titleEl.textContent.trim().toLowerCase() : '';
                 const cardCategory = (card.getAttribute('data-category') || '').toLowerCase();
-                
+
                 const brandMatch = selectedBrands.length === 0 || selectedBrands.includes(cardBrand);
 
                 const cardSizes = card.dataset.sizes ? card.dataset.sizes.split(',') : allSizes;
                 const sizeMatch = selectedSizes.length === 0 || selectedSizes.some(size => cardSizes.includes(size));
-                
-                const searchMatch = !urlSearchQueryLocal || 
-                    cardTitle.includes(urlSearchQueryLocal) || 
-                    cardBrand.includes(urlSearchQueryLocal) || 
+
+                const searchMatch = !urlSearchQueryLocal ||
+                    cardTitle.includes(urlSearchQueryLocal) ||
+                    cardBrand.includes(urlSearchQueryLocal) ||
                     cardCategory.includes(urlSearchQueryLocal);
 
                 let categoryStripMatch = true;
@@ -2102,15 +2585,30 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
 
                 if (brandMatch && sizeMatch && searchMatch && categoryStripMatch) {
-                    card.style.display = '';
-                    visibleCount++;
+                    matchedCards.push(card);
                 } else {
                     card.style.display = 'none';
                 }
             });
-            
+
             const countEl = document.querySelector('.item-count');
-            if (countEl) countEl.textContent = `${visibleCount} Items Found`;
+            if (countEl) countEl.textContent = `${matchedCards.length} Items Found`;
+
+            const totalPages = Math.ceil(matchedCards.length / productsPerPage);
+            if (currentPage > totalPages) currentPage = totalPages || 1;
+
+            const startIndex = (currentPage - 1) * productsPerPage;
+            const endIndex = startIndex + productsPerPage;
+
+            matchedCards.forEach((card, index) => {
+                if (index >= startIndex && index < endIndex) {
+                    card.style.display = '';
+                } else {
+                    card.style.display = 'none';
+                }
+            });
+
+            renderPagination(totalPages);
         };
 
         const sortProducts = () => {
@@ -2133,43 +2631,43 @@ document.addEventListener('DOMContentLoaded', () => {
                 } else if (sortVal === 'price-high') {
                     return getPrice(b) - getPrice(a);
                 } else if (sortVal === 'newest') {
-                    // ID is sequential, higher is newer
                     const idA = parseInt(a.dataset.productId || '0');
                     const idB = parseInt(b.dataset.productId || '0');
-                    return idB - idA; 
+                    return idB - idA;
                 } else {
-                    // popularity (default) - no strict sort needed for demo
                     return 0;
                 }
             });
 
-            // Re-append in new order
             cards.forEach(card => grid.appendChild(card));
+            applyFilters();
         };
 
         sizeButtons.forEach(btn => {
             btn.addEventListener('click', () => {
                 btn.classList.toggle('active');
+                currentPage = 1;
                 applyFilters();
             });
         });
 
         const sortSelect = document.getElementById('sort-select');
         if (sortSelect) {
-            sortSelect.addEventListener('change', sortProducts);
+            sortSelect.addEventListener('change', () => {
+                currentPage = 1;
+                sortProducts();
+            });
         }
 
         const viewToggles = document.querySelectorAll('.view-toggles button');
         const productGrid = document.querySelector('.product-area .product-grid');
-        
+
         if (viewToggles.length === 2 && productGrid) {
-            // Grid view (default)
             viewToggles[0].addEventListener('click', () => {
                 viewToggles[0].classList.add('active');
                 viewToggles[1].classList.remove('active');
                 productGrid.classList.remove('list-view');
             });
-            // List view
             viewToggles[1].addEventListener('click', () => {
                 viewToggles[1].classList.add('active');
                 viewToggles[0].classList.remove('active');
@@ -2177,14 +2675,12 @@ document.addEventListener('DOMContentLoaded', () => {
             });
         }
 
-        // Initialize UI and apply filters
         buildBrandUI();
-        applyFilters();
-        
-        // Expose globally so dynamic injections can re-trigger UI build
+        sortProducts();
+
         window.applyFilters = () => {
+            currentPage = 1;
             buildBrandUI();
-            applyFilters();
             sortProducts();
         };
     };

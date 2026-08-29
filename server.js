@@ -1,3 +1,4 @@
+require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
 const { Pool } = require('pg');
@@ -10,13 +11,27 @@ const PORT = 3000;
 app.use(cors());
 app.use(express.json({ limit: '50mb' }));
 
+// Admin Authentication Middleware
+const adminAuth = (req, res, next) => {
+    // Only check if it's an admin route or an admin parameter is passed
+    if (req.path.startsWith('/api/admin') || req.query.admin || (req.path.startsWith('/api/settings') && req.method !== 'GET') || (req.path.startsWith('/api/products') && req.method !== 'GET') || (req.path.startsWith('/api/orders') && (req.method === 'PUT' || req.method === 'DELETE'))) {
+        const token = req.headers['x-admin-token'];
+        if (token !== (process.env.ADMIN_PASSWORD || 'secret')) {
+            return res.status(401).json({ error: 'Unauthorized Admin Access' });
+        }
+    }
+    next();
+};
+
+app.use(adminAuth);
+
 // Initialize PostgreSQL connection pool
 const pool = new Pool({
-    user: 'postgres',
-    host: 'localhost',
-    database: 'moda_db',
-    password: 'pass123',
-    port: 5432,
+    user: process.env.DB_USER,
+    host: process.env.DB_HOST,
+    database: process.env.DB_NAME,
+    password: process.env.DB_PASSWORD,
+    port: process.env.DB_PORT || 5432,
 });
 
 pool.connect((err, client, release) => {
@@ -42,6 +57,9 @@ pool.connect((err, client, release) => {
 
 app.post('/api/register', async (req, res) => {
     const { name, email, password } = req.body;
+    if (!email || !password) {
+        return res.status(400).json({ error: 'Email and password are required.' });
+    }
     try {
         const query = `
             INSERT INTO users (name, email, password)
@@ -53,13 +71,17 @@ app.post('/api/register', async (req, res) => {
         if (err.code === '23505') { // Unique constraint violation (email exists)
             res.status(400).json({ error: 'Email already exists.' });
         } else {
-            res.status(500).json({ error: err.message });
+            console.error('Register error:', err);
+            res.status(500).json({ error: 'Internal Server Error' });
         }
     }
 });
 
 app.post('/api/login', async (req, res) => {
     const { email, password } = req.body;
+    if (!email || !password) {
+        return res.status(400).json({ error: 'Email and password are required.' });
+    }
     try {
         const { rows } = await pool.query('SELECT id, name, email FROM users WHERE email = $1 AND password = $2', [email, password]);
         if (rows.length > 0) {
@@ -68,7 +90,8 @@ app.post('/api/login', async (req, res) => {
             res.status(401).json({ error: 'Invalid email or password.' });
         }
     } catch (err) {
-        res.status(500).json({ error: err.message });
+        console.error('Login error:', err);
+        res.status(500).json({ error: 'Internal Server Error' });
     }
 });
 
@@ -108,7 +131,7 @@ app.get('/api/products', async (req, res) => {
             const { rows } = await pool.query('SELECT * FROM products ORDER BY id DESC');
             res.json(rows);
         } else {
-            const { rows } = await pool.query('SELECT id, title, price, category, brand, img, sizes FROM products ORDER BY id DESC');
+            const { rows } = await pool.query('SELECT id, title, price, category, brand, img, sizes, stock FROM products ORDER BY id DESC');
             res.json(rows);
         }
     } catch (err) {
@@ -128,6 +151,9 @@ app.get('/api/products/:id', async (req, res) => {
 
 app.post('/api/products', async (req, res) => {
     const { title, price, category, brand, img, img2, img3, sizes, description, material, shipping, stock } = req.body;
+    if (!title || !price || isNaN(price)) {
+        return res.status(400).json({ error: 'Valid title and price are required.' });
+    }
     console.log('Received description:', description);
     console.log('Received material:', material);
     console.log('Received shipping:', shipping);
@@ -141,7 +167,7 @@ app.post('/api/products', async (req, res) => {
         res.json({ id: rows[0].id });
     } catch (err) {
         console.error('Error saving product:', err);
-        res.status(500).json({ error: err.message });
+        res.status(500).json({ error: 'Internal Server Error' });
     }
 });
 
@@ -151,6 +177,20 @@ app.delete('/api/products/:id', async (req, res) => {
         res.json({ deletedID: req.params.id });
     } catch (err) {
         res.status(500).json({ error: err.message });
+    }
+});
+
+app.put('/api/products/:id/stock', async (req, res) => {
+    try {
+        const { stock } = req.body;
+        if (stock === undefined || isNaN(stock) || stock < 0) {
+            return res.status(400).json({ error: 'Valid stock quantity is required.' });
+        }
+        await pool.query('UPDATE products SET stock = $1 WHERE id = $2', [stock, req.params.id]);
+        res.json({ success: true });
+    } catch (err) {
+        console.error('Update stock error:', err);
+        res.status(500).json({ error: 'Internal Server Error' });
     }
 });
 
@@ -188,7 +228,14 @@ app.post('/api/reviews', async (req, res) => {
 
 app.get('/api/orders', async (req, res) => {
     try {
-        const { rows } = await pool.query('SELECT * FROM orders ORDER BY created_at DESC');
+        const days = parseInt(req.query.days);
+        let query = 'SELECT * FROM orders';
+        const params = [];
+        if (!isNaN(days)) {
+            query += " WHERE created_at >= NOW() - INTERVAL '" + days + " days'";
+        }
+        query += ' ORDER BY created_at DESC';
+        const { rows } = await pool.query(query);
         const parsedRows = rows.map(row => {
             try { row.items = JSON.parse(row.items); } catch (e) {}
             try { row.customer_info = JSON.parse(row.customer_info); } catch (e) {}
@@ -201,8 +248,12 @@ app.get('/api/orders', async (req, res) => {
 });
 
 app.post('/api/orders', async (req, res) => {
-    const { items, total_price, customer_info, user_id } = req.body;
+    const { items, customer_info, user_id, promo_code } = req.body;
     
+    if (!items || items.length === 0) {
+        return res.status(400).json({ error: 'Order items cannot be empty.' });
+    }
+
     const shipDate = new Date();
     shipDate.setDate(shipDate.getDate() + 3);
     const shipping_date = shipDate.toLocaleDateString('en-US', {
@@ -212,32 +263,82 @@ app.post('/api/orders', async (req, res) => {
     try {
         await pool.query('BEGIN');
         
+        let calculatedSubtotal = 0;
+        const validItems = [];
+
+        for (const item of items) {
+            const prodId = item.product_id || item.id;
+            if (!prodId || !item.qty || item.qty <= 0) {
+                throw new Error('Invalid item data.');
+            }
+            
+            // Lock row for update to prevent overselling
+            const productRes = await pool.query('SELECT * FROM products WHERE id = $1 FOR UPDATE', [prodId]);
+            if (productRes.rows.length === 0) {
+                throw new Error(`Product not found.`);
+            }
+            
+            const product = productRes.rows[0];
+            if (product.stock < item.qty) {
+                throw new Error(`Insufficient stock for product ${product.title}.`);
+            }
+            
+            calculatedSubtotal += (product.price * item.qty);
+            validItems.push({
+                product_id: product.id,
+                title: product.title,
+                price: product.price, // Trusting backend price
+                qty: item.qty,
+                size: item.size,
+                color: item.color,
+                img: product.img
+            });
+        }
+
+        // Apply promo if valid
+        let discountMultiplier = 0;
+        const settingsPath = path.join(__dirname, 'settings.json');
+        if (promo_code) {
+            let activePromo = 'MODA20';
+            let activeDiscount = 20;
+            if (fs.existsSync(settingsPath)) {
+                const settingsData = JSON.parse(fs.readFileSync(settingsPath, 'utf8'));
+                if (settingsData.promoCode) activePromo = settingsData.promoCode;
+                if (settingsData.promoDiscount) activeDiscount = settingsData.promoDiscount;
+            }
+            
+            if (promo_code.toUpperCase() === activePromo.toUpperCase()) {
+                discountMultiplier = activeDiscount / 100;
+            }
+        }
+        
+        const discountAmt = calculatedSubtotal * discountMultiplier;
+        const discountedSubtotal = calculatedSubtotal - discountAmt;
+        const tax = discountedSubtotal * 0.0824;
+        const finalTotal = parseFloat((discountedSubtotal + tax).toFixed(2));
+
         const query = `
             INSERT INTO orders (items, total_price, customer_info, shipping_date, user_id)
             VALUES ($1, $2, $3, $4, $5) RETURNING id;
         `;
         const values = [
-            JSON.stringify(items), 
-            total_price, 
+            JSON.stringify(validItems), 
+            finalTotal, 
             JSON.stringify(customer_info), 
             shipping_date,
             user_id || null
         ];
         const { rows } = await pool.query(query, values);
         
-        if (items && items.length > 0) {
-            for (const item of items) {
-                if (item.title && item.qty) {
-                    await pool.query('UPDATE products SET stock = GREATEST(stock - $1, 0) WHERE title = $2', [item.qty, item.title]);
-                }
-            }
+        for (const item of validItems) {
+            await pool.query('UPDATE products SET stock = stock - $1 WHERE id = $2', [item.qty, item.product_id]);
         }
         
         await pool.query('COMMIT');
-        res.json({ id: rows[0].id, shipping_date });
+        res.json({ id: rows[0].id, shipping_date, total_price: finalTotal });
     } catch (err) {
         await pool.query('ROLLBACK');
-        res.status(500).json({ error: err.message });
+        res.status(400).json({ error: err.message });
     }
 });
 
@@ -277,6 +378,151 @@ app.delete('/api/orders/:id', async (req, res) => {
 // ==========================================
 // ADMIN API
 // ==========================================
+
+app.get('/api/admin/bestselling-product', async (req, res) => {
+    try {
+        // User specifically requested to only show the highest sold product for the current month
+        let dateFilter = "o.status != 'Cancelled' AND date_trunc('month', o.created_at) = date_trunc('month', CURRENT_DATE)";
+
+        // Query to get the most sold product based on order items
+        const query = `
+            SELECT 
+                p.id, 
+                p.title, 
+                p.img, 
+                p.price, 
+                p.brand,
+                SUM((item->>'qty')::int) as total_sold,
+                SUM(((item->>'qty')::int) * p.price) as total_revenue
+            FROM orders o,
+            json_array_elements(o.items::json) as item
+            JOIN products p ON item->>'title' = p.title
+            WHERE ${dateFilter}
+            GROUP BY p.id, p.title, p.img, p.price, p.brand
+            ORDER BY total_sold DESC
+            LIMIT 1;
+        `;
+        const { rows } = await pool.query(query);
+        if (rows.length > 0) {
+            res.json(rows[0]);
+        } else {
+            res.json(null);
+        }
+    } catch (err) {
+        console.error('Error fetching best-selling product:', err);
+        res.status(500).json({ error: err.message });
+    }
+});
+
+app.get('/api/admin/category-sales-percentage', async (req, res) => {
+    try {
+        const days = parseInt(req.query.days);
+        let dateFilter = "o.status != 'Cancelled'";
+        if (!isNaN(days)) {
+            dateFilter += " AND o.created_at >= NOW() - INTERVAL '" + days + " days'";
+        }
+        const defaultCategories = [
+            'T-SHIRTS', 'SHIRTS', 'JEANS', 'JACKETS', 'TROUSERS', 
+            'BLAZERS', 'SHOES', 'ACCESSORIES', 'TOPS', 'DRESSES', 
+            'SKIRTS', 'BAGS'
+        ];
+        
+        const allCategories = defaultCategories;
+        console.log('All categories to return:', allCategories);
+        
+        const query = `
+            WITH CategorySales AS (
+                SELECT
+                    CASE
+                        WHEN p.title ILIKE '%t-shirt%' THEN 'T-SHIRTS'
+                        WHEN p.title ILIKE '%shirt%' THEN 'SHIRTS'
+                        WHEN p.title ILIKE '%jeans%' THEN 'JEANS'
+                        WHEN p.title ILIKE '%jacket%' THEN 'JACKETS'
+                        WHEN p.title ILIKE '%trouser%' THEN 'TROUSERS'
+                        WHEN p.title ILIKE '%blazer%' THEN 'BLAZERS'
+                        WHEN p.title ILIKE '%shoe%' OR p.title ILIKE '%sneaker%' OR p.title ILIKE '%sandal%' OR p.title ILIKE '%heel%' OR p.title ILIKE '%boot%' THEN 'SHOES'
+                        WHEN p.title ILIKE '%bag%' OR p.title ILIKE '%backpack%' OR p.title ILIKE '%satchel%' THEN 'BAGS'
+                        WHEN p.title ILIKE '%top%' THEN 'TOPS'
+                        WHEN p.title ILIKE '%dress%' THEN 'DRESSES'
+                        WHEN p.title ILIKE '%skirt%' THEN 'SKIRTS'
+                        WHEN p.title ILIKE '%watch%' OR p.title ILIKE '%belt%' OR p.title ILIKE '%sunglass%' OR p.title ILIKE '%necklace%' OR p.title ILIKE '%hat%' OR p.title ILIKE '%cap%' OR p.title ILIKE '%wallet%' THEN 'ACCESSORIES'
+                        ELSE 'OTHER'
+                    END as category,
+                    SUM((item->>'qty')::int) AS total_qty_sold
+                FROM orders o,
+                json_array_elements(o.items::json) AS item
+                JOIN products p ON item->>'title' = p.title
+                WHERE ${dateFilter}
+                GROUP BY 
+                    CASE
+                        WHEN p.title ILIKE '%t-shirt%' THEN 'T-SHIRTS'
+                        WHEN p.title ILIKE '%shirt%' THEN 'SHIRTS'
+                        WHEN p.title ILIKE '%jeans%' THEN 'JEANS'
+                        WHEN p.title ILIKE '%jacket%' THEN 'JACKETS'
+                        WHEN p.title ILIKE '%trouser%' THEN 'TROUSERS'
+                        WHEN p.title ILIKE '%blazer%' THEN 'BLAZERS'
+                        WHEN p.title ILIKE '%shoe%' OR p.title ILIKE '%sneaker%' OR p.title ILIKE '%sandal%' OR p.title ILIKE '%heel%' OR p.title ILIKE '%boot%' THEN 'SHOES'
+                        WHEN p.title ILIKE '%bag%' OR p.title ILIKE '%backpack%' OR p.title ILIKE '%satchel%' THEN 'BAGS'
+                        WHEN p.title ILIKE '%top%' THEN 'TOPS'
+                        WHEN p.title ILIKE '%dress%' THEN 'DRESSES'
+                        WHEN p.title ILIKE '%skirt%' THEN 'SKIRTS'
+                        WHEN p.title ILIKE '%watch%' OR p.title ILIKE '%belt%' OR p.title ILIKE '%sunglass%' OR p.title ILIKE '%necklace%' OR p.title ILIKE '%hat%' OR p.title ILIKE '%cap%' OR p.title ILIKE '%wallet%' THEN 'ACCESSORIES'
+                        ELSE 'OTHER'
+                    END
+            ),
+            TotalSales AS (
+                SELECT SUM(total_qty_sold) AS overall_total_qty_sold
+                FROM CategorySales
+                WHERE category != 'OTHER'
+            )
+            SELECT
+                cs.category,
+                cs.total_qty_sold,
+                (cs.total_qty_sold * 100.0 / ts.overall_total_qty_sold) AS percentage_sold
+            FROM CategorySales cs, TotalSales ts
+            WHERE ts.overall_total_qty_sold > 0 AND cs.category != 'OTHER'
+            ORDER BY percentage_sold DESC;
+        `;
+        const { rows } = await pool.query(query);
+        console.log('Query results:', rows);
+        
+        // Create a map of existing category sales
+        const salesMap = {};
+        rows.forEach(row => {
+            salesMap[row.category.toUpperCase()] = {
+                category: row.category,
+                total_qty_sold: row.total_qty_sold,
+                percentage_sold: row.percentage_sold
+            };
+        });
+        console.log('Sales map:', salesMap);
+        
+        // Build result with all categories (0 sales for missing ones)
+        let result = allCategories.map(cat => {
+            const upperCat = cat.toUpperCase();
+            if (salesMap[upperCat]) {
+                return salesMap[upperCat];
+            } else {
+                return {
+                    category: cat,
+                    total_qty_sold: '0',
+                    percentage_sold: '0'
+                };
+            }
+        });
+        
+        // Sort by percentage sold descending and filter out 0% sales
+        result = result
+            .filter(item => parseFloat(item.percentage_sold) > 0)
+            .sort((a, b) => parseFloat(b.percentage_sold) - parseFloat(a.percentage_sold));
+        
+        console.log('Final result:', result);
+        res.json(result);
+    } catch (err) {
+        console.error('Error fetching category sales percentage:', err);
+        res.status(500).json({ error: err.message });
+    }
+});
 
 app.get('/api/admin/customers', async (req, res) => {
     try {
@@ -418,11 +664,24 @@ app.post('/api/wishlist/:sessionId', async (req, res) => {
 // ==========================================
 const settingsPath = path.join(__dirname, 'settings.json');
 
+app.get('/api/settings', (req, res) => {
+    try {
+        if (fs.existsSync(settingsPath)) {
+            const data = JSON.parse(fs.readFileSync(settingsPath, 'utf8'));
+            res.json(data);
+        } else {
+            res.json({ hidden: [], promoCode: 'MODA20', promoDiscount: 20 });
+        }
+    } catch(err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
 app.get('/api/settings/categories', (req, res) => {
     try {
         if (fs.existsSync(settingsPath)) {
-            const data = fs.readFileSync(settingsPath, 'utf8');
-            res.json(JSON.parse(data));
+            const data = JSON.parse(fs.readFileSync(settingsPath, 'utf8'));
+            res.json({ hidden: data.hidden || [] });
         } else {
             res.json({ hidden: [] });
         }
@@ -434,8 +693,29 @@ app.get('/api/settings/categories', (req, res) => {
 app.post('/api/settings/categories', (req, res) => {
     try {
         const { hidden } = req.body;
-        fs.writeFileSync(settingsPath, JSON.stringify({ hidden }), 'utf8');
+        let data = { hidden: [], promoCode: 'MODA20', promoDiscount: 20 };
+        if (fs.existsSync(settingsPath)) {
+            data = JSON.parse(fs.readFileSync(settingsPath, 'utf8'));
+        }
+        data.hidden = hidden;
+        fs.writeFileSync(settingsPath, JSON.stringify(data), 'utf8');
         res.json({ success: true, hidden });
+    } catch(err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
+app.post('/api/settings/promo', (req, res) => {
+    try {
+        const { promoCode, promoDiscount } = req.body;
+        let data = { hidden: [], promoCode: 'MODA20', promoDiscount: 20 };
+        if (fs.existsSync(settingsPath)) {
+            data = JSON.parse(fs.readFileSync(settingsPath, 'utf8'));
+        }
+        data.promoCode = promoCode;
+        data.promoDiscount = promoDiscount;
+        fs.writeFileSync(settingsPath, JSON.stringify(data), 'utf8');
+        res.json({ success: true, promoCode, promoDiscount });
     } catch(err) {
         res.status(500).json({ error: err.message });
     }

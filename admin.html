@@ -1,20 +1,25 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Admin Dashboard - MODA</title>
     <link rel="stylesheet" href="styles.css">
-    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&family=Inter:wght@300;400;500;600&display=swap"
+        rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         body {
             background-color: #f4f8f7;
         }
+
         .admin-layout {
             display: flex;
             min-height: 100vh;
         }
+
         .admin-sidebar {
             background-color: #062b2b;
             background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1440 320'%3E%3Cpath fill='%23ffffff' fill-opacity='0.03' d='M0,96L48,112C96,128,192,160,288,165.3C384,171,480,149,576,144C672,139,768,149,864,154.7C960,160,1056,160,1152,144C1248,128,1344,96,1392,80L1440,64L1440,320L1392,320C1344,320,1248,320,1152,320C1056,320,960,320,864,320C768,320,672,320,576,320C480,320,384,320,288,320C192,320,96,320,48,320L0,320Z'%3E%3C/path%3E%3Cpath fill='%23ffffff' fill-opacity='0.02' d='M0,160L48,144C96,128,192,96,288,106.7C384,117,480,171,576,165.3C672,160,768,96,864,96C960,96,1056,160,1152,176C1248,192,1344,160,1392,144L1440,128L1440,320L1392,320C1344,320,1248,320,1152,320C1056,320,960,320,864,320C768,320,672,320,576,320C480,320,384,320,288,320C192,320,96,320,48,320L0,320Z'%3E%3C/path%3E%3C/svg%3E");
@@ -29,8 +34,9 @@
             width: 250px;
             overflow-y: auto;
             z-index: 100;
-            border-right: 1px solid rgba(255,255,255,0.05);
+            border-right: 1px solid rgba(255, 255, 255, 0.05);
         }
+
         .admin-sidebar h2 {
             font-family: var(--font-heading);
             margin-bottom: 3rem;
@@ -41,15 +47,18 @@
             font-size: 1.5rem;
             line-height: 1.2;
         }
+
         .admin-sidebar h2 .logo-icon {
             color: #2dd4bf;
             font-size: 2rem;
         }
+
         .admin-nav {
             display: flex;
             flex-direction: column;
             gap: 0.5rem;
         }
+
         .admin-nav a {
             color: #94a3b8;
             text-transform: uppercase;
@@ -62,54 +71,65 @@
             border-radius: 6px;
             font-weight: 500;
         }
-        .admin-nav a.active, .admin-nav a:hover {
+
+        .admin-nav a.active,
+        .admin-nav a:hover {
             color: #fff;
             background-color: #0f4f4f;
         }
+
         .admin-main {
             padding: 2rem 3rem;
             background-color: #f4f8f7;
             margin-left: 250px;
             width: calc(100% - 250px);
         }
+
         .admin-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
             margin-bottom: 2rem;
         }
+
         .admin-title {
             font-family: var(--font-heading);
             font-size: 2.2rem;
             color: #062b2b;
         }
+
         .admin-header-actions {
             display: flex;
             align-items: center;
             gap: 1.8rem;
         }
+
         .admin-header-actions i {
             font-size: 1.2rem;
             color: #062b2b;
             cursor: pointer;
         }
+
         .admin-profile {
             display: flex;
             align-items: center;
             gap: 10px;
             cursor: pointer;
         }
+
         .admin-profile img {
             width: 36px;
             height: 36px;
             border-radius: 50%;
             object-fit: cover;
         }
+
         .admin-profile span {
             font-size: 0.9rem;
             font-weight: 500;
             color: #062b2b;
         }
+
         .btn-primary {
             background-color: #0d7f7f;
             color: #fff;
@@ -123,9 +143,11 @@
             transition: 0.3s;
             border-radius: 6px;
         }
+
         .btn-primary:hover {
             background-color: #095959;
         }
+
         .admin-card {
             background: #fff;
             padding: 2.5rem;
@@ -134,33 +156,39 @@
             margin-bottom: 2rem;
             box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
         }
+
         .category-visibility-card {
             background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1440 320'%3E%3Cpath fill='%230b5c5c' fill-opacity='0.15' d='M0,160L48,144C96,128,192,96,288,106.7C384,117,480,171,576,165.3C672,160,768,96,864,96C960,96,1056,160,1152,176C1248,192,1344,160,1392,144L1440,128L1440,320L1392,320C1344,320,1248,320,1152,320C1056,320,960,320,864,320C768,320,672,320,576,320C480,320,384,320,288,320C192,320,96,320,48,320L0,320Z'%3E%3C/path%3E%3Cpath fill='%23084747' fill-opacity='0.2' d='M0,256L48,229.3C96,203,192,149,288,154.7C384,160,480,224,576,218.7C672,213,768,139,864,128C960,117,1056,171,1152,197.3C1248,224,1344,224,1392,224L1440,224L1440,320L1392,320C1344,320,1248,320,1152,320C1056,320,960,320,864,320C768,320,672,320,576,320C480,320,384,320,288,320C192,320,96,320,48,320L0,320Z'%3E%3C/path%3E%3C/svg%3E"), linear-gradient(135deg, #ccfbf1 0%, #5eead4 50%, #14b8a6 100%);
             background-size: cover;
             border: none;
             color: #062b2b;
         }
+
         .category-visibility-card h3 {
             color: #042f2e;
         }
+
         .category-visibility-card p {
             color: #0f766e !important;
         }
-        
+
         .form-grid {
             display: grid;
             grid-template-columns: 1fr 1fr;
             gap: 1.5rem;
         }
+
         .form-group {
             display: flex;
             flex-direction: column;
             gap: 0.5rem;
             margin-bottom: 1.5rem;
         }
+
         .form-group.full-width {
             grid-column: 1 / -1;
         }
+
         .form-group label {
             font-size: 0.75rem;
             text-transform: uppercase;
@@ -168,7 +196,10 @@
             font-weight: 600;
             color: #475569;
         }
-        .form-group input, .form-group select, .form-group textarea {
+
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
             padding: 0.9rem;
             border: 1px solid #cbd5e1;
             font-family: var(--font-body);
@@ -177,27 +208,34 @@
             border-radius: 8px;
             transition: 0.3s;
         }
-        .form-group input:focus, .form-group select:focus, .form-group textarea:focus {
+
+        .form-group input:focus,
+        .form-group select:focus,
+        .form-group textarea:focus {
             border-color: #0d7f7f;
             box-shadow: 0 0 0 3px rgba(13, 127, 127, 0.1);
         }
+
         input[type="checkbox"] {
             accent-color: #0d7f7f;
             width: 16px;
             height: 16px;
             cursor: pointer;
         }
-        
+
         table {
             width: 100%;
             border-collapse: collapse;
         }
-        th, td {
+
+        th,
+        td {
             padding: 1.2rem 1rem;
             text-align: left;
             border-bottom: 1px solid #e2e8f0;
             font-size: 0.85rem;
         }
+
         th {
             text-transform: uppercase;
             letter-spacing: 1.5px;
@@ -205,12 +243,14 @@
             color: #64748b;
             font-size: 0.75rem;
         }
+
         .td-img img {
             width: 50px;
             height: 60px;
             object-fit: cover;
             border-radius: 6px;
         }
+
         .action-btn {
             background: none;
             border: none;
@@ -219,20 +259,36 @@
             font-size: 1.2rem;
             transition: 0.3s;
         }
+
         .action-btn:hover {
             color: #dc2626;
         }
+
+        .trophy-icon {
+            font-size: 2rem;
+            color: #FFD700;
+            /* Gold */
+            -webkit-text-stroke: 1px #000;
+            /* Black border */
+            text-stroke: 1px #000;
+            /* Future support */
+        }
     </style>
+<link rel="stylesheet" href="mobile-responsive.css">
 </head>
+
 <body>
     <div class="admin-layout">
         <aside class="admin-sidebar">
-            <h2><i class="fas fa-layer-group logo-icon"></i> <div>MODA<br>ADMIN</div></h2>
+            <h2><i class="fas fa-layer-group logo-icon"></i>
+                <div>MODA<br>ADMIN</div>
+            </h2>
             <nav class="admin-nav">
                 <a href="index.html"><i class="fas fa-arrow-left"></i> Back to Site</a>
                 <a href="#" id="admin-nav-products" class="active"><i class="fas fa-box"></i> Products</a>
                 <a href="#" id="admin-nav-orders"><i class="fas fa-shopping-cart"></i> Orders</a>
                 <a href="#" id="admin-nav-customers"><i class="fas fa-users"></i> Customers</a>
+                <a href="#" id="admin-nav-reports"><i class="fas fa-chart-line"></i> Reports</a>
             </nav>
         </aside>
 
@@ -243,20 +299,48 @@
                     <h1 class="admin-title">Product Management</h1>
                 </div>
 
+                <!-- Stats Cards -->
+                <div id="admin-stats-cards"
+                    style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1.5rem; margin-bottom: 2rem;">
+                    <!-- Rendered by JS -->
+                </div>
+
+                <!-- Promo Code Form -->
+                <div class="admin-card" style="margin-bottom: 2rem; border-left: 4px solid #0d7f7f;">
+                    <h3 style="margin-bottom: 1rem; font-family: var(--font-heading); font-size: 1.5rem;">Global Promo Settings</h3>
+                    <p style="margin-bottom: 1.5rem; color: #64748b;">Update the active promotional code and discount percentage across the store.</p>
+                    <div class="form-grid" style="grid-template-columns: 1fr 1fr; align-items: end;">
+                        <div class="form-group" style="margin-bottom: 0;">
+                            <label>Promo Code Text</label>
+                            <input type="text" id="promo-code-input" placeholder="e.g. MODA20" style="text-transform: uppercase;">
+                        </div>
+                        <div class="form-group" style="margin-bottom: 0;">
+                            <label>Discount Percentage (%)</label>
+                            <input type="number" id="promo-discount-input" min="0" max="100" placeholder="e.g. 20">
+                        </div>
+                    </div>
+                    <button id="save-promo-btn" class="btn-primary" style="margin-top: 1.5rem; width: auto; padding: 0.75rem 1.5rem;">SAVE PROMO</button>
+                    <div id="save-promo-msg" style="margin-top: 1rem; font-size: 0.9rem; font-weight: 500;"></div>
+                </div>
+
                 <!-- Category Visibility Form -->
                 <div class="admin-card category-visibility-card" style="margin-bottom: 2rem;">
-                    <h3 style="margin-bottom: 1rem; font-family: var(--font-heading); font-size: 1.5rem;">Category Visibility</h3>
-                    <p style="margin-bottom: 1.5rem; color: #64748b;">Uncheck a category to hide it from the user-facing store pages.</p>
+                    <h3 style="margin-bottom: 1rem; font-family: var(--font-heading); font-size: 1.5rem;">Category
+                        Visibility</h3>
+                    <p style="margin-bottom: 1.5rem; color: #64748b;">Uncheck a category to hide it from the user-facing
+                        store pages.</p>
                     <div id="category-visibility-grid" style="display: flex; gap: 15px; flex-wrap: wrap;">
                         <!-- Checkboxes will be injected here by script.js -->
                     </div>
-                    <button id="save-categories-btn" class="btn-primary" style="margin-top: 1.5rem; width: auto; padding: 0.75rem 1.5rem;">SAVE VISIBILITY</button>
+                    <button id="save-categories-btn" class="btn-primary"
+                        style="margin-top: 1.5rem; width: auto; padding: 0.75rem 1.5rem;">SAVE VISIBILITY</button>
                     <div id="save-categories-msg" style="margin-top: 1rem; font-size: 0.9rem;"></div>
                 </div>
 
                 <!-- Upload Form -->
                 <div class="admin-card">
-                    <h3 style="margin-bottom: 2rem; font-family: var(--font-heading); font-size: 1.5rem;">Upload New Product</h3>
+                    <h3 style="margin-bottom: 2rem; font-family: var(--font-heading); font-size: 1.5rem;">Upload New
+                        Product</h3>
                     <form id="add-product-form">
                         <div class="form-grid">
                             <div class="form-group">
@@ -280,34 +364,55 @@
                             </div>
                             <div class="form-group">
                                 <label>Brand</label>
-                                <select id="prod-brand">
+                                <input type="text" id="prod-brand" list="brand-options"
+                                    placeholder="Select or type a brand..."
+                                    style="padding: 0.9rem; border: 1px solid var(--border-color); border-radius: 4px; font-family: var(--font-body); font-size: 0.9rem; width: 100%; box-sizing: border-box; outline: none; transition: border-color 0.3s; background-color: var(--bg-light);">
+                                <datalist id="brand-options">
                                     <option value="MODA ARCHIVE">Moda Archive</option>
                                     <option value="AURA COLLECTIVE">Aura Collective</option>
                                     <option value="ELYSIAN">Elysian</option>
                                     <option value="NORDIC RAW">Nordic Raw</option>
-                                </select>
+                                </datalist>
                             </div>
                             <div class="form-group full-width">
                                 <label>Product Description</label>
-                                <textarea id="prod-description" rows="4" placeholder="Enter a detailed description of the product..." style="padding: 0.9rem; border: 1px solid var(--border-color); font-family: var(--font-body); font-size: 0.9rem; outline: none; resize: vertical;"></textarea>
+                                <textarea id="prod-description" rows="4"
+                                    placeholder="Enter a detailed description of the product..."
+                                    style="padding: 0.9rem; border: 1px solid var(--border-color); font-family: var(--font-body); font-size: 0.9rem; outline: none; resize: vertical;"></textarea>
                             </div>
                             <div class="form-group full-width">
                                 <label>Material & Care</label>
-                                <textarea id="prod-material" rows="3" placeholder="Enter material and care information (e.g., 100% Cotton, Machine wash cold)..." style="padding: 0.9rem; border: 1px solid var(--border-color); font-family: var(--font-body); font-size: 0.9rem; outline: none; resize: vertical;"></textarea>
+                                <textarea id="prod-material" rows="3"
+                                    placeholder="Enter material and care information (e.g., 100% Cotton, Machine wash cold)..."
+                                    style="padding: 0.9rem; border: 1px solid var(--border-color); font-family: var(--font-body); font-size: 0.9rem; outline: none; resize: vertical;"></textarea>
                             </div>
                             <div class="form-group full-width">
                                 <label>Shipping Information</label>
-                                <textarea id="prod-shipping" rows="3" placeholder="Enter shipping information (e.g., Free shipping on orders over ₹500)..." style="padding: 0.9rem; border: 1px solid var(--border-color); font-family: var(--font-body); font-size: 0.9rem; outline: none; resize: vertical;"></textarea>
+                                <textarea id="prod-shipping" rows="3"
+                                    placeholder="Enter shipping information (e.g., Free shipping on orders over ₹500)..."
+                                    style="padding: 0.9rem; border: 1px solid var(--border-color); font-family: var(--font-body); font-size: 0.9rem; outline: none; resize: vertical;"></textarea>
                             </div>
                             <div class="form-group full-width">
                                 <label>Available Sizes</label>
                                 <div style="display: flex; gap: 15px; flex-wrap: wrap;" id="prod-sizes">
-                                    <label style="display: flex; align-items: center; gap: 5px; cursor: pointer; text-transform: none;"><input type="checkbox" value="XS"> XS</label>
-                                    <label style="display: flex; align-items: center; gap: 5px; cursor: pointer; text-transform: none;"><input type="checkbox" value="S"> S</label>
-                                    <label style="display: flex; align-items: center; gap: 5px; cursor: pointer; text-transform: none;"><input type="checkbox" value="M" checked> M</label>
-                                    <label style="display: flex; align-items: center; gap: 5px; cursor: pointer; text-transform: none;"><input type="checkbox" value="L" checked> L</label>
-                                    <label style="display: flex; align-items: center; gap: 5px; cursor: pointer; text-transform: none;"><input type="checkbox" value="XL"> XL</label>
-                                    <label style="display: flex; align-items: center; gap: 5px; cursor: pointer; text-transform: none;"><input type="checkbox" value="XXL"> XXL</label>
+                                    <label
+                                        style="display: flex; align-items: center; gap: 5px; cursor: pointer; text-transform: none;"><input
+                                            type="checkbox" value="XS"> XS</label>
+                                    <label
+                                        style="display: flex; align-items: center; gap: 5px; cursor: pointer; text-transform: none;"><input
+                                            type="checkbox" value="S"> S</label>
+                                    <label
+                                        style="display: flex; align-items: center; gap: 5px; cursor: pointer; text-transform: none;"><input
+                                            type="checkbox" value="M" checked> M</label>
+                                    <label
+                                        style="display: flex; align-items: center; gap: 5px; cursor: pointer; text-transform: none;"><input
+                                            type="checkbox" value="L" checked> L</label>
+                                    <label
+                                        style="display: flex; align-items: center; gap: 5px; cursor: pointer; text-transform: none;"><input
+                                            type="checkbox" value="XL"> XL</label>
+                                    <label
+                                        style="display: flex; align-items: center; gap: 5px; cursor: pointer; text-transform: none;"><input
+                                            type="checkbox" value="XXL"> XXL</label>
                                 </div>
                             </div>
                             <div class="form-group full-width">
@@ -323,49 +428,60 @@
                                 <input type="file" id="prod-image-3" accept="image/*" style="padding: 0.6rem;">
                             </div>
                         </div>
-                        <button type="submit" class="btn-primary" style="margin-top: 1rem;">PUBLISH PRODUCT TO STORE</button>
+                        <button type="submit" class="btn-primary" style="margin-top: 1rem;">PUBLISH PRODUCT TO
+                            STORE</button>
                     </form>
                 </div>
 
                 <!-- Display Uploaded Products -->
                 <div class="admin-card">
-                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
-                        <h3 style="margin-bottom: 0; font-family: var(--font-heading); font-size: 1.5rem;">Custom Uploaded Products</h3>
+                    <div
+                        style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+                        <h3 style="margin-bottom: 0; font-family: var(--font-heading); font-size: 1.5rem;">Custom
+                            Uploaded Products</h3>
                         <div style="display: flex; align-items: center; gap: 15px;">
                             <div style="display: flex; align-items: center; gap: 8px;">
-                                <label for="products-section-filter" style="font-size: 0.85rem; font-weight: 500; color: #475569;">Section:</label>
-                                <select id="products-section-filter" onchange="filterAdminProducts()" style="padding: 0.5rem; border: 1px solid #cbd5e1; border-radius: 6px; outline: none; font-family: var(--font-body); font-size: 0.85rem; cursor: pointer;">
+                                <label for="products-section-filter"
+                                    style="font-size: 0.85rem; font-weight: 500; color: #475569;">Section:</label>
+                                <select id="products-section-filter" onchange="filterAdminProducts()"
+                                    style="padding: 0.5rem; border: 1px solid #cbd5e1; border-radius: 6px; outline: none; font-family: var(--font-body); font-size: 0.85rem; cursor: pointer;">
                                     <option value="ALL">All</option>
                                     <option value="Men's">Men's</option>
                                     <option value="Women's">Women's</option>
                                 </select>
                             </div>
                             <div style="display: flex; align-items: center; gap: 8px;">
-                                <label for="products-category-filter" style="font-size: 0.85rem; font-weight: 500; color: #475569;">Category:</label>
-                                <select id="products-category-filter" onchange="filterAdminProducts()" style="padding: 0.5rem; border: 1px solid #cbd5e1; border-radius: 6px; outline: none; font-family: var(--font-body); font-size: 0.85rem; cursor: pointer;">
+                                <label for="products-category-filter"
+                                    style="font-size: 0.85rem; font-weight: 500; color: #475569;">Category:</label>
+                                <select id="products-category-filter" onchange="filterAdminProducts()"
+                                    style="padding: 0.5rem; border: 1px solid #cbd5e1; border-radius: 6px; outline: none; font-family: var(--font-body); font-size: 0.85rem; cursor: pointer;">
                                     <option value="ALL">ALL</option>
                                 </select>
                             </div>
                         </div>
                     </div>
-                    <table id="custom-products-table">
-                        <thead>
-                            <tr>
-                                <th>Image</th>
-                                <th>Name</th>
-                                <th>Category</th>
-                                <th>Brand</th>
-                                <th>Price</th>
-                                <th>Stock</th>
-                                <th>Sizes</th>
-                                <th>Action</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <!-- Rendered by JS -->
-                        </tbody>
-                    </table>
-                    <div id="products-pagination" style="display: flex; justify-content: flex-end; align-items: center; gap: 15px; margin-top: 1.5rem;"></div>
+                    <div style="max-height: 500px; overflow-y: auto; border: 1px solid #e2e8f0; border-radius: 8px;">
+                        <table id="custom-products-table">
+                            <thead>
+                                <tr>
+                                    <th style="position: sticky; top: 0; background: #fff; z-index: 1;">Image</th>
+                                    <th style="position: sticky; top: 0; background: #fff; z-index: 1;">Name</th>
+                                    <th style="position: sticky; top: 0; background: #fff; z-index: 1;">Category</th>
+                                    <th style="position: sticky; top: 0; background: #fff; z-index: 1;">Brand</th>
+                                    <th style="position: sticky; top: 0; background: #fff; z-index: 1;">Price</th>
+                                    <th style="position: sticky; top: 0; background: #fff; z-index: 1;">Stock</th>
+                                    <th style="position: sticky; top: 0; background: #fff; z-index: 1;">Sizes</th>
+                                    <th style="position: sticky; top: 0; background: #fff; z-index: 1;">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <!-- Rendered by JS -->
+                            </tbody>
+                        </table>
+                    </div>
+                    <div id="products-pagination"
+                        style="display: flex; justify-content: flex-end; align-items: center; gap: 15px; margin-top: 1.5rem;">
+                    </div>
                 </div>
             </div>
 
@@ -376,7 +492,8 @@
                 </div>
 
                 <div class="admin-card">
-                    <h3 style="margin-bottom: 1.5rem; font-family: var(--font-heading); font-size: 1.5rem;">Customer Orders</h3>
+                    <h3 style="margin-bottom: 1.5rem; font-family: var(--font-heading); font-size: 1.5rem;">Customer
+                        Orders</h3>
                     <table id="custom-orders-table" style="width: 100%;">
                         <thead>
                             <tr>
@@ -403,7 +520,8 @@
                 </div>
 
                 <div class="admin-card">
-                    <h3 style="margin-bottom: 1.5rem; font-family: var(--font-heading); font-size: 1.5rem;">Registered Customers</h3>
+                    <h3 style="margin-bottom: 1.5rem; font-family: var(--font-heading); font-size: 1.5rem;">Registered
+                        Customers</h3>
                     <table id="custom-customers-table" style="width: 100%;">
                         <thead>
                             <tr>
@@ -424,17 +542,130 @@
             </div>
 
             <!-- Customer Details Modal -->
-            <div id="customer-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; align-items: center; justify-content: center;">
-                <div style="background: #fff; width: 600px; max-width: 90%; max-height: 90vh; overflow-y: auto; border-radius: 8px; padding: 2rem; position: relative;">
-                    <button onclick="document.getElementById('customer-modal').style.display='none'" style="position: absolute; top: 1rem; right: 1rem; background: none; border: none; font-size: 1.5rem; cursor: pointer; color: #666;">&times;</button>
-                    <h2 style="font-family: var(--font-heading); margin-bottom: 1.5rem; border-bottom: 1px solid #eee; padding-bottom: 1rem;">Customer Profile</h2>
+            <div id="customer-modal"
+                style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; align-items: center; justify-content: center;">
+                <div
+                    style="background: #fff; width: 600px; max-width: 90%; max-height: 90vh; overflow-y: auto; border-radius: 8px; padding: 2rem; position: relative;">
+                    <button onclick="document.getElementById('customer-modal').style.display='none'"
+                        style="position: absolute; top: 1rem; right: 1rem; background: none; border: none; font-size: 1.5rem; cursor: pointer; color: #666;">&times;</button>
+                    <h2
+                        style="font-family: var(--font-heading); margin-bottom: 1.5rem; border-bottom: 1px solid #eee; padding-bottom: 1rem;">
+                        Customer Profile</h2>
                     <div id="customer-modal-content">
                         <!-- Rendered by JS -->
                     </div>
                 </div>
             </div>
+            <!-- Reports Panel (Hidden by default) -->
+            <div id="admin-reports-panel" style="display: none;">
+                <div class="admin-header"
+                    style="margin-bottom: 1.5rem; display: flex; justify-content: space-between; align-items: center;">
+                    <h1 class="admin-title" style="font-size: 1.5rem; color: #0f172a;">Performance Analytics</h1>
+                    <select id="date-filter" onchange="renderAdminReports()"
+                        style="background: #ffffff; padding: 0.4rem 1rem; border-radius: 6px; border: 1px solid #cbd5e1; font-size: 0.85rem; color: #475569; font-weight: 500; cursor: pointer; outline: none; box-shadow: 0 1px 2px rgba(0,0,0,0.05);">
+                        <option value="all">Data: All Time</option>
+                        <option value="7">Last 7 Days</option>
+                        <option value="30">Last 30 Days</option>
+                        <option value="90">Last 90 Days</option>
+                    </select>
+                </div>
+
+                <!-- KPI Summary Cards -->
+                <div id="reports-kpi-container"
+                    style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.5rem; margin-bottom: 2rem;">
+                    <!-- Rendered by JS -->
+                </div>
+
+                <!-- Best Selling Product Card -->
+                <div class="admin-card"
+                    style="padding: 1.5rem; border-radius: 12px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); background: #fff; border: 1px solid #e2e8f0; margin-bottom: 2rem;">
+                    <div
+                        style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+                        <h3
+                            style="font-family: 'Inter', sans-serif; font-size: 1.2rem; color: #1e293b; margin: 0; font-weight: 600;">
+                            <i class="fa-solid fa-trophy trophy-icon"></i> Best Selling Product (This Month)
+                        </h3>
+                    </div>
+                    <div id="best-selling-product-container">
+                        <!-- Rendered by JS -->
+                    </div>
+                </div>
+
+                <!-- Category Sales Percentage Chart -->
+                <div class="admin-card"
+                    style="padding: 1.5rem; border-radius: 12px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); background: #fff; border: 1px solid #e2e8f0; margin-bottom: 2rem;">
+                    <div
+                        style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+                        <h3
+                            style="font-family: 'Inter', sans-serif; font-size: 1.2rem; color: #1e293b; margin: 0; font-weight: 600;">
+                            📊 Category Sales Distribution</h3>
+                    </div>
+                    <div id="category-sales-chart-container">
+                        <!-- Rendered by JS -->
+                    </div>
+                </div>
+
+                <div
+                    style="display: grid; grid-template-columns: repeat(auto-fit, minmax(400px, 1fr)); gap: 1.5rem; margin-bottom: 2rem;">
+                    <!-- Revenue Line Chart -->
+                    <div class="admin-card"
+                        style="padding: 1.5rem; border-radius: 12px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); background: #fff; border: 1px solid #e2e8f0; display: flex; flex-direction: column;">
+                        <div
+                            style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+                            <h3
+                                style="font-family: 'Inter', sans-serif; font-size: 1.05rem; color: #1e293b; margin: 0; font-weight: 600;">
+                                Sales Overview (Revenue)</h3>
+                        </div>
+                        <div style="position: relative; height: 350px; width: 100%;">
+                            <canvas id="revenueChart"></canvas>
+                        </div>
+                    </div>
+
+                    <!-- Products Sold Bar Chart -->
+                    <div class="admin-card"
+                        style="padding: 1.5rem; border-radius: 12px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); background: #fff; border: 1px solid #e2e8f0; display: flex; flex-direction: column;">
+                        <div
+                            style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+                            <h3
+                                style="font-family: 'Inter', sans-serif; font-size: 1.05rem; color: #1e293b; margin: 0; font-weight: 600;">
+                                Units Sold by Month</h3>
+                        </div>
+                        <div style="position: relative; height: 350px; width: 100%;">
+                            <canvas id="salesChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Monthly Summary Table -->
+                <div class="admin-card"
+                    style="padding: 1.5rem; border-radius: 12px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); background: #fff; border: 1px solid #e2e8f0; margin-bottom: 2rem;">
+                    <div
+                        style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+                        <h3
+                            style="font-family: 'Inter', sans-serif; font-size: 1.2rem; color: #1e293b; margin: 0; font-weight: 600;">
+                            Monthly Summary Breakdown</h3>
+                    </div>
+                    <table style="width: 100%; border-collapse: collapse;">
+                        <thead>
+                            <tr
+                                style="border-bottom: 2px solid #e2e8f0; text-align: left; color: #64748b; font-size: 0.9rem; text-transform: uppercase;">
+                                <th style="padding: 1rem; font-weight: 600;">Month</th>
+                                <th style="padding: 1rem; font-weight: 600;">Total Orders</th>
+                                <th style="padding: 1rem; font-weight: 600;">Units Sold</th>
+                                <th style="padding: 1rem; font-weight: 600;">Gross Revenue</th>
+                            </tr>
+                        </thead>
+                        <tbody id="reports-monthly-table" style="font-size: 0.95rem; color: #1e293b;">
+                            <!-- Rendered by JS -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
         </main>
     </div>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="script.js"></script>
 </body>
+
 </html>

@@ -1,12 +1,16 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Account - Moda</title>
     <link rel="stylesheet" href="styles.css">
     <link rel="stylesheet" href="mens.css">
-    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="login-animation.css">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&family=Inter:wght@300;400;500;600&display=swap"
+        rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         /* Unauthenticated View (Split Screen) */
@@ -15,37 +19,53 @@
             min-height: calc(100vh - 120px);
             background: #fff;
         }
+
         .auth-image {
             flex: 1;
             background: url('https://images.unsplash.com/photo-1490481651871-ab68de25d43d?auto=format&fit=crop&w=1200&q=80') center/cover no-repeat;
             display: none;
         }
+
         @media (min-width: 900px) {
-            .auth-image { display: block; }
+            .auth-image {
+                display: block;
+            }
         }
+
         .auth-content {
             flex: 1;
             display: flex;
             flex-direction: column;
             justify-content: center;
-            padding: 4rem 10%;
+            align-items: center;
+            padding: 4rem 2rem;
+            position: relative;
         }
+
+        .auth-content>* {
+            width: 100%;
+            max-width: 420px;
+        }
+
         .auth-title {
             font-size: 2.5rem;
             font-weight: 600;
             margin-bottom: 0.5rem;
             font-family: 'Playfair Display', serif;
         }
+
         .auth-subtitle {
             color: var(--text-light);
             margin-bottom: 2.5rem;
         }
+
         .auth-tabs {
             display: flex;
             gap: 2rem;
             margin-bottom: 2rem;
             border-bottom: 1px solid #eee;
         }
+
         .auth-tabs button {
             background: none;
             border: none;
@@ -57,14 +77,55 @@
             border-bottom: 2px solid transparent;
             transition: all 0.3s ease;
         }
+
         .auth-tabs button.active {
             color: var(--text-color);
             border-color: var(--text-color);
         }
-        .account-form { display: none; animation: fadeIn 0.4s ease; }
-        .account-form.active { display: block; }
 
-        .form-group { margin-bottom: 1.5rem; }
+        .flip-container {
+            perspective: 1000px;
+            width: 100%;
+        }
+
+        .flipper {
+            transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+            transform-style: preserve-3d;
+            position: relative;
+            display: grid;
+        }
+
+        .flipper.show-register {
+            transform: rotateY(180deg);
+        }
+
+        .front,
+        .back {
+            grid-area: 1 / 1;
+            backface-visibility: hidden;
+            width: 100%;
+        }
+
+        .back {
+            transform: rotateY(180deg);
+        }
+
+        .flipper.show-login .back {
+            pointer-events: none;
+        }
+
+        .flipper.show-register .front {
+            pointer-events: none;
+        }
+
+        .account-form {
+            display: block;
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
         .form-group label {
             display: block;
             margin-bottom: 0.5rem;
@@ -73,6 +134,7 @@
             text-transform: uppercase;
             letter-spacing: 0.05em;
         }
+
         .form-group input {
             width: 100%;
             padding: 1rem;
@@ -82,12 +144,14 @@
             transition: all 0.3s;
             font-family: 'Inter', sans-serif;
         }
+
         .form-group input:focus {
             border-color: #000;
             background: #fff;
             outline: none;
-            box-shadow: 0 0 0 3px rgba(0,0,0,0.05);
+            box-shadow: 0 0 0 3px rgba(0, 0, 0, 0.05);
         }
+
         .btn-submit {
             width: 100%;
             padding: 1.2rem;
@@ -100,13 +164,21 @@
             transition: background 0.3s, transform 0.1s;
             text-transform: uppercase;
         }
-        .btn-submit:hover { background: #333; }
-        .btn-submit:active { transform: scale(0.98); }
+
+        .btn-submit:hover {
+            background: #333;
+        }
+
+        .btn-submit:active {
+            transform: scale(0.98);
+        }
 
         /* Authenticated Dashboard View */
         #profile-section {
-            display: none; /* Shown by JS when logged in */
+            display: none;
+            /* Shown by JS when logged in */
         }
+
         .dashboard-wrapper {
             max-width: 1200px;
             margin: 4rem auto;
@@ -115,13 +187,17 @@
             flex-direction: column;
             gap: 3rem;
         }
+
         @media (min-width: 768px) {
-            .dashboard-wrapper { flex-direction: row; }
+            .dashboard-wrapper {
+                flex-direction: row;
+            }
         }
 
         .dashboard-sidebar {
             flex: 0 0 250px;
         }
+
         .user-greeting {
             font-family: 'Playfair Display', serif;
             font-size: 1.5rem;
@@ -129,11 +205,13 @@
             padding-bottom: 1rem;
             border-bottom: 1px solid #eee;
         }
+
         .dashboard-nav {
             display: flex;
             flex-direction: column;
             gap: 0.5rem;
         }
+
         .dashboard-nav button {
             text-align: left;
             padding: 1rem;
@@ -146,16 +224,19 @@
             transition: all 0.2s;
             font-family: 'Inter', sans-serif;
         }
+
         .dashboard-nav button:hover {
             color: var(--text-color);
             background: #f9f9f9;
         }
+
         .dashboard-nav button.active {
             color: var(--text-color);
             font-weight: 600;
             border-left-color: var(--text-color);
             background: #f9f9f9;
         }
+
         .dashboard-nav button.logout-btn {
             color: #dc2626;
             margin-top: 2rem;
@@ -164,13 +245,16 @@
         .dashboard-content {
             flex: 1;
         }
+
         .dashboard-panel {
             display: none;
             animation: fadeIn 0.4s ease;
         }
+
         .dashboard-panel.active {
             display: block;
         }
+
         .panel-title {
             font-size: 1.8rem;
             font-weight: 600;
@@ -185,15 +269,18 @@
             border-radius: 8px;
             margin-bottom: 1.5rem;
         }
+
         .info-row {
             display: flex;
             margin-bottom: 1rem;
         }
+
         .info-label {
             width: 150px;
             color: var(--text-light);
             font-size: 0.9rem;
         }
+
         .info-value {
             font-weight: 500;
         }
@@ -204,9 +291,10 @@
             border-radius: 8px;
             overflow: hidden;
             margin-bottom: 2rem;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.02);
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.02);
             font-family: 'Inter', sans-serif;
         }
+
         .order-header {
             background: #f9fafb;
             padding: 1.5rem;
@@ -215,32 +303,66 @@
             align-items: center;
             border-bottom: 1px solid #eaeaea;
         }
-        .order-header-info p { margin: 0; }
-        .order-date { color: var(--text-light); font-size: 0.85rem; margin-bottom: 0.3rem; }
-        .order-id { font-weight: 600; font-size: 1.1rem; }
+
+        .order-header-info p {
+            margin: 0;
+        }
+
+        .order-date {
+            color: var(--text-light);
+            font-size: 0.85rem;
+            margin-bottom: 0.3rem;
+        }
+
+        .order-id {
+            font-weight: 600;
+            font-size: 1.1rem;
+        }
+
         .order-status {
             padding: 0.4rem 1rem;
             border-radius: 20px;
             font-size: 0.85rem;
             font-weight: 600;
         }
-        .status-Pending { background: #fef3c7; color: #92400e; }
-        .status-Shipped { background: #e0f2fe; color: #0369a1; }
-        .status-Delivered { background: #dcfce7; color: #166534; }
 
-        .order-body { padding: 1.5rem; }
+        .status-Pending {
+            background: #fef3c7;
+            color: #92400e;
+        }
+
+        .status-Shipped {
+            background: #e0f2fe;
+            color: #0369a1;
+        }
+
+        .status-Delivered {
+            background: #dcfce7;
+            color: #166534;
+        }
+
+        .order-body {
+            padding: 1.5rem;
+        }
+
         .order-item-list {
             display: flex;
             flex-direction: column;
             gap: 1.5rem;
         }
+
         .order-item {
             display: flex;
             gap: 1.5rem;
             padding-bottom: 1.5rem;
             border-bottom: 1px solid #f3f4f6;
         }
-        .order-item:last-child { border-bottom: none; padding-bottom: 0; }
+
+        .order-item:last-child {
+            border-bottom: none;
+            padding-bottom: 0;
+        }
+
         .order-item-img {
             width: 90px;
             height: 120px;
@@ -248,10 +370,30 @@
             border-radius: 4px;
             background: #f5f5f5;
         }
-        .order-item-details { flex: 1; display: flex; flex-direction: column; justify-content: center; }
-        .order-item-title { font-weight: 600; margin-bottom: 0.5rem; font-size: 1.1rem; }
-        .order-item-meta { color: var(--text-light); font-size: 0.9rem; margin-bottom: 0.5rem; }
-        .order-item-price { font-weight: 600; margin-top: auto; }
+
+        .order-item-details {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        .order-item-title {
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            font-size: 1.1rem;
+        }
+
+        .order-item-meta {
+            color: var(--text-light);
+            font-size: 0.9rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .order-item-price {
+            font-weight: 600;
+            margin-top: auto;
+        }
 
         .order-footer {
             padding: 1.5rem;
@@ -261,7 +403,12 @@
             align-items: center;
             border-top: 1px solid #eaeaea;
         }
-        .order-total { font-size: 1.2rem; font-weight: 600; }
+
+        .order-total {
+            font-size: 1.2rem;
+            font-weight: 600;
+        }
+
         .btn-outline {
             padding: 0.6rem 1.2rem;
             border: 1px solid #ccc;
@@ -272,11 +419,22 @@
             transition: all 0.2s;
             border-radius: 4px;
         }
-        .btn-outline:hover { background: #f3f4f6; border-color: #999; }
+
+        .btn-outline:hover {
+            background: #f3f4f6;
+            border-color: #999;
+        }
 
         @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
         }
 
         .form-message {
@@ -286,12 +444,14 @@
             font-size: 0.9rem;
             border-radius: 4px;
         }
+
         .form-message.error {
             background-color: #fee2e2;
             color: #dc2626;
             border: 1px solid #f87171;
             display: block;
         }
+
         .form-message.success {
             background-color: #dcfce7;
             color: #16a34a;
@@ -303,12 +463,16 @@
         .tracking-modal {
             display: none;
             position: fixed;
-            top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.5);
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
             z-index: 9999;
             align-items: center;
             justify-content: center;
         }
+
         .tracking-modal-content {
             background: #fff;
             width: 90%;
@@ -318,49 +482,65 @@
             position: relative;
             animation: fadeIn 0.3s ease;
         }
+
         .tracking-close {
             position: absolute;
-            top: 1rem; right: 1rem;
-            background: none; border: none;
-            font-size: 1.5rem; cursor: pointer;
+            top: 1rem;
+            right: 1rem;
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
             color: #666;
         }
+
         .tracking-timeline {
             margin-top: 1.5rem;
             position: relative;
             padding-left: 20px;
         }
+
         .tracking-timeline::before {
             content: '';
             position: absolute;
-            left: 5px; top: 0; bottom: 0;
+            left: 5px;
+            top: 0;
+            bottom: 0;
             width: 2px;
             background: #eaeaea;
         }
+
         .tracking-step {
             position: relative;
             margin-bottom: 1.5rem;
             color: #999;
         }
+
         .tracking-step::before {
             content: '';
             position: absolute;
-            left: -20px; top: 4px;
-            width: 12px; height: 12px;
+            left: -20px;
+            top: 4px;
+            width: 12px;
+            height: 12px;
             border-radius: 50%;
             background: #eaeaea;
             border: 2px solid #fff;
         }
+
         .tracking-step.active {
             color: #000;
         }
+
         .tracking-step.active::before {
             background: #000;
         }
+
         .tracking-step-title {
             font-weight: 600;
             margin-bottom: 0.2rem;
         }
+
         .tracking-step-desc {
             font-size: 0.85rem;
         }
@@ -369,17 +549,21 @@
         .tracking-step.delivered {
             color: #10b981;
         }
+
         .tracking-step.delivered::before {
             background: #10b981;
             border-color: #10b981;
             transform: scale(0);
             animation: popIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
         }
+
         .tracking-step.delivered::after {
             content: '';
             position: absolute;
-            left: -17px; top: 6px;
-            width: 4px; height: 9px;
+            left: -17px;
+            top: 6px;
+            width: 4px;
+            height: 9px;
             border: solid white;
             border-width: 0 2px 2px 0;
             transform: rotate(45deg) scale(0);
@@ -391,6 +575,7 @@
             animation: slideFadeIn 0.5s ease-out forwards;
             color: #10b981;
         }
+
         .tracking-step.delivered .tracking-step-desc {
             animation: slideFadeIn 0.5s ease-out 0.2s forwards;
             opacity: 0;
@@ -400,52 +585,87 @@
         /* Confetti Container */
         .confetti-wrapper {
             position: absolute;
-            top: 0; left: 0; width: 100%; height: 100%;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
             pointer-events: none;
             overflow: hidden;
             z-index: 999;
             border-radius: 8px;
         }
+
         .confetti {
             position: absolute;
-            width: 10px; height: 18px;
+            width: 10px;
+            height: 18px;
             opacity: 0;
             transform-origin: center;
             animation: confettiBurst 2.5s cubic-bezier(0.25, 1, 0.5, 1) forwards;
         }
 
         @keyframes popIn {
-            0% { transform: scale(0); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.4); }
-            50% { box-shadow: 0 0 0 10px rgba(16, 185, 129, 0); }
-            100% { transform: scale(1.5); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
+            0% {
+                transform: scale(0);
+                box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.4);
+            }
+
+            50% {
+                box-shadow: 0 0 0 10px rgba(16, 185, 129, 0);
+            }
+
+            100% {
+                transform: scale(1.5);
+                box-shadow: 0 0 0 0 rgba(16, 185, 129, 0);
+            }
         }
+
         @keyframes checkmark {
-            0% { transform: rotate(45deg) scale(0); opacity: 0; }
-            100% { transform: rotate(45deg) scale(1); opacity: 1; }
+            0% {
+                transform: rotate(45deg) scale(0);
+                opacity: 0;
+            }
+
+            100% {
+                transform: rotate(45deg) scale(1);
+                opacity: 1;
+            }
         }
+
         @keyframes slideFadeIn {
-            0% { opacity: 0; transform: translateX(-15px); }
-            100% { opacity: 1; transform: translateX(0); }
+            0% {
+                opacity: 0;
+                transform: translateX(-15px);
+            }
+
+            100% {
+                opacity: 1;
+                transform: translateX(0);
+            }
         }
+
         @keyframes confettiBurst {
-            0% { transform: translate(0, 0) scale(0) rotate(0deg); opacity: 1; }
-            35% { transform: translate(var(--tx), var(--ty)) scale(1) rotate(calc(var(--rot) / 2)); opacity: 1; }
-            100% { transform: translate(calc(var(--tx) + (var(--tx) * 0.5)), calc(var(--ty) + 400px)) scale(1) rotate(var(--rot)); opacity: 0; }
+            0% {
+                transform: translate(0, 0) scale(0) rotate(0deg);
+                opacity: 1;
+            }
+
+            35% {
+                transform: translate(var(--tx), var(--ty)) scale(1) rotate(calc(var(--rot) / 2));
+                opacity: 1;
+            }
+
+            100% {
+                transform: translate(calc(var(--tx) + (var(--tx) * 0.5)), calc(var(--ty) + 400px)) scale(1) rotate(var(--rot));
+                opacity: 0;
+            }
         }
     </style>
+<link rel="stylesheet" href="mobile-responsive.css">
 </head>
+
 <body>
-    <!-- Top Announcement Bar -->
-    <div class="top-bar">
-        <div class="top-bar-center">
-            EXTRA 20% OFF ON FIRST ORDER | <span>USE CODE: MODA20</span>
-        </div>
-        <div class="top-bar-right">
-            <a href="#">Track Order</a>
-            <a href="#">Store Locator</a>
-            <a href="#">Help</a>
-        </div>
-    </div>
+
 
     <!-- Main Navbar -->
     <header class="navbar dark-navbar">
@@ -477,56 +697,81 @@
     </header>
 
     <main>
-        <!-- Unauthenticated Split Layout -->
-        <div id="auth-wrapper">
-            <div class="auth-image"></div>
-            <div class="auth-content">
-                <h1 class="auth-title">Welcome to MODA</h1>
-                <p class="auth-subtitle">Sign in to track orders, manage your profile, and receive exclusive offers.</p>
-                
-                <div class="auth-tabs" id="account-tabs">
-                    <button class="active" id="tab-login" onclick="switchAuthTab('login')">Sign In</button>
-                    <button id="tab-register" onclick="switchAuthTab('register')">Create Account</button>
+        <!-- Unauthenticated Fullscreen Layout -->
+        <div id="auth-wrapper" style="display: flex; min-height: calc(100vh - 120px);">
+            <div class="auth-content" style="flex: 1; width: 100%;">
+                <div class="login-scene is-closed" id="login-scene">
+                    <!-- The Interactive Boy & Bag -->
+                    <div class="scene-visuals" id="scene-visuals" aria-label="Open login form" role="button"
+                        tabindex="0">
+                        <!-- Placeholder Video (Replace src with your final 3D animation) -->
+                        <video id="login-video" class="login-video" src="rushi 2.mp4" playsinline muted
+                            crossorigin="anonymous"></video>
+                    </div>
+
+                    <div class="form-emergence-container">
+                        <div class="auth-inner">
+                            <h1 class="auth-title">Welcome to MODA</h1>
+                            <p class="auth-subtitle">Sign in to track orders, manage your profile, and receive exclusive
+                                offers.</p>
+
+                            <div class="auth-tabs" id="account-tabs">
+                                <button class="active" id="tab-login" onclick="switchAuthTab('login')">Sign In</button>
+                                <button id="tab-register" onclick="switchAuthTab('register')">Create Account</button>
+                            </div>
+
+                            <div class="flip-container">
+                                <div class="flipper show-login" id="auth-flipper">
+                                    <div class="front">
+                                        <!-- Login Form -->
+                                        <form id="login-form" class="account-form">
+                                            <div class="form-group">
+                                                <label>Email Address</label>
+                                                <input type="email" id="login-email" placeholder="Enter your email"
+                                                    required>
+                                            </div>
+                                            <div class="form-group">
+                                                <label>Password</label>
+                                                <input type="password" id="login-password"
+                                                    placeholder="Enter your password" required>
+                                            </div>
+                                            <button type="submit" class="btn-submit">Sign In</button>
+                                            <div id="login-message" class="form-message"></div>
+                                        </form>
+                                    </div>
+                                    <div class="back">
+                                        <!-- Register Form -->
+                                        <form id="register-form" class="account-form">
+                                            <div class="form-group">
+                                                <label>Full Name</label>
+                                                <input type="text" id="register-name" placeholder="John Doe" required>
+                                            </div>
+                                            <div class="form-group">
+                                                <label>Email Address</label>
+                                                <input type="email" id="register-email" placeholder="Enter your email"
+                                                    required>
+                                            </div>
+                                            <div class="form-group">
+                                                <label>Password</label>
+                                                <input type="password" id="register-password"
+                                                    placeholder="Create a password" required>
+                                            </div>
+                                            <button type="submit" class="btn-submit">Create Account</button>
+                                            <div id="register-message" class="form-message"></div>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
-
-                <!-- Login Form -->
-                <form id="login-form" class="account-form active">
-                    <div class="form-group">
-                        <label>Email Address</label>
-                        <input type="email" id="login-email" placeholder="Enter your email" required>
-                    </div>
-                    <div class="form-group">
-                        <label>Password</label>
-                        <input type="password" id="login-password" placeholder="Enter your password" required>
-                    </div>
-                    <button type="submit" class="btn-submit">Sign In</button>
-                    <div id="login-message" class="form-message"></div>
-                </form>
-
-                <!-- Register Form -->
-                <form id="register-form" class="account-form">
-                    <div class="form-group">
-                        <label>Full Name</label>
-                        <input type="text" id="register-name" placeholder="John Doe" required>
-                    </div>
-                    <div class="form-group">
-                        <label>Email Address</label>
-                        <input type="email" id="register-email" placeholder="Enter your email" required>
-                    </div>
-                    <div class="form-group">
-                        <label>Password</label>
-                        <input type="password" id="register-password" placeholder="Create a password" required>
-                    </div>
-                    <button type="submit" class="btn-submit">Create Account</button>
-                    <div id="register-message" class="form-message"></div>
-                </form>
             </div>
         </div>
 
         <!-- Authenticated Dashboard Layout -->
         <div id="profile-section">
             <div class="dashboard-wrapper">
-                
+
                 <!-- Sidebar Menu -->
                 <aside class="dashboard-sidebar">
                     <h2 class="user-greeting">Hi, <span id="greeting-name">User</span>!</h2>
@@ -540,12 +785,13 @@
 
                 <!-- Dashboard Content Area -->
                 <div class="dashboard-content">
-                    
+
                     <!-- Overview Panel -->
                     <div id="panel-overview" class="dashboard-panel active">
                         <h2 class="panel-title">Account Overview</h2>
                         <div class="info-card">
-                            <h3 style="margin-bottom: 1.5rem; font-family: 'Playfair Display', serif;">Profile Information</h3>
+                            <h3 style="margin-bottom: 1.5rem; font-family: 'Playfair Display', serif;">Profile
+                                Information</h3>
                             <div class="info-row">
                                 <div class="info-label">Full Name</div>
                                 <div class="info-value" id="profile-name"></div>
@@ -597,10 +843,12 @@
     <!-- Tracking Modal -->
     <div id="tracking-modal" class="tracking-modal">
         <div class="tracking-modal-content">
-            <button class="tracking-close" onclick="document.getElementById('tracking-modal').style.display='none'">&times;</button>
-            <h2 style="font-family: 'Playfair Display', serif; margin-bottom: 0.5rem;" id="tracking-order-title">Track Package</h2>
+            <button class="tracking-close"
+                onclick="document.getElementById('tracking-modal').style.display='none'">&times;</button>
+            <h2 style="font-family: 'Playfair Display', serif; margin-bottom: 0.5rem;" id="tracking-order-title">Track
+                Package</h2>
             <p style="color: #666; font-size: 0.9rem; margin-bottom: 1.5rem;" id="tracking-order-id">Loading...</p>
-            
+
             <div class="tracking-timeline" id="tracking-timeline-container">
                 <!-- Dynamically populated -->
             </div>
@@ -611,7 +859,8 @@
         <div class="footer-content footer-alt-grid">
             <div class="footer-col brand-col">
                 <h3>MODA ARCHIVE</h3>
-                <p>Curation of timeless silhouettes and contemporary design principles. Built for the modern wardrobe.</p>
+                <p>Curation of timeless silhouettes and contemporary design principles. Built for the modern wardrobe.
+                </p>
             </div>
             <div class="footer-col">
                 <h3>Shop</h3>
@@ -633,15 +882,16 @@
         function switchAuthTab(tab) {
             document.getElementById('tab-login').classList.remove('active');
             document.getElementById('tab-register').classList.remove('active');
-            document.getElementById('login-form').classList.remove('active');
-            document.getElementById('register-form').classList.remove('active');
+            const flipper = document.getElementById('auth-flipper');
 
             if (tab === 'login') {
                 document.getElementById('tab-login').classList.add('active');
-                document.getElementById('login-form').classList.add('active');
+                flipper.classList.remove('show-register');
+                flipper.classList.add('show-login');
             } else {
                 document.getElementById('tab-register').classList.add('active');
-                document.getElementById('register-form').classList.add('active');
+                flipper.classList.remove('show-login');
+                flipper.classList.add('show-register');
             }
         }
 
@@ -658,6 +908,8 @@
             document.getElementById('panel-' + panelId).classList.add('active');
         }
     </script>
+    <script src="login-animation.js"></script>
     <script src="script.js"></script>
 </body>
+
 </html>
