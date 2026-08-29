@@ -36,7 +36,7 @@ Make sure you have [Node.js](https://nodejs.org/) and [PostgreSQL](https://www.p
    DB_NAME=moda_db
    DB_PASSWORD=your_db_password
    DB_PORT=5432
-   ADMIN_PASSWORD=your_admin_password
+   ADMIN_PASSWORD=your_admin_secret
    ```
 
 5. **Database Setup**:
