@@ -43,9 +43,10 @@ pool.connect((err, client, release) => {
         // Ensure user_id column exists on orders table and stock on products table
         Promise.all([
             client.query('ALTER TABLE orders ADD COLUMN IF NOT EXISTS user_id INTEGER'),
-            client.query('ALTER TABLE products ADD COLUMN IF NOT EXISTS stock INTEGER DEFAULT 0')
+            client.query('ALTER TABLE products ADD COLUMN IF NOT EXISTS stock INTEGER DEFAULT 0'),
+            client.query('ALTER TABLE products ADD COLUMN IF NOT EXISTS colors TEXT DEFAULT \'\'')
         ])
-            .then(() => console.log('Checked user_id column in orders and stock column in products.'))
+            .then(() => console.log('Checked user_id column in orders, stock and colors columns in products.'))
             .catch(e => console.error('Error altering tables:', e.message))
             .finally(() => release());
     }
@@ -131,7 +132,7 @@ app.get('/api/products', async (req, res) => {
             const { rows } = await pool.query('SELECT * FROM products ORDER BY id DESC');
             res.json(rows);
         } else {
-            const { rows } = await pool.query('SELECT id, title, price, category, brand, img, sizes, stock FROM products ORDER BY id DESC');
+            const { rows } = await pool.query('SELECT id, title, price, category, brand, img, sizes, colors, stock FROM products ORDER BY id DESC');
             res.json(rows);
         }
     } catch (err) {
@@ -150,7 +151,7 @@ app.get('/api/products/:id', async (req, res) => {
 });
 
 app.post('/api/products', async (req, res) => {
-    const { title, price, category, brand, img, img2, img3, sizes, description, material, shipping, stock } = req.body;
+    const { title, price, category, brand, img, img2, img3, sizes, colors, description, material, shipping, stock } = req.body;
     if (!title || !price || isNaN(price)) {
         return res.status(400).json({ error: 'Valid title and price are required.' });
     }
@@ -159,10 +160,10 @@ app.post('/api/products', async (req, res) => {
     console.log('Received shipping:', shipping);
     try {
         const query = `
-            INSERT INTO products (title, price, category, brand, img, img2, img3, sizes, description, material, shipping, stock)
-            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12) RETURNING id;
+            INSERT INTO products (title, price, category, brand, img, img2, img3, sizes, colors, description, material, shipping, stock)
+            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13) RETURNING id;
         `;
-        const values = [title, price, category, brand, img, img2, img3, sizes || '', description || '', material || '', shipping || '', stock || 0];
+        const values = [title, price, category, brand, img, img2, img3, sizes || '', colors || '', description || '', material || '', shipping || '', stock || 0];
         const { rows } = await pool.query(query, values);
         res.json({ id: rows[0].id });
     } catch (err) {

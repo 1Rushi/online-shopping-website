@@ -35,6 +35,7 @@
             overflow-y: auto;
             z-index: 100;
             border-right: 1px solid rgba(255, 255, 255, 0.05);
+            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
         .admin-sidebar h2 {
@@ -83,6 +84,37 @@
             background-color: #f4f8f7;
             margin-left: 250px;
             width: calc(100% - 250px);
+            transition: margin-left 0.3s;
+        }
+
+        .mobile-menu-btn {
+            display: none;
+            background: #062b2b;
+            color: white;
+            border: none;
+            padding: 0.75rem 1rem;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 1.25rem;
+            margin-bottom: 1.5rem;
+        }
+
+        /* overlay for mobile */
+        .admin-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 90;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+        
+        body.sidebar-open .admin-overlay {
+            opacity: 1;
         }
 
         .admin-header {
@@ -278,8 +310,9 @@
 </head>
 
 <body>
+    <div class="admin-overlay" id="admin-overlay"></div>
     <div class="admin-layout">
-        <aside class="admin-sidebar">
+        <aside class="admin-sidebar" id="admin-sidebar">
             <h2><i class="fas fa-layer-group logo-icon"></i>
                 <div>MODA<br>ADMIN</div>
             </h2>
@@ -293,6 +326,7 @@
         </aside>
 
         <main class="admin-main">
+            <button class="mobile-menu-btn" id="mobile-menu-btn"><i class="fas fa-bars"></i></button>
             <!-- Products Panel (Visible by default) -->
             <div id="admin-products-panel">
                 <div class="admin-header">
@@ -414,6 +448,10 @@
                                         style="display: flex; align-items: center; gap: 5px; cursor: pointer; text-transform: none;"><input
                                             type="checkbox" value="XXL"> XXL</label>
                                 </div>
+                            </div>
+                            <div class="form-group full-width">
+                                <label>Available Colors</label>
+                                <input type="text" id="prod-colors" placeholder="e.g. red, yellow, #ff0000" style="padding: 0.9rem; border: 1px solid var(--border-color); border-radius: 4px; font-family: var(--font-body); font-size: 0.9rem; width: 100%; box-sizing: border-box; outline: none; transition: border-color 0.3s; background-color: var(--bg-light);">
                             </div>
                             <div class="form-group full-width">
                                 <label>Main Product Image (Required)</label>
@@ -665,7 +703,25 @@
         </main>
     </div>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script src="script.js"></script>
+    <script src="script.js?v=3"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const toggleBtn = document.getElementById('mobile-menu-btn');
+            const overlay = document.getElementById('admin-overlay');
+            
+            if (toggleBtn) {
+                toggleBtn.addEventListener('click', () => {
+                    document.body.classList.toggle('sidebar-open');
+                });
+            }
+            
+            if (overlay) {
+                overlay.addEventListener('click', () => {
+                    document.body.classList.remove('sidebar-open');
+                });
+            }
+        });
+    </script>
 </body>
 
 </html>

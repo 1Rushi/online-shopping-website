@@ -953,6 +953,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         img2: img2Base64,
                         img3: img3Base64,
                         sizes: checkedSizes,
+                        colors: document.getElementById('prod-colors') ? document.getElementById('prod-colors').value : '',
                         description: descriptionValue,
                         material: materialValue,
                         shipping: shippingValue,
@@ -1388,6 +1389,29 @@ document.addEventListener('DOMContentLoaded', () => {
 
                     // Set initial tab content to description
                     tabContent.innerHTML = window.tabContents.description;
+                }
+
+                // Dynamically render color swatches
+                const colorsContainer = document.querySelector('.color-swatches.pdp-colors');
+                if (colorsContainer && currentProduct.colors) {
+                    const colorsList = currentProduct.colors.split(',').map(c => c.trim()).filter(c => c);
+                    if (colorsList.length > 0) {
+                        colorsContainer.innerHTML = '';
+                        colorsList.forEach((color, index) => {
+                            const btn = document.createElement('button');
+                            btn.className = index === 0 ? 'color-btn active' : 'color-btn';
+                            btn.dataset.color = color.toUpperCase();
+                            btn.style.backgroundColor = color;
+                            if (color.toLowerCase() === 'white' || color.toLowerCase() === '#ffffff' || color.toLowerCase() === '#fff') {
+                                btn.style.border = '1px solid #ddd';
+                            }
+                            colorsContainer.appendChild(btn);
+                        });
+                        const selectedColorText = document.getElementById('pdp-selected-color');
+                        if (selectedColorText) {
+                            selectedColorText.innerText = colorsList[0].toUpperCase();
+                        }
+                    }
                 }
 
                 // Fade in main section after loading

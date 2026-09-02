@@ -1,5 +1,10 @@
 /* login-animation.css - Video Entrance Logic */
 
+/* Hide the promo banner on the login page */
+.promo-banner {
+    display: none !important;
+}
+
 .login-scene {
     position: absolute;
     top: 0;

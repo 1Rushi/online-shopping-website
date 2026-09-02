@@ -19,7 +19,7 @@
     /* Mobile General Layout */
     html,
     body {
-        overflow-x: hidden;
+        overflow-x: clip;
         width: 100%;
     }
 
@@ -131,16 +131,60 @@
     /* -----------------------------------------
        ACCOUNT / LOGIN
        ----------------------------------------- */
-    /* Make the login form smaller on mobile */
+
+    .auth-content {
+        padding: 1rem 0 !important;
+        width: 100% !important;
+        box-sizing: border-box !important;
+        overflow-x: hidden;
+        display: flex !important;
+    }
+
+    /* Make the login form act like a normal centered block on mobile */
+    .login-scene {
+        position: relative !important;
+        justify-content: center !important;
+        align-items: center !important;
+        padding: 1rem 0 !important;
+        width: 100% !important;
+        height: auto !important;
+        min-height: 80vh !important;
+        max-width: 100% !important;
+        box-sizing: border-box !important;
+        margin: 0 !important;
+    }
+
+    .form-emergence-container {
+        margin: auto !important;
+        padding: 0 !important;
+        width: 100% !important;
+        max-width: 100% !important;
+        box-sizing: border-box !important;
+        position: relative !important;
+        z-index: 20 !important;
+    }
+
     .form-emergence-container>.auth-inner {
         padding: 1.5rem !important;
         border-radius: 12px !important;
+        width: 92% !important;
+        max-width: 400px !important;
+        margin: 0 auto !important;
+        box-sizing: border-box !important;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15) !important;
+    }
+
+    /* Prevent tabs from expanding the box */
+    .auth-tabs {
+        gap: 1rem !important;
+        justify-content: center !important;
     }
 
     /* Save vertical space so form isn't too tall */
     .auth-title {
-        font-size: 1.6rem !important;
+        font-size: 1.5rem !important;
         margin-bottom: 1rem !important;
+        text-align: center !important;
     }
 
     .auth-subtitle {
@@ -150,32 +194,26 @@
     /* Make inputs and buttons more compact */
     .form-group {
         margin-bottom: 1rem !important;
+        width: 100% !important;
+        box-sizing: border-box !important;
     }
 
     .form-group input {
         padding: 0.75rem 1rem !important;
         font-size: 0.85rem !important;
+        width: 100% !important;
+        box-sizing: border-box !important;
     }
 
     .btn-submit {
         padding: 0.9rem !important;
         font-size: 0.85rem !important;
-    }
-
-    /* Safely align form to bottom without causing top overflow behind header */
-    .login-scene {
-        justify-content: flex-start !important;
-        padding: 1rem !important;
-    }
-
-    .form-emergence-container {
-        margin-top: auto !important;
-        margin-bottom: 0 !important;
-        padding: 0 !important;
+        width: 100% !important;
+        box-sizing: border-box !important;
     }
 
     .login-video {
-        object-position: center top !important;
+        object-position: center center !important;
     }
 
     .nav-actions {
@@ -302,21 +340,54 @@
         padding-bottom: 1rem;
     }
 
-    /* Orders Card */
+    /* Account Orders Card */
     .order-card {
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 1rem;
+        margin-bottom: 1.5rem !important;
     }
-
-    .order-image {
-        width: 100%;
-        height: 200px;
-        object-fit: cover;
+    .order-header {
+        padding: 0.8rem !important;
     }
-
-    .order-details {
-        width: 100%;
+    .order-id {
+        font-size: 0.95rem !important;
+    }
+    .order-date {
+        font-size: 0.75rem !important;
+    }
+    .order-status {
+        padding: 0.25rem 0.6rem !important;
+        font-size: 0.75rem !important;
+    }
+    .order-body {
+        padding: 0.8rem !important;
+    }
+    .order-item {
+        gap: 0.8rem !important;
+        padding-bottom: 0.8rem !important;
+    }
+    .order-item-img {
+        width: 60px !important;
+        height: 80px !important;
+    }
+    .order-item-title {
+        font-size: 0.85rem !important;
+        margin-bottom: 0.2rem !important;
+    }
+    .order-item-meta {
+        font-size: 0.7rem !important;
+        margin-bottom: 0.3rem !important;
+    }
+    .order-item-price {
+        font-size: 0.9rem !important;
+    }
+    .order-footer {
+        padding: 0.8rem !important;
+    }
+    .order-total {
+        font-size: 1rem !important;
+    }
+    .order-footer .btn-outline {
+        padding: 0.5rem 1rem !important;
+        font-size: 0.8rem !important;
     }
 
     /* Settings Form */
@@ -434,7 +505,7 @@
     .collection-layout .product-grid-4 {
         display: block !important;
     }
-    
+
     .collection-layout .product-card {
         float: left !important;
         width: calc(33.333% - 0.5rem) !important;
@@ -610,7 +681,7 @@
     .reviews-stars {
         font-size: 0.65rem !important;
     }
-    
+
     .review-count {
         font-size: 0.65rem !important;
     }
@@ -664,7 +735,8 @@
     .customer-reviews {
         padding: 2rem 1.5rem !important;
         margin: 0 !important;
-        background-color: #fff !important; /* Clean white background */
+        background-color: #fff !important;
+        /* Clean white background */
     }
 
     .customer-reviews .section-title-left {
@@ -684,31 +756,31 @@
         background: #fafafa !important;
         border-radius: 16px !important;
         border: 1px solid #f0f0f0 !important;
-        box-shadow: 0 4px 15px rgba(0,0,0,0.02) !important;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.02) !important;
     }
 
     .big-rating {
         font-size: 3rem !important;
     }
-    
+
     .write-review-btn {
         border-radius: 30px !important;
         padding: 0.7rem 1.5rem !important;
         font-size: 0.75rem !important;
         letter-spacing: 1px !important;
-        box-shadow: 0 4px 10px rgba(0,0,0,0.1) !important;
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1) !important;
     }
 
     /* Review Modal Mobile Fix */
-    #review-modal > div {
+    #review-modal>div {
         padding: 1rem 1.25rem !important;
         max-height: 80vh;
         width: 85% !important;
         overflow-y: auto;
         border-radius: 16px !important;
-        box-shadow: 0 10px 40px rgba(0,0,0,0.2) !important;
+        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2) !important;
     }
-    
+
     #close-review-modal {
         top: 0.75rem !important;
         right: 1rem !important;
@@ -752,7 +824,7 @@
         border-radius: 6px !important;
         background-color: #fafafa !important;
     }
-    
+
     #review-form input:focus,
     #review-form select:focus,
     #review-form textarea:focus {
@@ -804,6 +876,46 @@
     /* -----------------------------------------
        CART
        ----------------------------------------- */
+    .form-grid-pdp {
+        gap: 0.3rem 0.5rem !important;
+    }
+    .form-group-pdp {
+        margin-bottom: 0.3rem !important;
+        gap: 0.1rem !important;
+    }
+    .form-group-pdp label {
+        font-size: 0.5rem !important;
+        letter-spacing: 0 !important;
+        margin-bottom: 0 !important;
+    }
+    .form-group-pdp input {
+        padding: 0.35rem 0.4rem !important;
+        font-size: 0.65rem !important;
+        width: 100% !important;
+        box-sizing: border-box !important;
+        min-width: 0 !important;
+    }
+    .modal-section-title {
+        font-size: 0.6rem !important;
+        margin-bottom: 0.3rem !important;
+        padding-bottom: 0.2rem !important;
+        margin-top: 0.5rem !important;
+    }
+    #payment-form-step h2 {
+        font-size: 1rem !important;
+        margin-bottom: 0.1rem !important;
+    }
+    .modal-subtitle {
+        font-size: 0.6rem !important;
+        margin-bottom: 0.5rem !important;
+        line-height: 1.2 !important;
+    }
+    .modal-pay-btn {
+        padding: 0.6rem !important;
+        font-size: 0.75rem !important;
+        margin-top: 0.5rem !important;
+    }
+
     .cart-page {
         padding: 1rem 1.5rem !important;
     }
@@ -927,10 +1039,56 @@
     /* -----------------------------------------
        MODALS (Tracking, Quick View)
        ----------------------------------------- */
+    .modal-overlay {
+        align-items: flex-start !important;
+        padding: 2rem 0 !important;
+        overflow-y: auto !important;
+    }
+    
     .modal-content {
-        width: 95%;
-        margin: 2rem auto;
-        padding: 1.5rem;
+        width: 85% !important;
+        margin: auto !important;
+        padding: 1rem !important;
+        max-height: none !important;
+        overflow: hidden !important;
+    }
+    
+    .close-modal-btn {
+        top: 0.5rem !important;
+        right: 0.5rem !important;
+    }
+
+    /* Tracking Modal Mobile Overrides */
+    .tracking-modal {
+        align-items: flex-start !important;
+        padding: 2rem 0 !important;
+        overflow-y: auto !important;
+    }
+    .tracking-modal-content {
+        width: 85% !important;
+        margin: auto !important;
+        padding: 1.2rem !important;
+    }
+    .tracking-close {
+        top: 0.5rem !important;
+        right: 0.5rem !important;
+        font-size: 1.2rem !important;
+    }
+    .tracking-step {
+        margin-bottom: 1rem !important;
+    }
+    .tracking-step-title {
+        font-size: 0.9rem !important;
+    }
+    .tracking-step-desc {
+        font-size: 0.75rem !important;
+    }
+    #tracking-order-title {
+        font-size: 1.2rem !important;
+        margin-bottom: 0.2rem !important;
+    }
+    #tracking-order-id {
+        font-size: 0.75rem !important;
     }
 
     /* -----------------------------------------
@@ -968,8 +1126,13 @@
     }
 
     @keyframes marquee {
-        0% { transform: translateX(100vw); }
-        100% { transform: translateX(-100%); }
+        0% {
+            transform: translateX(100vw);
+        }
+
+        100% {
+            transform: translateX(-100%);
+        }
     }
 
     .footer-bottom p {
@@ -1171,6 +1334,52 @@
     .newsletter-right p {
         font-size: 0.3rem;
         line-height: 1.2;
+    }
+
+    /* -----------------------------------------
+       ADMIN PANEL (OFF-CANVAS SIDEBAR)
+       ----------------------------------------- */
+    .admin-sidebar {
+        position: fixed !important;
+        width: 280px !important;
+        height: 100vh !important;
+        padding: 2rem !important;
+        border-right: none !important;
+        z-index: 100 !important;
+        transform: translateX(-100%);
+        transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+    }
+
+    body.sidebar-open .admin-sidebar {
+        transform: translateX(0);
+    }
+
+    .admin-main {
+        margin-left: 0 !important;
+        width: 100% !important;
+        padding: 1.5rem 1rem !important;
+        box-sizing: border-box !important;
+    }
+
+    .mobile-menu-btn {
+        display: inline-block !important;
+    }
+
+    .admin-overlay {
+        display: block !important;
+        pointer-events: none;
+    }
+
+    body.sidebar-open .admin-overlay {
+        pointer-events: auto;
+    }
+
+    .admin-card table {
+        display: block !important;
+        width: 100% !important;
+        overflow-x: auto !important;
+        white-space: nowrap !important;
+        -webkit-overflow-scrolling: touch;
     }
 }
 
