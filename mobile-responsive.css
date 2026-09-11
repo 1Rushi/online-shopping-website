@@ -1337,8 +1337,12 @@
     }
 
     /* -----------------------------------------
-       ADMIN PANEL (OFF-CANVAS SIDEBAR)
+       ADMIN PANEL - FULL DESKTOP-IDENTICAL MOBILE VIEW
+       Preserves exact same layout structure on mobile
+       with horizontal scrolling where needed.
        ----------------------------------------- */
+
+    /* --- Sidebar Off-Canvas --- */
     .admin-sidebar {
         position: fixed !important;
         width: 280px !important;
@@ -1357,12 +1361,13 @@
     .admin-main {
         margin-left: 0 !important;
         width: 100% !important;
-        padding: 1.5rem 1rem !important;
+        padding: 1rem 0.75rem !important;
         box-sizing: border-box !important;
     }
 
     .mobile-menu-btn {
         display: inline-block !important;
+        margin-bottom: 0.75rem !important;
     }
 
     .admin-overlay {
@@ -1374,12 +1379,265 @@
         pointer-events: auto;
     }
 
-    .admin-card table {
-        display: block !important;
-        width: 100% !important;
-        overflow-x: auto !important;
+    /* --- Header --- */
+    .admin-header {
+        margin-bottom: 1rem !important;
+    }
+
+    .admin-title {
+        font-size: 1.5rem !important;
+    }
+
+    /* --- Stats Cards: Keep 3 cards side-by-side (same as desktop) --- */
+    #admin-stats-cards {
+        display: grid !important;
+        grid-template-columns: repeat(3, 1fr) !important;
+        gap: 0.5rem !important;
+        margin-bottom: 1rem !important;
+    }
+
+    #admin-stats-cards .admin-card {
+        padding: 0.75rem 0.5rem !important;
+        border-radius: 8px !important;
+        margin-bottom: 0 !important;
+        min-width: 0 !important;
+    }
+
+    #admin-stats-cards .admin-card h4 {
+        font-size: 0.55rem !important;
+        letter-spacing: 0.5px !important;
+        margin-bottom: 0.25rem !important;
         white-space: nowrap !important;
-        -webkit-overflow-scrolling: touch;
+        overflow: hidden !important;
+        text-overflow: ellipsis !important;
+    }
+
+    #admin-stats-cards .admin-card > div {
+        font-size: 1.25rem !important;
+    }
+
+    /* --- Admin Cards General --- */
+    .admin-card {
+        padding: 1rem 0.85rem !important;
+        margin-bottom: 1rem !important;
+        border-radius: 10px !important;
+        box-sizing: border-box !important;
+    }
+
+    .admin-card h3 {
+        font-size: 1.15rem !important;
+    }
+
+    .admin-card p {
+        font-size: 0.78rem !important;
+        line-height: 1.4 !important;
+    }
+
+    /* --- Promo Settings: Keep 2-column grid (same as desktop) --- */
+    .admin-card .form-grid {
+        display: grid !important;
+        grid-template-columns: 1fr 1fr !important;
+        gap: 0.65rem !important;
+    }
+
+    .admin-card .form-group {
+        margin-bottom: 0.75rem !important;
+    }
+
+    .admin-card .form-group label {
+        font-size: 0.6rem !important;
+        letter-spacing: 0.5px !important;
+    }
+
+    .admin-card .form-group input,
+    .admin-card .form-group select,
+    .admin-card .form-group textarea {
+        padding: 0.6rem 0.5rem !important;
+        font-size: 0.78rem !important;
+        border-radius: 6px !important;
+        width: 100% !important;
+        box-sizing: border-box !important;
+    }
+
+    .admin-card .btn-primary {
+        padding: 0.6rem 1.2rem !important;
+        font-size: 0.75rem !important;
+    }
+
+    /* --- Category Visibility: Wrap tags like desktop --- */
+    #category-visibility-grid {
+        display: flex !important;
+        flex-wrap: wrap !important;
+        gap: 6px 10px !important;
+    }
+
+    #category-visibility-grid label {
+        font-size: 0.68rem !important;
+        font-weight: 600 !important;
+        letter-spacing: 0.5px !important;
+        display: flex !important;
+        align-items: center !important;
+        gap: 4px !important;
+        white-space: nowrap !important;
+    }
+
+    #category-visibility-grid input[type="checkbox"] {
+        width: 13px !important;
+        height: 13px !important;
+    }
+
+    /* --- Upload Form: Keep 2-col grid (same as desktop) --- */
+    #add-product-form .form-grid {
+        grid-template-columns: 1fr 1fr !important;
+        gap: 0.6rem !important;
+    }
+
+    #add-product-form .form-group.full-width {
+        grid-column: 1 / -1 !important;
+    }
+
+    /* --- Products Table Card: Desktop-identical with scroll --- */
+
+    /* Header: Title on top, Filters below on mobile (same content, just stacked) */
+    #admin-products-panel .admin-card > div[style*="justify-content: space-between"] {
+        display: flex !important;
+        flex-wrap: wrap !important;
+        gap: 0.75rem !important;
+    }
+
+    #admin-products-panel .admin-card > div[style*="justify-content: space-between"] > h3 {
+        font-size: 1.05rem !important;
+        width: 100% !important;
+        margin-bottom: 0 !important;
+    }
+
+    /* Filters row: Section + Category stay side-by-side */
+    #admin-products-panel .admin-card > div[style*="justify-content: space-between"] > div {
+        display: flex !important;
+        align-items: center !important;
+        gap: 10px !important;
+        flex-wrap: wrap !important;
+        width: 100% !important;
+    }
+
+    #admin-products-panel .admin-card > div[style*="justify-content: space-between"] label {
+        font-size: 0.72rem !important;
+        white-space: nowrap !important;
+    }
+
+    #admin-products-panel .admin-card > div[style*="justify-content: space-between"] select {
+        padding: 0.35rem 0.5rem !important;
+        font-size: 0.72rem !important;
+        min-width: 60px !important;
+    }
+
+    /* Table scroll container - force horizontal scroll for all columns */
+    #admin-products-panel .admin-card > div[style*="max-height"] {
+        overflow-x: auto !important;
+        overflow-y: auto !important;
+        -webkit-overflow-scrolling: touch !important;
+        max-height: 420px !important;
+        border-radius: 8px !important;
+    }
+
+    /* Table itself - keep exact same structure, force min-width for scroll */
+    .admin-card table {
+        display: table !important;
+        width: 100% !important;
+        min-width: 750px !important;
+        table-layout: auto !important;
+        border-collapse: collapse !important;
+    }
+
+    .admin-card table th,
+    .admin-card table td {
+        padding: 0.75rem 0.6rem !important;
+        font-size: 0.78rem !important;
+        white-space: nowrap !important;
+    }
+
+    .admin-card table th {
+        font-size: 0.65rem !important;
+        position: sticky !important;
+        top: 0 !important;
+        background: #fff !important;
+        z-index: 1 !important;
+    }
+
+    .td-img img {
+        width: 40px !important;
+        height: 50px !important;
+    }
+
+    /* Stock input inside table */
+    .admin-card table input[type="number"] {
+        width: 55px !important;
+        padding: 0.3rem !important;
+        font-size: 0.75rem !important;
+    }
+
+    /* Pagination - right-aligned same as desktop */
+    #products-pagination {
+        display: flex !important;
+        justify-content: flex-end !important;
+        align-items: center !important;
+        gap: 10px !important;
+        margin-top: 1rem !important;
+        font-size: 0.78rem !important;
+    }
+
+    #products-pagination button {
+        padding: 0.4rem 0.8rem !important;
+        font-size: 0.7rem !important;
+    }
+
+    /* --- Orders Panel: Same table structure with scroll --- */
+    #admin-orders-panel .admin-card {
+        overflow-x: auto !important;
+        -webkit-overflow-scrolling: touch !important;
+    }
+
+    #custom-orders-table {
+        min-width: 800px !important;
+    }
+
+    /* --- Customers Panel: Same table structure with scroll --- */
+    #admin-customers-panel .admin-card {
+        overflow-x: auto !important;
+        -webkit-overflow-scrolling: touch !important;
+    }
+
+    #custom-customers-table {
+        min-width: 800px !important;
+    }
+
+    /* --- Customer Modal on mobile --- */
+    #customer-modal > div {
+        width: 95% !important;
+        padding: 1.25rem !important;
+    }
+
+    /* --- Reports Panel --- */
+    #reports-kpi-container {
+        grid-template-columns: repeat(3, 1fr) !important;
+        gap: 0.5rem !important;
+    }
+
+    /* Charts grid: stack to single column on mobile */
+    #admin-reports-panel > div[style*="grid-template-columns: repeat(auto-fit, minmax(400px"] {
+        grid-template-columns: 1fr !important;
+        gap: 1rem !important;
+    }
+
+    /* Chart canvas containers */
+    #admin-reports-panel div[style*="height: 350px"] {
+        height: 250px !important;
+    }
+
+    /* Reports date filter */
+    #date-filter {
+        font-size: 0.75rem !important;
+        padding: 0.35rem 0.6rem !important;
     }
 }
 
