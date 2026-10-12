@@ -5,11 +5,16 @@ const { Pool } = require('pg');
 const fs = require('fs');
 const path = require('path');
 const app = express();
-const PORT = 3000;
+// const PORT = 3000;
+const PORT = process.env.PORT || 3000;
+
+
 
 // Middleware
 app.use(cors());
 app.use(express.json({ limit: '50mb' }));
+// Serve frontend static files
+app.use(express.static(__dirname));
 
 // Admin Authentication Middleware
 const adminAuth = (req, res, next) => {
@@ -32,6 +37,10 @@ const pool = new Pool({
     database: process.env.DB_NAME,
     password: process.env.DB_PASSWORD,
     port: process.env.DB_PORT || 5432,
+    // ssl: {
+    //     rejectUnauthorized: false
+    // }
+    ssl: true
 });
 
 pool.connect((err, client, release) => {
@@ -39,7 +48,7 @@ pool.connect((err, client, release) => {
         console.error('Error connecting to PostgreSQL', err.stack);
     } else {
         console.log('Connected to PostgreSQL database "moda_db".');
-        
+
         // Ensure user_id column exists on orders table and stock on products table
         Promise.all([
             client.query('ALTER TABLE orders ADD COLUMN IF NOT EXISTS user_id INTEGER'),
@@ -114,7 +123,7 @@ app.put('/api/users/:id', async (req, res) => {
             res.status(404).json({ error: 'User not found.' });
         }
     } catch (err) {
-        if (err.code === '23505') { 
+        if (err.code === '23505') {
             res.status(400).json({ error: 'Email already exists.' });
         } else {
             res.status(500).json({ error: err.message });
@@ -126,27 +135,135 @@ app.put('/api/users/:id', async (req, res) => {
 // PRODUCTS API
 // ==========================================
 
+
+app.get('/api/products/:id/image/:field', async (req, res) => {
+    const allowedFields = {
+        img: 'img',
+        img2: 'img2',
+        img3: 'img3'
+    };
+
+    const column = allowedFields[req.params.field];
+
+    if (!column) {
+        return res.status(400).json({ error: 'Invalid image field' });
+    }
+
+    try {
+        const { rows } = await pool.query(
+            `SELECT ${column} FROM products WHERE id = $1`,
+            [req.params.id]
+        );
+
+        if (!rows.length || !rows[0][column]) {
+            return res.status(404).json({ error: 'Image not found' });
+        }
+
+        const value = rows[0][column];
+        const match = value.match(/^data:(image\/[a-zA-Z0-9.+-]+);base64,(.+)$/s);
+
+        if (!match) {
+            return res.status(415).json({ error: 'Unsupported image format' });
+        }
+
+        const imageBuffer = Buffer.from(match[2], 'base64');
+
+        res.set('Content-Type', match[1]);
+        res.set('Cache-Control', 'public, max-age=86400');
+        res.send(imageBuffer);
+    } catch (err) {
+        console.error('Product image error:', err.message);
+        res.status(500).json({ error: 'Failed to load image' });
+    }
+});
+
+// app.get('/api/products', async (req, res) => {
+//     try {
+//         if (req.query.admin) {
+//             const { rows } = await pool.query('SELECT * FROM products ORDER BY id DESC');
+//             res.json(rows);
+//         } else {
+//             const { rows } = await pool.query('SELECT id, title, price, category, brand, img, sizes, colors, stock FROM products ORDER BY id DESC');
+//             res.json(rows);
+//         }
+//     } catch (err) {
+//         res.status(500).json({ error: err.message });
+//     }
+// });
+
+// app.get('/api/products/:id', async (req, res) => {
+//     try {
+//         const { rows } = await pool.query('SELECT * FROM products WHERE id = $1', [req.params.id]);
+//         if (rows.length > 0) res.json(rows[0]);
+//         else res.status(404).json({ error: 'Product not found' });
+//     } catch (err) {
+//         res.status(500).json({ error: err.message });
+//     }
+// });
+
+
 app.get('/api/products', async (req, res) => {
     try {
+        let rows;
+
         if (req.query.admin) {
-            const { rows } = await pool.query('SELECT * FROM products ORDER BY id DESC');
-            res.json(rows);
+            const result = await pool.query(`
+                SELECT id, title, price, category, brand,
+                       created_at, sizes, description, material,
+                       shipping, stock, colors
+                FROM products
+                ORDER BY id DESC
+            `);
+            rows = result.rows;
         } else {
-            const { rows } = await pool.query('SELECT id, title, price, category, brand, img, sizes, colors, stock FROM products ORDER BY id DESC');
-            res.json(rows);
+            const result = await pool.query(`
+                SELECT id, title, price, category, brand,
+                       sizes, colors, stock
+                FROM products
+                ORDER BY id DESC
+            `);
+            rows = result.rows;
         }
+
+        const products = rows.map(product => ({
+            ...product,
+            img: `/api/products/${product.id}/image/img`,
+            img2: `/api/products/${product.id}/image/img2`,
+            img3: `/api/products/${product.id}/image/img3`
+        }));
+
+        res.json(products);
     } catch (err) {
-        res.status(500).json({ error: err.message });
+        console.error('Get products error:', err.message);
+        res.status(500).json({ error: 'Failed to load products' });
     }
 });
 
 app.get('/api/products/:id', async (req, res) => {
     try {
-        const { rows } = await pool.query('SELECT * FROM products WHERE id = $1', [req.params.id]);
-        if (rows.length > 0) res.json(rows[0]);
-        else res.status(404).json({ error: 'Product not found' });
+        const { rows } = await pool.query(`
+            SELECT id, title, price, category, brand,
+                   created_at, sizes, description, material,
+                   shipping, stock, colors
+            FROM products
+            WHERE id = $1
+        `, [req.params.id]);
+
+        if (rows.length === 0) {
+            return res.status(404).json({ error: 'Product not found' });
+        }
+
+        const product = rows[0];
+
+        res.json({
+            ...product,
+            img: `/api/products/${product.id}/image/img`,
+            img2: `/api/products/${product.id}/image/img2`,
+            img3: `/api/products/${product.id}/image/img3`
+        });
     } catch (err) {
-        res.status(500).json({ error: err.message });
+        console.error('Get product error:', err.message);
+        res.status(500).json({ error: 'Failed to load product' });
     }
 });
 
@@ -238,8 +355,8 @@ app.get('/api/orders', async (req, res) => {
         query += ' ORDER BY created_at DESC';
         const { rows } = await pool.query(query);
         const parsedRows = rows.map(row => {
-            try { row.items = JSON.parse(row.items); } catch (e) {}
-            try { row.customer_info = JSON.parse(row.customer_info); } catch (e) {}
+            try { row.items = JSON.parse(row.items); } catch (e) { }
+            try { row.customer_info = JSON.parse(row.customer_info); } catch (e) { }
             return row;
         });
         res.json(parsedRows);
@@ -250,7 +367,7 @@ app.get('/api/orders', async (req, res) => {
 
 app.post('/api/orders', async (req, res) => {
     const { items, customer_info, user_id, promo_code } = req.body;
-    
+
     if (!items || items.length === 0) {
         return res.status(400).json({ error: 'Order items cannot be empty.' });
     }
@@ -263,7 +380,7 @@ app.post('/api/orders', async (req, res) => {
 
     try {
         await pool.query('BEGIN');
-        
+
         let calculatedSubtotal = 0;
         const validItems = [];
 
@@ -272,18 +389,18 @@ app.post('/api/orders', async (req, res) => {
             if (!prodId || !item.qty || item.qty <= 0) {
                 throw new Error('Invalid item data.');
             }
-            
+
             // Lock row for update to prevent overselling
             const productRes = await pool.query('SELECT * FROM products WHERE id = $1 FOR UPDATE', [prodId]);
             if (productRes.rows.length === 0) {
                 throw new Error(`Product not found.`);
             }
-            
+
             const product = productRes.rows[0];
             if (product.stock < item.qty) {
                 throw new Error(`Insufficient stock for product ${product.title}.`);
             }
-            
+
             calculatedSubtotal += (product.price * item.qty);
             validItems.push({
                 product_id: product.id,
@@ -307,12 +424,12 @@ app.post('/api/orders', async (req, res) => {
                 if (settingsData.promoCode) activePromo = settingsData.promoCode;
                 if (settingsData.promoDiscount) activeDiscount = settingsData.promoDiscount;
             }
-            
+
             if (promo_code.toUpperCase() === activePromo.toUpperCase()) {
                 discountMultiplier = activeDiscount / 100;
             }
         }
-        
+
         const discountAmt = calculatedSubtotal * discountMultiplier;
         const discountedSubtotal = calculatedSubtotal - discountAmt;
         const tax = discountedSubtotal * 0.0824;
@@ -323,18 +440,18 @@ app.post('/api/orders', async (req, res) => {
             VALUES ($1, $2, $3, $4, $5) RETURNING id;
         `;
         const values = [
-            JSON.stringify(validItems), 
-            finalTotal, 
-            JSON.stringify(customer_info), 
+            JSON.stringify(validItems),
+            finalTotal,
+            JSON.stringify(customer_info),
             shipping_date,
             user_id || null
         ];
         const { rows } = await pool.query(query, values);
-        
+
         for (const item of validItems) {
             await pool.query('UPDATE products SET stock = stock - $1 WHERE id = $2', [item.qty, item.product_id]);
         }
-        
+
         await pool.query('COMMIT');
         res.json({ id: rows[0].id, shipping_date, total_price: finalTotal });
     } catch (err) {
@@ -347,8 +464,8 @@ app.get('/api/orders/user/:userId', async (req, res) => {
     try {
         const { rows } = await pool.query('SELECT * FROM orders WHERE user_id = $1 ORDER BY created_at DESC', [req.params.userId]);
         const parsedRows = rows.map(row => {
-            try { row.items = JSON.parse(row.items); } catch (e) {}
-            try { row.customer_info = JSON.parse(row.customer_info); } catch (e) {}
+            try { row.items = JSON.parse(row.items); } catch (e) { }
+            try { row.customer_info = JSON.parse(row.customer_info); } catch (e) { }
             return row;
         });
         res.json(parsedRows);
@@ -423,14 +540,14 @@ app.get('/api/admin/category-sales-percentage', async (req, res) => {
             dateFilter += " AND o.created_at >= NOW() - INTERVAL '" + days + " days'";
         }
         const defaultCategories = [
-            'T-SHIRTS', 'SHIRTS', 'JEANS', 'JACKETS', 'TROUSERS', 
-            'BLAZERS', 'SHOES', 'ACCESSORIES', 'TOPS', 'DRESSES', 
+            'T-SHIRTS', 'SHIRTS', 'JEANS', 'JACKETS', 'TROUSERS',
+            'BLAZERS', 'SHOES', 'ACCESSORIES', 'TOPS', 'DRESSES',
             'SKIRTS', 'BAGS'
         ];
-        
+
         const allCategories = defaultCategories;
         console.log('All categories to return:', allCategories);
-        
+
         const query = `
             WITH CategorySales AS (
                 SELECT
@@ -486,7 +603,7 @@ app.get('/api/admin/category-sales-percentage', async (req, res) => {
         `;
         const { rows } = await pool.query(query);
         console.log('Query results:', rows);
-        
+
         // Create a map of existing category sales
         const salesMap = {};
         rows.forEach(row => {
@@ -497,7 +614,7 @@ app.get('/api/admin/category-sales-percentage', async (req, res) => {
             };
         });
         console.log('Sales map:', salesMap);
-        
+
         // Build result with all categories (0 sales for missing ones)
         let result = allCategories.map(cat => {
             const upperCat = cat.toUpperCase();
@@ -511,12 +628,12 @@ app.get('/api/admin/category-sales-percentage', async (req, res) => {
                 };
             }
         });
-        
+
         // Sort by percentage sold descending and filter out 0% sales
         result = result
             .filter(item => parseFloat(item.percentage_sold) > 0)
             .sort((a, b) => parseFloat(b.percentage_sold) - parseFloat(a.percentage_sold));
-        
+
         console.log('Final result:', result);
         res.json(result);
     } catch (err) {
@@ -568,7 +685,7 @@ app.post('/api/cart/:sessionId', async (req, res) => {
         // Check if item already exists in cart with same size and color
         const checkQuery = `SELECT id, qty FROM cart_items WHERE session_id = $1 AND title = $2 AND size = $3 AND color = $4`;
         const checkRes = await pool.query(checkQuery, [sessionId, title, size, color]);
-        
+
         if (checkRes.rowCount > 0) {
             // Update quantity
             const newQty = checkRes.rows[0].qty + (qty || 1);
@@ -642,7 +759,7 @@ app.post('/api/wishlist/:sessionId', async (req, res) => {
     try {
         const checkQuery = `SELECT id FROM wishlist_items WHERE session_id = $1 AND title = $2`;
         const checkRes = await pool.query(checkQuery, [sessionId, title]);
-        
+
         if (checkRes.rowCount > 0) {
             // Remove it if it exists (Toggle behavior)
             await pool.query('DELETE FROM wishlist_items WHERE id = $1', [checkRes.rows[0].id]);
@@ -673,7 +790,7 @@ app.get('/api/settings', (req, res) => {
         } else {
             res.json({ hidden: [], promoCode: 'MODA20', promoDiscount: 20 });
         }
-    } catch(err) {
+    } catch (err) {
         res.status(500).json({ error: err.message });
     }
 });
@@ -686,7 +803,7 @@ app.get('/api/settings/categories', (req, res) => {
         } else {
             res.json({ hidden: [] });
         }
-    } catch(err) {
+    } catch (err) {
         res.status(500).json({ error: err.message });
     }
 });
@@ -701,7 +818,7 @@ app.post('/api/settings/categories', (req, res) => {
         data.hidden = hidden;
         fs.writeFileSync(settingsPath, JSON.stringify(data), 'utf8');
         res.json({ success: true, hidden });
-    } catch(err) {
+    } catch (err) {
         res.status(500).json({ error: err.message });
     }
 });
@@ -717,12 +834,16 @@ app.post('/api/settings/promo', (req, res) => {
         data.promoDiscount = promoDiscount;
         fs.writeFileSync(settingsPath, JSON.stringify(data), 'utf8');
         res.json({ success: true, promoCode, promoDiscount });
-    } catch(err) {
+    } catch (err) {
         res.status(500).json({ error: err.message });
     }
 });
 
+// // Start server
+// app.listen(PORT, () => {
+//     console.log(`Server is running on http://localhost:${PORT}`);
+// });
 // Start server
-app.listen(PORT, () => {
+app.listen(PORT, '0.0.0.0', () => {
     console.log(`Server is running on http://localhost:${PORT}`);
 });
