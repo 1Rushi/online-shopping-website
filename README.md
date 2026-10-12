@@ -60,3 +60,5 @@ Make sure you have [Node.js](https://nodejs.org/) and [PostgreSQL](https://www.p
 - Backend authoritatively calculates all order totals and final pricing to prevent tampering.
 - Backend verifies stock availability and locks row during checkout to prevent concurrent overselling.
 - Admin APIs are protected via token authentication.
+
+<!-- Jenkins auto-trigger test -->
