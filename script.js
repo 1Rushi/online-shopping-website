@@ -2,7 +2,7 @@ document.addEventListener('DOMContentLoaded', () => {
     window.appSettings = { promoCode: 'MODA20', promoDiscount: 20 };
     const fetchGlobalSettings = async () => {
         try {
-            const res = await fetch('http://localhost:3000/api/settings');
+            const res = await fetch('/api/settings');
             const data = await res.json();
             if (data.promoCode) window.appSettings.promoCode = data.promoCode;
             if (data.promoDiscount !== undefined) window.appSettings.promoDiscount = data.promoDiscount;
@@ -70,7 +70,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const updateCartBadge = async () => {
         try {
-            const res = await fetch(`http://localhost:3000/api/cart/${getSessionId()}`);
+            const res = await fetch(`/api/cart/${getSessionId()}`);
             if (!res.ok) return;
             const cart = await res.json();
             const totalItems = cart.reduce((sum, item) => sum + item.qty, 0);
@@ -286,7 +286,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const renderAdminTable = async () => {
             try {
-                const res = await fetch('http://localhost:3000/api/products?admin=true');
+                const res = await fetch('/api/products?admin=true');
                 if (res.status === 401) {
                     alert('Invalid Admin Password!');
                     localStorage.removeItem('admin_token');
@@ -310,7 +310,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const grid = document.getElementById('category-visibility-grid');
             if (!grid) return;
             try {
-                const res = await fetch('http://localhost:3000/api/settings/categories');
+                const res = await fetch('/api/settings/categories');
                 const { hidden } = await res.json();
 
                 grid.innerHTML = categoriesList.map(cat => `
@@ -331,7 +331,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         });
 
                         try {
-                            await fetch('http://localhost:3000/api/settings/categories', {
+                            await fetch('/api/settings/categories', {
                                 method: 'POST',
                                 headers: { 'Content-Type': 'application/json' },
                                 body: JSON.stringify({ hidden: newHidden })
@@ -355,7 +355,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const discountInput = document.getElementById('promo-discount-input');
             if (!promoInput || !discountInput) return;
             try {
-                const res = await fetch('http://localhost:3000/api/settings');
+                const res = await fetch('/api/settings');
                 const data = await res.json();
                 promoInput.value = data.promoCode || 'MODA20';
                 discountInput.value = data.promoDiscount || 20;
@@ -367,7 +367,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         try {
                             const newCode = promoInput.value.trim().toUpperCase();
                             const newDiscount = parseFloat(discountInput.value) || 0;
-                            await fetch('http://localhost:3000/api/settings/promo', {
+                            await fetch('/api/settings/promo', {
                                 method: 'POST',
                                 headers: {
                                     'Content-Type': 'application/json',
@@ -392,7 +392,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const renderAdminOrders = async () => {
             if (!ordersTbody) return;
             try {
-                const res = await fetch('http://localhost:3000/api/orders');
+                const res = await fetch('/api/orders');
                 const orders = await res.json();
 
                 if (orders.length === 0) {
@@ -473,7 +473,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const renderAdminCustomers = async () => {
             if (!customersTbody) return;
             try {
-                const res = await fetch('http://localhost:3000/api/admin/customers');
+                const res = await fetch('/api/admin/customers');
                 const customers = await res.json();
                 window.adminCustomers = customers; // Save for modal
 
@@ -531,7 +531,7 @@ document.addEventListener('DOMContentLoaded', () => {
             modal.style.display = 'flex';
 
             try {
-                const res = await fetch(`http://localhost:3000/api/orders/user/${userId}`);
+                const res = await fetch(`/api/orders/user/${userId}`);
                 const orders = await res.json();
 
                 let ordersHtml = '';
@@ -657,7 +657,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 const dateFilter = document.getElementById('date-filter') ? document.getElementById('date-filter').value : 'all';
                 const queryParam = dateFilter !== 'all' ? `?days=${dateFilter}` : '';
                 try {
-                    const bestRes = await fetch(`http://localhost:3000/api/admin/bestselling-product${queryParam}`);
+                    const bestRes = await fetch(`/api/admin/bestselling-product${queryParam}`);
                     bestSellingProduct = await bestRes.json();
                 } catch (e) {
                     console.error('Error fetching best-selling product:', e);
@@ -708,7 +708,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 // Fetch and render category sales percentage
                 let categorySalesData = [];
                 try {
-                    const categoryRes = await fetch(`http://localhost:3000/api/admin/category-sales-percentage${queryParam}`);
+                    const categoryRes = await fetch(`/api/admin/category-sales-percentage${queryParam}`);
                     categorySalesData = await categoryRes.json();
                     console.log('Category sales data:', categorySalesData);
                 } catch (e) {
@@ -742,7 +742,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     }
                 }
 
-                const res = await fetch(`http://localhost:3000/api/orders${queryParam}`);
+                const res = await fetch(`/api/orders${queryParam}`);
                 const orders = await res.json();
 
                 const monthlyData = {};
@@ -961,7 +961,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     };
 
                     try {
-                        const response = await fetch('http://localhost:3000/api/products', {
+                        const response = await fetch('/api/products', {
                             method: 'POST',
                             headers: { 'Content-Type': 'application/json' },
                             body: JSON.stringify(newItem)
@@ -985,7 +985,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         window.deleteCustomProduct = async (id) => {
             try {
-                await fetch(`http://localhost:3000/api/products/${id}`, { method: 'DELETE' });
+                await fetch(`/api/products/${id}`, { method: 'DELETE' });
                 renderAdminTable();
             } catch (err) {
                 console.error('Failed to delete product', err);
@@ -995,7 +995,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         window.updateCustomProductStock = async (id, newStock) => {
             try {
-                const res = await fetch(`http://localhost:3000/api/products/${id}/stock`, {
+                const res = await fetch(`/api/products/${id}/stock`, {
                     method: 'PUT',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ stock: parseInt(newStock) || 0 })
@@ -1018,7 +1018,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         window.updateOrderStatus = async (id, newStatus) => {
             try {
-                const res = await fetch(`http://localhost:3000/api/orders/${id}/status`, {
+                const res = await fetch(`/api/orders/${id}/status`, {
                     method: 'PUT',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ status: newStatus })
@@ -1037,7 +1037,7 @@ document.addEventListener('DOMContentLoaded', () => {
         window.deleteOrder = async (id) => {
             if (!confirm('Are you sure you want to delete this order?')) return;
             try {
-                const res = await fetch(`http://localhost:3000/api/orders/${id}`, {
+                const res = await fetch(`/api/orders/${id}`, {
                     method: 'DELETE'
                 });
                 if (res.ok) {
@@ -1054,7 +1054,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const injectCustomProducts = async () => {
         try {
-            const res = await fetch('http://localhost:3000/api/products');
+            const res = await fetch('/api/products');
             const customProducts = await res.json();
             if (!Array.isArray(customProducts) || customProducts.length === 0) {
                 setupProductCards();
@@ -1131,7 +1131,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // ==========================================
     const updateWishlistUI = async () => {
         try {
-            const res = await fetch(`http://localhost:3000/api/wishlist/${getSessionId()}`);
+            const res = await fetch(`/api/wishlist/${getSessionId()}`);
             if (!res.ok) return;
             const wishlist = await res.json();
             const wishlistBtns = document.querySelectorAll('.wishlist-btn, .btn-wishlist-outline');
@@ -1170,7 +1170,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const toggleWishlist = async (product) => {
         try {
-            await fetch(`http://localhost:3000/api/wishlist/${getSessionId()}`, {
+            await fetch(`/api/wishlist/${getSessionId()}`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(product)
@@ -1307,7 +1307,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const productId = localStorage.getItem('current_product_id');
             if (productId) {
                 try {
-                    const res = await fetch(`http://localhost:3000/api/products/${productId}`);
+                    const res = await fetch(`/api/products/${productId}`);
                     if (res.ok) {
                         currentProduct = await res.json();
                     }
@@ -1502,7 +1502,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         const submitBtn = document.getElementById('pdp-add-to-cart');
                         if (submitBtn) submitBtn.disabled = true;
 
-                        await fetch(`http://localhost:3000/api/cart/${getSessionId()}`, {
+                        await fetch(`/api/cart/${getSessionId()}`, {
                             method: 'POST',
                             headers: { 'Content-Type': 'application/json' },
                             body: JSON.stringify(item)
@@ -1548,7 +1548,7 @@ document.addEventListener('DOMContentLoaded', () => {
             // Fetch related products dynamically
             if (currentProduct && currentProduct.category) {
                 try {
-                    const res = await fetch('http://localhost:3000/api/products');
+                    const res = await fetch('/api/products');
                     if (res.ok) {
                         const allProducts = await res.json();
                         const relatedProducts = allProducts.filter(p => p.category === currentProduct.category && p.id !== currentProduct.id).slice(0, 4);
@@ -1620,7 +1620,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (currentProduct) {
                 const fetchReviews = async () => {
                     try {
-                        const res = await fetch(`http://localhost:3000/api/reviews/${currentProduct.id}`);
+                        const res = await fetch(`/api/reviews/${currentProduct.id}`);
                         if (res.ok) {
                             const reviews = await res.json();
                             const listContainer = document.getElementById('reviews-list-container');
@@ -1728,7 +1728,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         };
 
                         try {
-                            const res = await fetch('http://localhost:3000/api/reviews', {
+                            const res = await fetch('/api/reviews', {
                                 method: 'POST',
                                 headers: { 'Content-Type': 'application/json' },
                                 body: JSON.stringify(newReview)
@@ -1768,7 +1768,7 @@ document.addEventListener('DOMContentLoaded', () => {
         container.innerHTML = '<p style="padding: 2rem 0; color: var(--text-light);">Loading cart...</p>';
 
         try {
-            const res = await fetch(`http://localhost:3000/api/cart/${getSessionId()}`);
+            const res = await fetch(`/api/cart/${getSessionId()}`);
             const cart = await res.json();
             container.innerHTML = '';
 
@@ -1817,7 +1817,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     window.updateQty = async function (itemId, delta) {
         try {
-            await fetch(`http://localhost:3000/api/cart/${getSessionId()}/${itemId}`, {
+            await fetch(`/api/cart/${getSessionId()}/${itemId}`, {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ delta })
@@ -1829,7 +1829,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     window.removeItem = async function (itemId) {
         try {
-            await fetch(`http://localhost:3000/api/cart/${getSessionId()}/${itemId}`, {
+            await fetch(`/api/cart/${getSessionId()}/${itemId}`, {
                 method: 'DELETE'
             });
             renderCart();
@@ -1856,7 +1856,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     msg.innerText = `Promo code applied! ${window.appSettings.promoDiscount}% discount.`;
                     msg.style.color = '#10b981';
                     try {
-                        const res = await fetch(`http://localhost:3000/api/cart/${getSessionId()}`);
+                        const res = await fetch(`/api/cart/${getSessionId()}`);
                         const cart = await res.json();
                         updateTotals(cart);
                     } catch (e) { }
@@ -1866,7 +1866,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 msg.style.color = '#e74c3c';
                 isPromoApplied = false;
                 try {
-                    const res = await fetch(`http://localhost:3000/api/cart/${getSessionId()}`);
+                    const res = await fetch(`/api/cart/${getSessionId()}`);
                     const cart = await res.json();
                     updateTotals(cart);
                 } catch (e) { }
@@ -1924,7 +1924,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
 
             try {
-                const res = await fetch(`http://localhost:3000/api/cart/${getSessionId()}`);
+                const res = await fetch(`/api/cart/${getSessionId()}`);
                 const cart = await res.json();
 
                 if (cart.length === 0) {
@@ -2017,7 +2017,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     const submitBtn = document.getElementById('submit-payment-btn');
                     if (submitBtn) submitBtn.disabled = true;
 
-                    const res = await fetch('http://localhost:3000/api/orders', {
+                    const res = await fetch('/api/orders', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify(orderData)
@@ -2036,7 +2036,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         }
 
                         // Clear the cart on backend after successful order
-                        await fetch(`http://localhost:3000/api/cart/${getSessionId()}`, { method: 'DELETE' });
+                        await fetch(`/api/cart/${getSessionId()}`, { method: 'DELETE' });
 
                         paymentFormStep.style.display = 'none';
                         paymentSuccessStep.style.display = 'block';
@@ -2061,7 +2061,7 @@ document.addEventListener('DOMContentLoaded', () => {
         window.renderWishlistPage = async () => {
             if (!container || !emptyMsg) return;
             try {
-                const res = await fetch(`http://localhost:3000/api/wishlist/${getSessionId()}`);
+                const res = await fetch(`/api/wishlist/${getSessionId()}`);
                 const wishlist = await res.json();
 
                 if (wishlist.length === 0) {
@@ -2160,7 +2160,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         if (settingsEmail) settingsEmail.value = u.email || '';
 
 
-                        fetch(`http://localhost:3000/api/orders/user/${u.id}`)
+                        fetch(`/api/orders/user/${u.id}`)
                             .then(res => res.json())
                             .then(orders => {
                                 const list = document.getElementById('user-orders-list');
@@ -2326,7 +2326,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 const password = document.getElementById('settings-password').value;
 
                 try {
-                    const res = await fetch(`http://localhost:3000/api/users/${u.id}`, {
+                    const res = await fetch(`/api/users/${u.id}`, {
                         method: 'PUT',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({ name, email, password })
@@ -2362,7 +2362,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 const password = document.getElementById('register-password').value;
 
                 try {
-                    const res = await fetch('http://localhost:3000/api/register', {
+                    const res = await fetch('/api/register', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({ name, email, password })
@@ -2393,7 +2393,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 const password = document.getElementById('login-password').value;
 
                 try {
-                    const res = await fetch('http://localhost:3000/api/login', {
+                    const res = await fetch('/api/login', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({ email, password })
@@ -2448,7 +2448,7 @@ document.addEventListener('DOMContentLoaded', () => {
         let selectedCategoryItem = 'ALL';
 
         if (categoryStripItems.length > 0) {
-            fetch('http://localhost:3000/api/settings/categories')
+            fetch('/api/settings/categories')
                 .then(res => res.json())
                 .then(data => {
                     const hidden = data.hidden || [];
@@ -2712,3 +2712,5 @@ document.addEventListener('DOMContentLoaded', () => {
     initMensFilters();
 
 });
+
+
