@@ -143,6 +143,10 @@ document.addEventListener('DOMContentLoaded', () => {
         let adminProductsCurrentPage = 1;
         const adminProductsPerPage = 15;
 
+        let allAdminOrders = [];
+        let adminOrdersCurrentPage = 1;
+        let adminOrdersPerPage = 10;
+
         const populateAdminCategoryFilter = () => {
             const filterDropdown = document.getElementById('products-category-filter');
             if (!filterDropdown) return;
@@ -389,80 +393,210 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         };
 
-        const renderAdminOrders = async () => {
+        const createOrderPageButton = (page, isActive) => {
+            if (isActive) {
+                return `<button style="min-width: 34px; height: 34px; padding: 0 8px; background: #0d7f7f; color: #fff; border: 1px solid #0d7f7f; border-radius: 6px; font-weight: 700; font-size: 0.8rem; cursor: default; box-shadow: 0 1px 2px rgba(0,0,0,0.05);">${page}</button>`;
+            }
+            return `<button style="min-width: 34px; height: 34px; padding: 0 8px; background: #fff; color: #334155; border: 1px solid #cbd5e1; border-radius: 6px; font-weight: 500; font-size: 0.8rem; cursor: pointer; transition: all 0.2s; box-shadow: 0 1px 2px rgba(0,0,0,0.03);" onmouseover="this.style.background='#f1f5f9'; this.style.borderColor='#94a3b8'" onmouseout="this.style.background='#fff'; this.style.borderColor='#cbd5e1'" onclick="changeAdminOrdersPage(${page})">${page}</button>`;
+        };
+
+        const renderAdminOrdersPagination = () => {
+            const paginationContainer = document.getElementById('orders-pagination');
+            if (!paginationContainer) return;
+
+            const totalOrders = allAdminOrders.length;
+            if (totalOrders === 0) {
+                paginationContainer.innerHTML = '';
+                return;
+            }
+
+            const totalPages = Math.ceil(totalOrders / adminOrdersPerPage) || 1;
+            const start = (adminOrdersCurrentPage - 1) * adminOrdersPerPage;
+            const end = Math.min(start + adminOrdersPerPage, totalOrders);
+
+            let pagesHtml = '';
+            const maxVisiblePages = 5;
+
+            if (totalPages <= maxVisiblePages) {
+                for (let i = 1; i <= totalPages; i++) {
+                    pagesHtml += createOrderPageButton(i, i === adminOrdersCurrentPage);
+                }
+            } else {
+                pagesHtml += createOrderPageButton(1, adminOrdersCurrentPage === 1);
+
+                if (adminOrdersCurrentPage > 3) {
+                    pagesHtml += `<span style="padding: 0 4px; color: #94a3b8; font-weight: 600; font-size: 0.85rem;">...</span>`;
+                }
+
+                let startPage = Math.max(2, adminOrdersCurrentPage - 1);
+                let endPage = Math.min(totalPages - 1, adminOrdersCurrentPage + 1);
+
+                if (adminOrdersCurrentPage <= 3) {
+                    endPage = 4;
+                } else if (adminOrdersCurrentPage >= totalPages - 2) {
+                    startPage = totalPages - 3;
+                }
+
+                for (let i = startPage; i <= endPage; i++) {
+                    if (i > 1 && i < totalPages) {
+                        pagesHtml += createOrderPageButton(i, i === adminOrdersCurrentPage);
+                    }
+                }
+
+                if (adminOrdersCurrentPage < totalPages - 2) {
+                    pagesHtml += `<span style="padding: 0 4px; color: #94a3b8; font-weight: 600; font-size: 0.85rem;">...</span>`;
+                }
+
+                pagesHtml += createOrderPageButton(totalPages, adminOrdersCurrentPage === totalPages);
+            }
+
+            paginationContainer.innerHTML = `
+                <div style="display: flex; align-items: center; gap: 16px; flex-wrap: wrap;">
+                    <div style="font-size: 0.85rem; color: #64748b; font-weight: 500;">
+                        Showing <strong style="color: #0f172a; font-weight: 700;">${start + 1}</strong>–<strong style="color: #0f172a; font-weight: 700;">${end}</strong> of <strong style="color: #0f172a; font-weight: 700;">${totalOrders}</strong> orders
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 8px; font-size: 0.82rem; color: #64748b;">
+                        <span>Show:</span>
+                        <select onchange="changeAdminOrdersPerPage(this.value)" style="padding: 0.35rem 0.65rem; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 0.82rem; outline: none; background: #fff; cursor: pointer; color: #0f172a; font-weight: 500;">
+                            <option value="5" ${adminOrdersPerPage === 5 ? 'selected' : ''}>5</option>
+                            <option value="10" ${adminOrdersPerPage === 10 ? 'selected' : ''}>10</option>
+                            <option value="20" ${adminOrdersPerPage === 20 ? 'selected' : ''}>20</option>
+                            <option value="50" ${adminOrdersPerPage === 50 ? 'selected' : ''}>50</option>
+                        </select>
+                    </div>
+                </div>
+                <div style="display: flex; align-items: center; gap: 6px; flex-wrap: wrap;">
+                    <button class="btn-primary" style="padding: 0.45rem 0.9rem; font-size: 0.75rem; border-radius: 6px; display: inline-flex; align-items: center; gap: 5px; ${adminOrdersCurrentPage === 1 ? 'opacity: 0.5; cursor: not-allowed;' : ''}" onclick="changeAdminOrdersPage(${adminOrdersCurrentPage - 1})" ${adminOrdersCurrentPage === 1 ? 'disabled' : ''}>
+                        <i class="fas fa-chevron-left" style="font-size: 0.65rem;"></i> Prev
+                    </button>
+                    <div style="display: flex; align-items: center; gap: 4px;">
+                        ${pagesHtml}
+                    </div>
+                    <button class="btn-primary" style="padding: 0.45rem 0.9rem; font-size: 0.75rem; border-radius: 6px; display: inline-flex; align-items: center; gap: 5px; ${adminOrdersCurrentPage === totalPages ? 'opacity: 0.5; cursor: not-allowed;' : ''}" onclick="changeAdminOrdersPage(${adminOrdersCurrentPage + 1})" ${adminOrdersCurrentPage === totalPages ? 'disabled' : ''}>
+                        Next <i class="fas fa-chevron-right" style="font-size: 0.65rem;"></i>
+                    </button>
+                </div>
+            `;
+        };
+
+        window.changeAdminOrdersPage = (page) => {
+            const totalPages = Math.ceil(allAdminOrders.length / adminOrdersPerPage) || 1;
+            if (page >= 1 && page <= totalPages) {
+                adminOrdersCurrentPage = page;
+                displayAdminOrders();
+                const ordersTable = document.getElementById('custom-orders-table');
+                if (ordersTable) {
+                    ordersTable.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                }
+            }
+        };
+
+        window.changeAdminOrdersPerPage = (perPage) => {
+            adminOrdersPerPage = parseInt(perPage, 10) || 10;
+            adminOrdersCurrentPage = 1;
+            displayAdminOrders();
+        };
+
+        const displayAdminOrders = () => {
+            if (!ordersTbody) return;
+
+            if (allAdminOrders.length === 0) {
+                ordersTbody.innerHTML = '<tr><td colspan="7" style="text-align: center; color: var(--text-light); padding: 2rem;">No orders placed yet.</td></tr>';
+                renderAdminOrdersPagination();
+                return;
+            }
+
+            const start = (adminOrdersCurrentPage - 1) * adminOrdersPerPage;
+            const end = start + adminOrdersPerPage;
+            const paginatedOrders = allAdminOrders.slice(start, end);
+
+            ordersTbody.innerHTML = paginatedOrders.map((order) => {
+                let itemsList = '';
+                try {
+                    const parsedItems = typeof order.items === 'string' ? JSON.parse(order.items) : order.items;
+                    itemsList = parsedItems.map(item => `
+                        <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 12px;">
+                            <img src="${item.img}" style="width: 45px; height: 55px; object-fit: cover; border-radius: 4px; box-shadow: 0 2px 4px rgba(0,0,0,0.05);" alt="${item.title}">
+                            <div>
+                                <div style="font-weight: 700; font-size: 0.8rem; color: #0f172a; text-transform: uppercase; letter-spacing: 0.5px;">${item.title}</div>
+                                <div style="font-size: 0.75rem; color: #64748b; margin-top: 3px;">Size: ${item.size} | Color: ${item.color} | Qty: ${item.qty}</div>
+                            </div>
+                        </div>
+                    `).join('');
+                } catch (e) {
+                    itemsList = '<span style="color: red;">Error reading items</span>';
+                }
+
+                const dateObj = new Date(order.created_at);
+                const dateStr = dateObj.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+                const timeStr = dateObj.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+
+                let badgeColor = '#f59e0b';
+                if (order.status === 'Dispatched') badgeColor = '#3b82f6';
+                else if (order.status === 'Out for Delivery') badgeColor = '#8b5cf6';
+                else if (order.status === 'Delivered') badgeColor = '#10b981';
+
+                const statusBadge = `<span style="background-color: ${badgeColor}; color: white; padding: 4px 10px; border-radius: 4px; font-size: 0.7rem; font-weight: 700; letter-spacing: 0.5px; text-transform: uppercase; display: inline-block;">${order.status === 'Pending' ? 'PROCESSING' : order.status.toUpperCase()}</span>`;
+
+                const dispatchBtn = `
+                    <select onchange="updateOrderStatus(${order.id}, this.value)" style="padding: 6px 8px; font-size: 0.75rem; border: 1px solid #cbd5e1; border-radius: 4px; outline: none; background: white; cursor: pointer; color: #0f172a; font-weight: 500; min-width: 100px;">
+                        <option value="Pending" ${order.status === 'Pending' ? 'selected' : ''}>Processing</option>
+                        <option value="Dispatched" ${order.status === 'Dispatched' ? 'selected' : ''}>Dispatched</option>
+                        <option value="Out for Delivery" ${order.status === 'Out for Delivery' ? 'selected' : ''}>Out for Delivery</option>
+                        <option value="Delivered" ${order.status === 'Delivered' ? 'selected' : ''}>Delivered</option>
+                    </select>
+                `;
+
+                const deleteBtn = `<button class="action-btn" style="color: #ef4444; background: #fee2e2; width: 28px; height: 28px; border-radius: 4px; display: flex; align-items: center; justify-content: center; font-size: 0.8rem; transition: 0.2s; border: none; cursor: pointer;" onclick="deleteOrder(${order.id})" onmouseover="this.style.background='#fecaca'" onmouseout="this.style.background='#fee2e2'"><i class="fas fa-trash"></i></button>`;
+
+                return `
+                    <tr>
+                        <td style="font-weight: 700; color: #0f172a; font-size: 0.85rem;">#${order.id}</td>
+                        <td style="font-size: 0.8rem; color: #64748b; line-height: 1.5;">${dateStr},<br>${timeStr}</td>
+                        <td>${itemsList}</td>
+                        <td style="font-weight: 700; color: #0f172a; font-size: 0.9rem;">₹${parseFloat(order.total_price).toFixed(2)}</td>
+                        <td>${statusBadge}</td>
+                        <td style="font-size: 0.8rem; color: #334155; line-height: 1.5;">
+                            <span style="font-weight: 600; color: #0f172a; text-transform: lowercase;">${order.customer_info?.name || ''}</span><br>
+                            ${order.customer_info?.phone || ''}<br>
+                            ${order.customer_info?.address || ''}, ${order.customer_info?.city || ''} ${order.customer_info?.zip || ''}<br>
+                            ${order.customer_info?.country || 'US'}
+                        </td>
+                        <td style="font-size: 0.85rem; font-weight: 500;">
+                            <div style="margin-bottom: 6px; font-weight: 600; font-size: 0.75rem; color: #0f172a;">${order.shipping_date || 'N/A'}</div>
+                            <div style="display: flex; align-items: center; gap: 8px;">
+                                ${dispatchBtn}
+                                ${deleteBtn}
+                            </div>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+
+            renderAdminOrdersPagination();
+        };
+
+        const renderAdminOrders = async (keepPage = false) => {
             if (!ordersTbody) return;
             try {
                 const res = await fetch('/api/orders');
-                const orders = await res.json();
+                allAdminOrders = await res.json();
 
-                if (orders.length === 0) {
+                if (!Array.isArray(allAdminOrders) || allAdminOrders.length === 0) {
+                    allAdminOrders = [];
                     ordersTbody.innerHTML = '<tr><td colspan="7" style="text-align: center; color: var(--text-light); padding: 2rem;">No orders placed yet.</td></tr>';
+                    renderAdminOrdersPagination();
                     return;
                 }
 
-                ordersTbody.innerHTML = orders.map((order) => {
-                    let itemsList = '';
-                    try {
-                        const parsedItems = typeof order.items === 'string' ? JSON.parse(order.items) : order.items;
-                        itemsList = parsedItems.map(item => `
-                            <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 12px;">
-                                <img src="${item.img}" style="width: 45px; height: 55px; object-fit: cover; border-radius: 4px; box-shadow: 0 2px 4px rgba(0,0,0,0.05);" alt="${item.title}">
-                                <div>
-                                    <div style="font-weight: 700; font-size: 0.8rem; color: #0f172a; text-transform: uppercase; letter-spacing: 0.5px;">${item.title}</div>
-                                    <div style="font-size: 0.75rem; color: #64748b; margin-top: 3px;">Size: ${item.size} | Color: ${item.color} | Qty: ${item.qty}</div>
-                                </div>
-                            </div>
-                        `).join('');
-                    } catch (e) {
-                        itemsList = '<span style="color: red;">Error reading items</span>';
-                    }
+                const totalPages = Math.ceil(allAdminOrders.length / adminOrdersPerPage) || 1;
+                if (!keepPage) {
+                    adminOrdersCurrentPage = 1;
+                } else if (adminOrdersCurrentPage > totalPages) {
+                    adminOrdersCurrentPage = totalPages;
+                }
 
-                    const dateObj = new Date(order.created_at);
-                    const dateStr = dateObj.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
-                    const timeStr = dateObj.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
-
-                    let badgeColor = '#f59e0b';
-                    if (order.status === 'Dispatched') badgeColor = '#3b82f6';
-                    else if (order.status === 'Out for Delivery') badgeColor = '#8b5cf6';
-                    else if (order.status === 'Delivered') badgeColor = '#10b981';
-
-                    const statusBadge = `<span style="background-color: ${badgeColor}; color: white; padding: 4px 10px; border-radius: 4px; font-size: 0.7rem; font-weight: 700; letter-spacing: 0.5px; text-transform: uppercase; display: inline-block;">${order.status === 'Pending' ? 'PROCESSING' : order.status.toUpperCase()}</span>`;
-
-                    const dispatchBtn = `
-                        <select onchange="updateOrderStatus(${order.id}, this.value)" style="padding: 6px 8px; font-size: 0.75rem; border: 1px solid #cbd5e1; border-radius: 4px; outline: none; background: white; cursor: pointer; color: #0f172a; font-weight: 500; min-width: 100px;">
-                            <option value="Pending" ${order.status === 'Pending' ? 'selected' : ''}>Processing</option>
-                            <option value="Dispatched" ${order.status === 'Dispatched' ? 'selected' : ''}>Dispatched</option>
-                            <option value="Out for Delivery" ${order.status === 'Out for Delivery' ? 'selected' : ''}>Out for Delivery</option>
-                            <option value="Delivered" ${order.status === 'Delivered' ? 'selected' : ''}>Delivered</option>
-                        </select>
-                    `;
-
-                    const deleteBtn = `<button class="action-btn" style="color: #ef4444; background: #fee2e2; width: 28px; height: 28px; border-radius: 4px; display: flex; align-items: center; justify-content: center; font-size: 0.8rem; transition: 0.2s; border: none; cursor: pointer;" onclick="deleteOrder(${order.id})" onmouseover="this.style.background='#fecaca'" onmouseout="this.style.background='#fee2e2'"><i class="fas fa-trash"></i></button>`;
-
-                    return `
-                        <tr>
-                            <td style="font-weight: 700; color: #0f172a; font-size: 0.85rem;">#${order.id}</td>
-                            <td style="font-size: 0.8rem; color: #64748b; line-height: 1.5;">${dateStr},<br>${timeStr}</td>
-                            <td>${itemsList}</td>
-                            <td style="font-weight: 700; color: #0f172a; font-size: 0.9rem;">₹${parseFloat(order.total_price).toFixed(2)}</td>
-                            <td>${statusBadge}</td>
-                            <td style="font-size: 0.8rem; color: #334155; line-height: 1.5;">
-                                <span style="font-weight: 600; color: #0f172a; text-transform: lowercase;">${order.customer_info?.name || ''}</span><br>
-                                ${order.customer_info?.phone || ''}<br>
-                                ${order.customer_info?.address || ''}, ${order.customer_info?.city || ''} ${order.customer_info?.zip || ''}<br>
-                                ${order.customer_info?.country || 'US'}
-                            </td>
-                            <td style="font-size: 0.85rem; font-weight: 500;">
-                                <div style="margin-bottom: 6px; font-weight: 600; font-size: 0.75rem; color: #0f172a;">${order.shipping_date || 'N/A'}</div>
-                                <div style="display: flex; align-items: center; gap: 8px;">
-                                    ${dispatchBtn}
-                                    ${deleteBtn}
-                                </div>
-                            </td>
-                        </tr>
-                    `;
-                }).join('');
-
+                displayAdminOrders();
             } catch (err) {
                 ordersTbody.innerHTML = '<tr><td colspan="7" style="color: red; text-align: center;">Could not connect to database to fetch orders.</td></tr>';
             }
@@ -1024,7 +1158,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     body: JSON.stringify({ status: newStatus })
                 });
                 if (res.ok) {
-                    renderAdminOrders();
+                    renderAdminOrders(true);
                 } else {
                     alert('Failed to update status.');
                 }
@@ -1041,7 +1175,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     method: 'DELETE'
                 });
                 if (res.ok) {
-                    renderAdminOrders();
+                    renderAdminOrders(true);
                 } else {
                     alert('Failed to delete order.');
                 }

@@ -1577,16 +1577,19 @@
     }
 
     /* Pagination - right-aligned same as desktop */
-    #products-pagination {
+    #products-pagination,
+    #orders-pagination {
         display: flex !important;
-        justify-content: flex-end !important;
+        justify-content: space-between !important;
         align-items: center !important;
+        flex-wrap: wrap !important;
         gap: 10px !important;
         margin-top: 1rem !important;
         font-size: 0.78rem !important;
     }
 
-    #products-pagination button {
+    #products-pagination button,
+    #orders-pagination button {
         padding: 0.4rem 0.8rem !important;
         font-size: 0.7rem !important;
     }
